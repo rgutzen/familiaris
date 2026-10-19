@@ -1,0 +1,151 @@
+# relations.yaml -- what it POINTS AT: the walkable edges, and the coincidences that are never edges.
+#
+# DIRECTIVE (config/knowledge/): agents READ this file and never edit
+# it -- a vocabulary change is proposed and ratified by the user. Loaded
+# by engine/knowledge/ontology.py through
+# engine/lib/_miniyaml.py, and confined to the subset that reader
+# supports (nested mappings, block sequences, folded `>` scalars, `#`
+# comments) -- the parser is not extended for this file.
+#
+# Every entry carries criteria, a layer (category|concept|association),
+# a column (assertion|coincidence) and a `reviewed:` date.
+
+relations:
+  - id: related
+    criteria: >
+      The Zettelkasten move: a measured or asserted association between two
+      things. Symmetric across knowledge/**, so the pass may repair a missing
+      back-link unattended -- set symmetry needs no unvalidated number.
+    from: any
+    to: any
+    symmetry: symmetric, pass-repaired
+    writer: agent
+    column: assertion
+    walkable: true
+    layer: association
+    reviewed: 2026-09-30
+  - id: supersedes
+    criteria: >
+      A DECLARED precedence: this replaces that, whatever the dates say.
+      Asymmetric, and it derives `superseded_by:` on the other side -- except
+      for an EXTERNAL target, which derives no back-pointer because there is
+      nothing here to write one into (SPECS.md O1d).
+    from: any
+    to: any incl. `external`
+    symmetry: asymmetric; derives `superseded_by`
+    writer: explicit only
+    column: assertion
+    walkable: true
+    layer: association
+    reviewed: 2026-09-30
+  - id: contradicts
+    criteria: >
+      Two claims that cannot both hold, with no winner yet. Symmetric and
+      UNRESOLVED by itself: the conflict stage decides by ISO-8601 precedence
+      on `last_verified:` and marks the loser. Use this when the winner is not
+      known; `supersedes:` asserts one.
+    from: any
+    to: any
+    symmetry: symmetric, unresolved
+    writer: explicit only
+    column: assertion
+    walkable: true
+    layer: association
+    reviewed: 2026-09-30
+  - id: promoted_from
+    criteria: >
+      Provenance: the journal entries this was distilled from. The only edge
+      the PASS writes, and the route from a claim back to the episode that
+      produced it.
+    from: leaf/skill
+    to: episode
+    symmetry: asymmetric, provenance
+    writer: the pass
+    column: assertion
+    walkable: true
+    layer: association
+    reviewed: 2026-09-30
+  - id: source
+    criteria: >
+      The URL or material this came from. Asymmetric, author-written, and
+      MATERIAL rather than an identifier: the live tree carries free text here
+      (`see §Sources`, `arXiv 2607.06595`), so no check resolves it and none
+      should pretend to.
+    from: any
+    to: external
+    symmetry: asymmetric
+    writer: author
+    column: assertion
+    walkable: true
+    layer: association
+    reviewed: 2026-09-30
+  - id: cites
+    criteria: >
+      A skill points at the leaf whose claim its procedure leans on. This is
+      a DECLARED RULE with no frontmatter key and none planned: the OWED was
+      STRUCK 2026-10-09. `meta/knowledge-vs-skills.md` makes the dependency
+      skill -> leaf, never the reverse, and that rule is already enforced the
+      other way round by the `knowledge→skill link` finding
+      (`engine/consolidation/stages/associate.py`), which files a nightly
+      proposal into the brief for a human to decide. A detection that works is
+      not an argument for a field nothing writes. Re-open only with a
+      register-resolvable READER in hand, as a new item with its own exit.
+    from: skill
+    to: leaf
+    symmetry: asymmetric, one-way by rule
+    writer: nobody -- the rule is checked, never an edge
+    column: assertion
+    walkable: true
+    layer: association
+    reviewed: 2026-10-09
+  - id: same-subject
+    criteria: >
+      Two documents in one subject. A retrieval prior and never an edge: after
+      O2b it is the folder, so an edge derived from it would be an edge
+      derived from the path.
+    from: any
+    to: any
+    symmetry: equality
+    writer: nobody -- derived
+    column: coincidence
+    walkable: false
+    layer: category
+    reviewed: 2026-09-30
+  - id: same-area
+    criteria: >
+      Two documents in one Area. Measured `area: [B]` on 28 of 30 leaves, so
+      this edge would make the graph nearly complete and carry no information.
+    from: any
+    to: any
+    symmetry: equality
+    writer: nobody -- derived
+    column: coincidence
+    walkable: false
+    layer: category
+    reviewed: 2026-09-30
+  - id: same-scope
+    criteria: >
+      Two documents whose `scope:` globs overlap. A retrieval prior
+      (meta/memory-ranking.md: scope feeds the prior, never a filter), and a
+      prior is not a claim.
+    from: any
+    to: any
+    symmetry: overlap
+    writer: nobody -- derived
+    column: coincidence
+    walkable: false
+    layer: concept
+    reviewed: 2026-09-30
+  - id: same-cwd
+    criteria: >
+      Two skills observed in one working directory. A measured co-occurrence,
+      and the only signal in the pass that is INFERRED from a log rather than
+      asserted -- which is why 5b stays silent below MIN_SAMPLE.
+    from: any
+    to: any
+    symmetry: equality
+    writer: nobody -- derived
+    column: coincidence
+    walkable: false
+    layer: concept
+    reviewed: 2026-09-30

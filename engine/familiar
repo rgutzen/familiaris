@@ -1,0 +1,164 @@
+#!/usr/bin/env python3
+"""familiar -- the one command line: `familiar <subject> <verb> [args]` (R1l).
+
+The subject comes first because it is how this system files everything else:
+the engine's folders, the knowledge tree and the checks are all cut by the
+same subjects (`config/knowledge/subjects.yaml`). A verb lives under
+the subject whose code implements it, and `familiar` with no arguments prints
+the whole table.
+
+THE ROUTES ARE THE DECLARATION. Each maps `(subject, verb)` to a back-end and
+the argv prefix that back-end takes. The back-ends are the three programs this
+front door replaced as entry points (`cli/familiar-memory.py`,
+`cli/familiar-context.py`, `structure/pazras.sh`) plus the shell helpers
+(`host/pazras-utils.sh`). The name is `familiar` (naming rule 8): PAZRAS names
+the folder tree, and this program is the whole system's front door. The old
+`engine/pazras` is a symlink to this file until nothing external calls it.
+They are not on PATH; `tests/test_front_door.py` holds every route to a verb its
+back-end actually dispatches.
+
+HOOK LATENCY. `familiar context capture` runs on every SessionEnd and
+PostToolUse, so this file imports `os` and `sys` only, and runs a Python
+back-end IN-PROCESS (`runpy`) rather than starting a second interpreter.
+A shell back-end is `exec`'d: same process slot, no wrapper left waiting.
+
+KEYLESS. Nothing here reads a credential; `cli/tests/test_cli_keyless.py`
+scans this file with the rest.
+"""
+import os
+import sys
+
+HERE = os.path.dirname(os.path.realpath(__file__))
+
+# back-end name -> (kind, path relative to engine/). The key is the PROGRAM's
+# name: `memory` would be read as the memory ROOT by `checks/root_literals.py`,
+# and it is not one (found when the vault became `memory/`, R3b).
+BACKENDS = {
+    "familiar-memory": ("python", "cli/familiar-memory.py"),
+    "familiar-context": ("python", "cli/familiar-context.py"),
+    "pazras": ("exec", "structure/pazras.sh"),
+    "pazras-utils": ("exec", "host/pazras-utils.sh"),
+}
+
+# subject -> verb -> (back-end, argv prefix, one line of help). Subject ids
+# are the engine's folder names, which are the register's ids after R3a.
+ROUTES = {
+    "knowledge": {
+        "index": ("familiar-memory", ["knowledge", "index"], "rebuild knowledge/INDEX.md and the routers [--check]"),
+        "glossary": ("familiar-memory", ["knowledge", "glossary"], "O3c: rebuild the generated subject glossary [--check]"),
+        "journal": ("familiar-memory", ["journal"], "index [--force] | search '<query>' [--top=N]: the journal's embedding index"),
+        "ontology": ("familiar-memory", ["ontology"], "<cmd>: the class registers, read and checked"),
+    },
+    "consolidation": {
+        "run": ("familiar-memory", ["run"], "the nightly pass [--dry-run] [--stages=LIST]"),
+        "status": ("familiar-memory", ["status"], "staging and log counts"),
+        "report": ("familiar-memory", ["report"], "the latest report [--full] [--patch]"),
+        "brief": ("familiar-memory", ["brief"], "what changed, what's open, what failed"),
+        "posture": ("familiar-memory", ["posture"], "the memory-poisoning checks"),
+        "vault": ("familiar-memory", ["vault"], "the vault contract, derived [--check | --write]"),
+        "queue": ("familiar-memory", ["queue"], "the open decisions, numbered [--all] [--json]"),
+        "decide": ("familiar-memory", ["decide"], "resolve item N, or walk the queue"),
+        "decision": ("familiar-memory", ["decision"], "record a user decision --kind=K --text=T"),
+        "dismiss": ("familiar-memory", ["dismiss"], "stop a decided proposal recurring --target=P --kind=K"),
+        "conflicts": ("familiar-memory", ["conflicts"], "stage 5d alone [--check] [--apply]"),
+    },
+    "skills": {
+        "index": ("familiar-memory", ["skills", "index"], "rebuild the skill routers [--check]"),
+    },
+    "context": {
+        "capture": ("familiar-memory", ["capture"], "hook payload on stdin --harness=H --event=E"),
+        "opencode-session": ("familiar-memory", ["opencode-session"], "stage one opencode transcript --session=ID"),
+        "hermes-session": ("familiar-memory", ["hermes-session"], "hook-facing: session_id on stdin"),
+        "hermes-session-worker": ("familiar-memory", ["hermes-session-worker"], "the detached worker --session=ID"),
+        "pointers": ("familiar-memory", ["pointers"], "which paths sessions touched"),
+        "harness": ("familiar-context", ["harness"], "drive each harness once against a stub"),
+        "tree": ("familiar-context", ["tree"], "what navigating the tree costs, by route [--check]"),
+        "route": ("familiar-context", ["route"], "is the tree delivered, or only reachable"),
+        "links": ("familiar-context", ["links"], "do the tree's pointers resolve [--check] [--fix]"),
+        "l1": ("familiar-context", ["l1"], "compile the always-on payload [--check]"),
+        "all": ("familiar-context", ["all"], "the context audits, one report"),
+    },
+    "harness": {
+        "jev": ("familiar-memory", ["jev"], "check | probe: the labelling model's key and pin"),
+    },
+    "checks": {
+        "healthcheck": ("pazras", ["healthcheck"], "stow, drift, unit results, mounts [--fix]"),
+        "selftest": ("familiar-memory", ["selftest"], "the pass's invariants, parity, hook cost"),
+    },
+    "structure": {
+        "init": ("pazras", ["init"], "create the PARA tree under $PARA_ROOT, from the profile"),
+        "skeleton": ("pazras", ["skeleton"], "seed the vault's missing always-loaded files [--check]"),
+        "link": ("pazras", ["link"], "install `familiar` into ~/.local/bin (one symlink)"),
+        "generate": ("pazras", ["structure"], "regenerate STRUCTURE.md [--check]"),
+        "maps": ("pazras", ["maps"], "regenerate the architecture figures [--check]"),
+        "validate": ("pazras", ["validate"], "the profile and master config parse, no duplicate Area codes"),
+        "status": ("pazras", ["status"], "system status report"),
+        "config": ("pazras", ["config"], "where the master config is"),
+        "project": ("pazras", ["project"], "create | complete | list"),
+        "zettel": ("pazras", ["zettel"], "daily | new"),
+    },
+    "schedule": {
+        "timers": ("pazras", ["timers"], "stage the units from PAZRAS_TIMERS [--check | --apply-dotfiles]"),
+    },
+    "backup": {
+        "run": ("pazras", ["backup"], "today's scheduled backups [FREQUENCY]"),
+        "verify": ("pazras", ["backup", "verify"], "restic integrity check [PERCENT]"),
+        "prune": ("pazras", ["backup", "prune"], "retention and space reclamation"),
+        "sync": ("pazras", ["backup", "sync"], "push repo deltas offsite"),
+        "reconcile": ("pazras", ["backup", "reconcile"], "remote packs the local repo dropped [--execute]"),
+    },
+    "host": {
+        "goto": ("pazras-utils", ["goto"], "print a PARA directory: inbox|projects|areas|zettel|resources|system|<Area>"),
+        "capture": ("pazras-utils", ["capture"], "append a line to 00_INBOX/quick-capture.md"),
+        "daily": ("pazras-utils", ["daily"], "create or show today's daily note"),
+    },
+}
+
+
+def usage(out=sys.stdout) -> int:
+    out.write("usage: familiar <subject> <verb> [args]\n")
+    for subject, verbs in ROUTES.items():
+        out.write(f"\n{subject}\n")
+        for verb, (_, _, text) in verbs.items():
+            out.write(f"  {verb:<22}{text}\n")
+    return 0
+
+
+def resolve(argv):
+    """argv -> (back-end, argv for it), or raise SystemExit with a message."""
+    if not argv or argv[0] in ("-h", "--help", "help"):
+        raise SystemExit(usage())
+    subject = argv[0]
+    if subject not in ROUTES:
+        sys.stderr.write(f"familiar: unknown subject {subject!r}. Subjects: "
+                         f"{', '.join(ROUTES)}\n")
+        raise SystemExit(1)
+    verbs = ROUTES[subject]
+    if len(argv) < 2 or argv[1] in ("-h", "--help", "help"):
+        sys.stdout.write(f"familiar {subject} <verb>\n")
+        for verb, (_, _, text) in verbs.items():
+            sys.stdout.write(f"  {verb:<22}{text}\n")
+        raise SystemExit(0 if len(argv) >= 2 else 1)
+    verb = argv[1]
+    if verb not in verbs:
+        sys.stderr.write(f"familiar: {subject} has no verb {verb!r}. Verbs: "
+                         f"{', '.join(verbs)}\n")
+        raise SystemExit(1)
+    backend, prefix, _ = verbs[verb]
+    return backend, prefix + list(argv[2:])
+
+
+def main(argv) -> int:
+    backend, args = resolve(argv)
+    kind, rel = BACKENDS[backend]
+    path = os.path.join(HERE, rel)
+    if kind == "exec":
+        os.execv(path, [path] + args)
+    import runpy
+    sys.argv = [path] + args
+    runpy.run_path(path, run_name="__main__")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

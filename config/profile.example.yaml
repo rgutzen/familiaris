@@ -1,0 +1,106 @@
+# profile.example.yaml -- the facts that make an install yours, in one file.
+#
+# Copy it to `config/profile.yaml` and edit. Until you do, the engine runs on
+# this file as it stands. Check it with `python3 engine/lib/profile.py --check`
+# or `familiar structure validate`.
+#
+# Read by `engine/lib/profile.py`: Python directly, bash through
+# `profile.py --sh`. The YAML subset is `engine/lib/_miniyaml.py`'s: block
+# mappings and block sequences, no flow collections (`[a, b]`), no anchors.
+#
+# Two environment variables beat the two roots below, so a scratch run never
+# touches your real tree:
+#   PARA_ROOT=/tmp/pazras-scratch familiar structure init
+#   PAZRAS_INSTALL=/path/to/checkout ...
+
+version: 1
+
+# Where the system is installed: the checkout your harnesses read and your
+# timers run. A git worktree can live anywhere; generated payloads still name
+# this path.
+install: ~/06_SYSTEM
+
+# Where the PARA folders live (00_INBOX, 01_PROJECTS ... 06_SYSTEM).
+para_root: ~
+
+# Your PUBLIC identity: the name you publish under, and your forge handle.
+# Two readers, both about code leaving this machine: the `instance-refs` gate
+# fails when generic engine code names either, and the push guard refuses a push
+# from the private tree to `<handle>/familiaris`, the public repository. The
+# machine login is NOT stored here -- this is the name a reader may see. A value
+# left at the placeholder names nobody, and both readers stay inert on it.
+identity:
+  name: Your Name
+  handle: your-handle
+
+# The Areas of 02_AREAS -- ongoing responsibilities, one folder each. The name
+# is `Letter_Name`; `code` is the letter, unique; `tag` is a one-word label;
+# `description` says what the Area holds. The ontology's `area` question and
+# `familiar structure init` both read this list. Five is a start, not a rule.
+areas:
+  A_Work:
+    code: A
+    tag: work
+    description: Paid work, its projects and its obligations
+  B_Tech:
+    code: B
+    tag: technology
+    description: Technology, programming, and digital tools
+  C_Writing:
+    code: C
+    tag: writing
+    description: Writing, communication, and publishing
+  D_Health:
+    code: D
+    tag: health
+    description: Health, movement, and wellbeing
+  E_Home:
+    code: E
+    tag: home
+    description: Housing, finances, and the household
+
+# Where the backups and the archive tier live. `archive_mount` is a stable
+# mount point for an external disk that holds 05_ARCHIVES' authoritative copy;
+# leave it as is if you have none.
+#
+# `remote` selects the provider adapter for the off-site half: a filename stem
+# in `engine/backup/remotes/`, and the only place this system names a provider.
+# `sync`, `reconcile` and the weekly mirror all load it; the ARCHIVE disk does
+# not, because a mount point is a local path and needs no adapter. `example`
+# ships with the tree, reaches nothing, and every caller skips it — so an
+# install with no provider still runs, and says so. Write your own adapter by
+# copying `engine/backup/remotes/example.sh` and setting its name here.
+storage:
+  restic_root: ~/.local/share/restic
+  restic_password_file: ~/.config/restic/password
+  archive_mount: ~/05_ARCHIVES-EXTERNAL
+  remote: example
+
+# Which model does what. Both keys are `provider/model` ids, and this is the
+# whole seam: nothing else in the tree names a model, so swapping one is an edit
+# here and no code change.
+#
+# `consolidation` distils sessions in the nightly pass through
+# `pi --print --model <id>`. It ships LOCAL, which is the safe default rather
+# than the fast one: `ollama/qwen3:4b` runs on this machine, needs no credential
+# and sends nothing anywhere, so the pass works on the day you clone. Pull it
+# first (`ollama pull qwen3:4b`), then swap for anything pi can reach:
+#
+#   consolidation: ollama/qwen3:30b-a3b-thinking-2507-q4_K_M   # bigger, still local
+#   consolidation: deepseek/deepseek-flash                      # faster, and a
+#                                                               # copy of every
+#                                                               # session leaves
+#                                                               # the machine
+#
+# THE DIFFERENCE IS NOT SPEED. A provider's model reads the same transcripts and
+# is usually far better at distilling them; what changes is that the reading is
+# disclosure to a third party, and that it needs a credential in pi
+# (`pi auth check --provider deepseek`). Use `familiar consolidation run
+# --dry-run` to see which model a night would use without making a call.
+#
+# `embed` is the local Ollama model that indexes the journal; it is local by
+# construction -- the index is derived from the journal and has no reason to
+# leave. `familiar knowledge journal index` after `ollama pull`:
+models:
+  consolidation: ollama/qwen3:4b
+  embed: nomic-embed-text

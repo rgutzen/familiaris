@@ -1,0 +1,34 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# DIRECTIVE. Agents propose, never edit.
+#
+# Version-control boundaries. Split from `read-write.yaml` on 2026-09-04: push
+# is neither a read nor a write, and a file named for one pair of operations
+# that quietly holds a third teaches an agent that the names are approximate.
+#
+# Every `*.yaml` in this directory is compiled together — see
+# `engine/boundaries/compile.py`. Adding a domain means adding a file.
+#
+# Rationale and honest limits: [[boundaries]]
+# ─────────────────────────────────────────────────────────────────────────────
+version: 1
+
+local_providers:
+  - ollama
+  - local-ollama
+
+defaults:
+  models: all
+  decision: deny
+
+rules:
+
+  # ── Publication is the user's decision ─────────────────────────────────────
+  - path: ~
+    mode: no-push
+    models: all
+    decision: ask          # prompt, do not refuse — the rule below says "ask"
+    reason: >
+      Pushing and rewriting history are the user's call, everywhere, not just
+      in public repos. Committing, branching and worktrees are not.
+    instead: commit and branch freely, then let the user approve the push
+    see: config/practice/user/user-identity.md

@@ -1,0 +1,295 @@
+# violations.yaml -- every present breach with a recommendation and a state: prescriptive, never auto-repaired.
+#
+# DIRECTIVE (config/knowledge/): agents READ this file and never edit
+# it -- a vocabulary change is proposed and ratified by the user. Loaded
+# by engine/knowledge/ontology.py through
+# engine/lib/_miniyaml.py, and confined to the subset that reader
+# supports (nested mappings, block sequences, folded `>` scalars, `#`
+# comments) -- the parser is not extended for this file.
+#
+# Every entry carries criteria, a layer (category|concept|association),
+# a column (assertion|coincidence) and a `reviewed:` date.
+
+violations:
+  - id: 1
+    criteria: >
+      A declared facet carrying a value the register does not have, on a leaf
+      that is live and routed.
+    what: >
+      `system/practice/user-vs-conventions.md` carried `trust: outdated`,
+      outside the declared four values. DONE 2026-10-13: set to `trial` -- not
+      a fifth value and not `deprecated`, because the leaf is live and routed
+      and its staleness was already recorded in `last_verified: 2026-09-03`.
+    recommendation: >
+      Closed. `trial` is one of the four, so the facet is in domain; the leaf's
+      own staleness signal is `last_verified`, which is a claim a reader can
+      check.
+    state: ratified
+    surfaced_by: check
+    layer: category
+    column: assertion
+    paths:
+      - memory/knowledge/system/practice/user-vs-conventions.md
+    facet: trust
+    value: outdated
+    reviewed: 2026-10-13
+  - id: 2
+    criteria: >
+      A finding the resolver produced because its node set was smaller than
+      the tree's reference set -- closed by declaration, not by editing the
+      tree.
+    what: 3x `related: voice` reported dangling.
+    recommendation: >
+      NOT a violation -- closed by O1c. `voice` is
+      `agents/conventions/voice.md`; the resolver's node set was smaller than
+      the tree's reference set.
+    state: ratified
+    surfaced_by: none
+    layer: association
+    column: assertion
+    reviewed: 2026-09-30
+  - id: 3
+    criteria: >
+      A true claim whose edge RANGE was too narrow: the target is a real file
+      outside the memory tree.
+    what: 2x `dangling-supersession` to files outside the tree.
+    recommendation: >
+      NOT a violation -- closed by O1d. Both targets are real files outside
+      `agents/`; an edge to `external` resolves to OUTSIDE, not to nothing.
+    state: ratified
+    surfaced_by: none
+    layer: association
+    column: assertion
+    reviewed: 2026-09-30
+  - id: 4
+    criteria: >
+      A stated one-way rule whose reverse direction is violated by prose --
+      the ontology is what turns it into a decidable one.
+    what: >
+      3x `knowledge→skill link`: leaf bodies citing skills (`claude-code.md`
+      -> `diagnose-crash`, `omarchy`; `skill-routing.md` -> `grilling`).
+    recommendation: >
+      REAL. `cites` is skill -> leaf only (meta/knowledge-vs-skills.md), so
+      the citation moves into the skill and the leaf keeps the fact.
+    state: open
+    surfaced_by: none
+    layer: association
+    column: assertion
+    reviewed: 2026-09-30
+  - id: 5
+    criteria: >
+      A branch the pass wanted and the class list did not have. Resolved by
+      declaring the class, not by moving the file.
+    what: >
+      The pass proposes `knowledge/projects/mantis-tradebot.md`, a branch with
+      no class.
+    recommendation: >
+      Resolved by O1f: `projects/` is a declared branch, with the promotion
+      rule that keeps it from becoming a plan store.
+    state: ratified
+    surfaced_by: none
+    layer: category
+    column: assertion
+    reviewed: 2026-09-30
+  - id: 6
+    criteria: >
+      A declared path that named a file which moved: the drift class the
+      ontology's subject vocabulary does not fix by itself.
+    what: >
+      `scripts/structure/pazras-master-config.sh:171,177,178` (`scripts/core/`
+      until O2f split it) name
+      `knowledge/operations/{consolidation-cycle,journal-index,healthcheck}.md`.
+      THREE, not the two first measured: the `healthcheck` row carries the same
+      stale `doc=` and was missed. Two more of the same class sat outside the
+      `doc=` field -- `healthcheck.sh:135` (a comment) and
+      `agents/skills/bundles/research-code.yaml:11` (an instruction injected
+      into a model, naming the `knowledge/conventions/` prefix that has been a
+      tombstone since 2026-08-31).
+    recommendation: >
+      Fixed by O2d, with the gate that makes the class visible. All five are
+      repathed and the three `Documentation=` lines regenerated. The reason
+      nothing saw them is structural and is now closed at its cause:
+      `declared_paths.py` read Python only and `links --check` walks `agents/`
+      only, so a `scripts/` file naming a moved leaf fell between the two
+      gates. `PAZRAS_TIMERS`'s `exec=` and `doc=` fields are now a declared
+      path list (`declared_paths.SHELL_FIELDS`), and the two references outside
+      that table were fixed by hand -- the shell side is named rather than
+      discovered, and that limitation is stated in the module.
+    state: ratified
+    surfaced_by: check
+    layer: concept
+    column: assertion
+    reviewed: 2026-09-30
+  - id: 7
+    criteria: >
+      The measured cost of path coupling: prose that names a physical layout
+      is prose that breaks when the layout moves.
+    what: 971 path references to leaves across 164 files; 0 declared.
+    recommendation: Fix by O2a: prose references become `[[stems]]`.
+    state: open
+    surfaced_by: none
+    layer: concept
+    column: assertion
+    reviewed: 2026-09-30
+  - id: 8
+    criteria: >
+      A filename encoding a facet, and using `_` for a role rather than a
+      field.
+    what: >
+      `reference_agent-prompt-dream-memory-consolidation.md` broke naming rules
+      1 and 5: `_` used for a role rather than a field, and a `reference_`
+      prefix duplicating what `origin: imported` already says. DONE 2026-10-13:
+      renamed to `agent-prompt-dream-memory-consolidation.md`, with the five
+      citations found by `git grep` and the generated index rebuilt.
+    recommendation: >
+      Closed by the rename. The stem still says what the file is
+      (`agent-prompt-dream-memory-consolidation`), and provenance is the
+      facet's job.
+    state: ratified
+    surfaced_by: naming
+    layer: concept
+    column: assertion
+    paths:
+      - memory/knowledge/system/consolidation/agent-prompt-dream-memory-consolidation.md
+    rules:
+      - 1
+      - 5
+    reviewed: 2026-10-13
+  - id: 9
+    criteria: >
+      Imported reference material whose filenames carry the source's own Title
+      Case and spaces -- the case layer is the one that tells a structural
+      file from a content member. Rule 2 exempts the `_refs/` DIRECTORY name
+      from rule 7, but says the files inside still obey rules 1 and 3.
+    what: >
+      13 files under `dev/*/_refs/` carried spaces and Title Case until
+      2026-10-09, when they were renamed to lowercase-hyphenated. The 8 under
+      ontology track's `_refs/` were deleted with that track on 2026-10-13, so
+      `paths:` lists the 5 that remain, under `dev/jev/_refs/`.
+    recommendation: >
+      DONE 2026-10-09. Renamed to lowercase-hyphenated (spaces and ` - ` to
+      `-`, parentheses and apostrophes dropped); the convention and the full
+      mapping are `system/structure/file-naming.md`. 8 of the 13 were in the
+      ontology track's `_refs/`, deleted with the track at O7 (2026-10-13).
+    state: ratified
+    surfaced_by: naming
+    layer: concept
+    column: assertion
+    paths:
+      - dev/jev/_refs/embrace-complexity-part-1.md
+      - dev/jev/_refs/embrace-complexity-part-2.md
+      - dev/jev/_refs/tony-seale-data-connectivity.md
+      - dev/jev/_refs/tony-seale-small-world-graphs.md
+      - dev/jev/_refs/tony-seale-what-is-jev.md
+    rules:
+      - 3
+    reviewed: 2026-09-30
+  - id: 10
+    criteria: >
+      A router past the tree's own concentration rule -- the signal that a
+      category has stopped naming one place.
+    what: >
+      `system/` held 33 leaves measured against the tree's own ~12 rule
+      (knowledge/CONTEXT.md §Splitting), which was the wrong unit: the rule asks
+      how many rows ONE ROUTER must triage, and `system/CONTEXT.md` lists
+      thirteen subjects while the subject routers below it list the leaves.
+      APPLIED 2026-10-13 -- `branch_findings` groups by the router's own
+      directory, so `system/` is measured per subject and the largest holds 8.
+      The same reading measures `areas/<A>/`, which the branch-level count left
+      unwatched while it warned about `system/`.
+    recommendation: >
+      Closed. A directory whose router passes ~12 rows still warns under this
+      entry, which is why it is `ratified` rather than removed: the rule stands
+      and the measurement is what was wrong.
+    state: ratified
+    surfaced_by: check
+    layer: category
+    column: assertion
+    reviewed: 2026-10-13
+  - id: 11
+    criteria: >
+      A provenance edge naming a journal entry that does not exist, because
+      the entry was written the next day. ADDED BY O1's IMPLEMENTATION, NOT
+      PRESENT IN SPECS.md O1k's ten: the structural check found it, and an
+      undeclared breach is an error, so it is declared here rather than left
+      failing. This is the same class as item 7 -- a path reference that went
+      stale -- and it is the one the measured list missed.
+    what: >
+      `system/consolidation/memory-poisoning-posture.md` carried `promoted_from:
+      journal/2026/09/2026-09-11_l5-l9-brief-and-posture.md`; the entry is dated
+      2026-09-12. DONE 2026-10-13: the date corrected to match the entry that
+      exists. The claim (this leaf was distilled from that session) was true;
+      only the path was wrong, so the edge was repaired, never dropped.
+    recommendation: >
+      Closed. A `promoted_from:` that resolves to the wrong day is the one
+      shape of this breach that repair fits, because the provenance is known
+      independently of the path.
+    state: ratified
+    surfaced_by: check
+    layer: association
+    column: assertion
+    paths:
+      - memory/knowledge/system/consolidation/memory-poisoning-posture.md
+    edge: promoted_from
+    reviewed: 2026-10-13
+  - id: 12
+    criteria: >
+      Generic engine code naming THIS INSTALLATION -- a machine, a disk, an
+      account, or a provider we happen to use. `engine/` is meant to publish
+      clean (R1k), so what does not yet is measured and declared here: a new
+      occurrence fails the `instance-refs` gate, a declared one only warns.
+    what: >
+      Measured 2026-10-15 at P5: 37 occurrence(s) across 9 file(s). The
+      provider selector took the two largest single sources out of `engine/`:
+      `engine/structure/pazras.sh` (11 occurrences: the archive disk in the
+      reconcile and sync loops, the off-site provider in log strings) no longer
+      names either, and `engine/backup/proton-mirror.sh`, a provider adapter in
+      disguise, is replaced by `engine/backup/mirror.sh` (a driver that names
+      no provider) plus adapters outside the engine: the template in
+      `engine/backup/remotes/example.sh`, which travels, and this install's own
+      `config/backup/remotes/proton-drive.sh`, which the classification omits.
+      Both old paths are DELETED from `paths:` here -- a declaration is
+      two-directional, and a row left standing fails the gate it exists to
+      quiet. What is left is nine files of test fixtures, this gate itself, and
+      the two leaves the engine's own register already reasons about.
+      Measured 2026-10-14: 58 occurrence(s) across 11 file(s).
+      The pattern is no longer eight words spelled in the gate (P2): the
+      identity words are read from `config/profile.yaml` and the home path from
+      `pathlib.Path.home()`, so what `identity.name` spells is what is searched
+      for. `engine/context/tests/test_l1.py` is in this list because of that
+      change and was always an occurrence: the name stands there in the case a
+      person writes it, and the old, lowercase pattern could not see it.
+      The publication survey's 2026-09-12 round measured 81 in 32, before R2c
+      split the packages and R2e moved the generated units to
+      `config/schedule/` -- the units alone carried one apiece, from a
+      double-quoted banner that expanded `$STAGING` (the survey's
+      one-character-class bug, fixed in the same commit). The 2026-10-07 round
+      measured 45 in the same 10 files; the counts here are the gate's own
+      output, which is the measurement this register is read against.
+    recommendation: >
+      Extract or parameterise, in Track P's rounds. Three kinds were here and
+      they are not the same, and P5 retired one of them: `proton-mirror.sh` was
+      a provider adapter in disguise, and the provider is no longer named in
+      the engine at all (`engine/backup/remotes/`). Second, the folder-tree
+      CLI's hits were a script that moved from `$HOME/bin` to a package path;
+      that script names neither now, because the path resolution moved into the
+      adapter that has a reason to know it. What remains is mostly TEST
+      FIXTURES that replay a
+      real payload on purpose -- do not "fix" a fixture, it is the
+      measurement's subject. `test_l1.py` is of that kind: the payload it
+      replays is the user's own `user-identity.md`.
+    state: open
+    surfaced_by: instance-refs
+    layer: category
+    column: assertion
+    paths:
+      - engine/cli/selftest.py
+      - engine/consolidation/tests/test_dry_run_invariant.py
+      - engine/consolidation/tests/test_replay.py
+      - engine/context/tests/test_hermes_extract.py
+      - engine/context/tests/test_l1.py
+      - engine/context/tests/test_opencode_extract.py
+      - engine/context/tests/test_pointers.py
+      - engine/context/tests/test_transcripts.py
+      - engine/knowledge/tests/test_ontology.py
+    reviewed: 2026-10-15

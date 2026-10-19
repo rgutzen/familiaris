@@ -1,0 +1,117 @@
+# naming.yaml -- the nine file-naming rules, declared once and generating one check.
+#
+# DIRECTIVE (config/knowledge/): agents READ this file and never edit
+# it -- a vocabulary change is proposed and ratified by the user. Loaded
+# by engine/knowledge/ontology.py through
+# engine/lib/_miniyaml.py, and confined to the subset that reader
+# supports (nested mappings, block sequences, folded `>` scalars, `#`
+# comments) -- the parser is not extended for this file.
+#
+# Every entry carries criteria, a layer (category|concept|association),
+# a column (assertion|coincidence) and a `reviewed:` date.
+
+naming:
+  - id: 1
+    criteria: >
+      `-` separates words, `_` separates fields. `memory-architecture.md` ·
+      `2026-09-29_slug.md`. At most one field separator per name, and the
+      leading field is an ISO date when the file is an event.
+    checkable: true
+    layer: category
+    column: assertion
+    reviewed: 2026-09-30
+  - id: 2
+    criteria: >
+      `_` as a prefix marks a NON-MEMBER of its folder's class:
+      `_leaf-template.md`, `_subject.md`, and a `_`-prefixed DIRECTORY marks
+      a container of non-members (`_refs/`, `_temp/`), whose own name is
+      therefore outside rule 7 -- while the files inside it are still files in
+      this repo and still obey rules 1 and 3. It is not a word separator and
+      not a role marker.
+    checkable: true
+    layer: category
+    column: assertion
+    reviewed: 2026-09-30
+  - id: 3
+    criteria: >
+      Case carries layer. `UPPERCASE.md` is structural, a hub file for the
+      directory it sits in -- never a content member (`CONTEXT.md` `INDEX.md`
+      `README.md` `SKILL.md` `PLAN.md` `SPECS.md`). `lowercase-hyphenated.md`
+      is a content member. `_lowercase.md` is a template or excluded. A
+      trailing `-YYYYMMDDTHHMMSS` disambiguator written by capture is a
+      timestamp, not a word, and is exempt from the case test. Payoff: `ls`
+      sorts structural files to the top of every listing. WHICH structural
+      file: a directory may carry any subset of `CONTEXT.md` (the router),
+      `INDEX.md` (the one disclosure index, at most one per tree) and
+      `README.md` (the human entry), at most one of each; `README` with no
+      extension is not allowed. The distribution is
+      `system/structure/file-naming.md`; this rule settles case, not which
+      hub file to add.
+    checkable: true
+    layer: category
+    column: assertion
+    reviewed: 2026-10-09
+  - id: 4
+    criteria: >
+      A stem must be self-identifying read ALONE, because it appears in
+      `related:` lists and `INDEX.md` rows with no path. So `memory-ranking`,
+      not `ranking`: a folder prefix may be redundant WITH THE PATH and still
+      required BY THE IDENTIFIER.
+    checkable: false
+    layer: category
+    column: assertion
+    reviewed: 2026-09-30
+  - id: 5
+    criteria: >
+      No filename may encode what a facet carries:
+      `reference_agent-prompt-….md` duplicates `origin: imported`, so the
+      prefix is dropped and the facet does the saying.
+    checkable: true
+    layer: category
+    column: assertion
+    reviewed: 2026-09-30
+  - id: 6
+    criteria: >
+      Dates are ISO-8601 and LEADING when the file is an event:
+      `2026-09-29_slug.md`. Never `DD-MM`, never a month name.
+    checkable: true
+    layer: category
+    column: assertion
+    reviewed: 2026-09-30
+  - id: 7
+    criteria: >
+      Directories are lowercase-hyphenated: plural for a countable collection
+      (`skills`, `boundaries`, `checks`), singular for a mass noun (`memory`,
+      `context`, `backup`). Exception, with its reason: `areas/A_Science/`
+      mirrors `~/02_AREAS/` exactly -- a mirror is never reformatted.
+    checkable: true
+    layer: category
+    column: assertion
+    reviewed: 2026-09-30
+  - id: 8
+    criteria: >
+      `familiar` names the P.A.Z.R.A.S folder hierarchy, not the system. A name
+      carries `familiar` only if it acts on the folder tree (`pazras-system`,
+      `pazras-structure-gen.sh`, the `p0`...`px` aliases). A name for the
+      system as a whole carries `familiar`. An alias is allowed and is not a
+      second name. Ratified 2026-10-13 (from the user's 2026-10-02 ruling).
+      The CLI becomes `familiar`, and the `harness` subject's lore name is
+      `the Guises` -- a harness is the form a familiar takes, so it cannot be
+      a second familiar. Applied 2026-10-13.
+    checkable: false
+    layer: category
+    column: assertion
+    reviewed: 2026-10-13
+  - id: 9
+    criteria: >
+      A file carries its extension, with ONE exception: a name is
+      extensionless only when it is a command a person types (something on
+      PATH, `engine/familiar`) or a name a tool requires (`pre-commit`, a git
+      hook name). The reason is that a command's name is an interface and its
+      language is an implementation detail; nothing justifies the exception
+      for a file that is only ever called by path. Applied 2026-10-13 to the
+      engine's own scripts (rule 8's pass).
+    checkable: false
+    layer: category
+    column: assertion
+    reviewed: 2026-10-13

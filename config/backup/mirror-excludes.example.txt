@@ -1,0 +1,52 @@
+# mirror-excludes.txt — what the BROWSABLE mirror leaves out. An EXAMPLE.
+#
+#   cp config/backup/mirror-excludes.example.txt config/backup/mirror-excludes.txt
+#
+# Read by `engine/backup/mirror.sh`, which resolves `PAZRAS_MIRROR_EXCLUDES`
+# the way the backup list resolves `PAZRAS_BACKUP_EXCLUDES`: the install's own
+# file when it exists, this one when it does not.
+#
+# STRICTER THAN THE BACKUP LIST, on purpose. The mirror is the ACCESS layer —
+# a browsable copy you read from a phone — and recovery is restic's job
+# (`STORAGE-MODEL.md` §4). Two consequences:
+#
+#   * `.git/` is excluded here and NOT from restic. Pack files cannot be
+#     browsed, and the code lives on a forge; a mirror that uploads them costs
+#     hours to publish something nobody can open.
+#   * a directory of 27 GB of research data is browsable in the sense that a
+#     folder listing loads. That is not access, and `01_PROJECTS/_data` is
+#     excluded by the mirror script itself rather than by this file, so it is
+#     not repeated here.
+#
+# Everything below the backup list's secrets block is repeated because the two
+# files are read by different programs with different failure modes, and one
+# list that quietly served both is how a secret ends up in the browsable copy:
+# the mirror never reads `backup-excludes.txt`.
+
+.git/
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+venv/
+.ipynb_checkpoints/
+.snakemake/
+target/
+dist/
+build/
+.cache/
+
+# Secrets. The mirror is the copy most likely to be seen by someone else, and
+# the one place where "encrypted at rest" is not doing the work.
+*.1pux
+.env
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+.netrc
+rclone.conf
+github.token
+
+# The mirror's own staging tree, if it ever lands under the mirrored root.
+.pazras-mirror/

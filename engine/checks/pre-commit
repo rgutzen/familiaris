@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# engine/checks/checks.py is the single registry of drift/regression checks —
+# see its docstring for why. Adding a check means adding one registry entry,
+# not editing this file, pazras-healthcheck.sh and CLAUDE.md by hand.
+set -euo pipefail
+
+# THE TREE BEING COMMITTED, not the path this file resolves to.
+#
+# git shares hooks through $GIT_COMMON_DIR, so a commit made in a LINKED
+# WORKTREE runs this file's main-checkout copy: `readlink -f` then resolves to
+# ~/06_SYSTEM/engine/checks/pre-commit, roots.sh takes its repository from
+# there, and the gate checks a tree that is not the one being committed. The
+# evidence of 2026-10-14 (`dev/publication/2026-10-14_recut.md` §2c): the same
+# commit, at the same minute, reported 6 failing gates when run explicitly from
+# the worktree and `gate 'pre-commit' passed (21 checks)` through the hook —
+# silently green, in the one direction that matters.
+#
+# `GIT_DIR` is cleared for exactly the reason `checks.py` clears it for its
+# children: in a hook it points at the shared git directory, and `rev-parse`
+# would then answer about the main worktree. With it cleared, the answer is the
+# working tree the hook is running in — which is also what a stranger's clone
+# needs, because there the checkout IS the install.
+REPO_TREE="$(env -u GIT_DIR -u GIT_WORK_TREE -u GIT_INDEX_FILE -u GIT_PREFIX \
+    -u GIT_COMMON_DIR git rev-parse --show-toplevel)"
+source "$REPO_TREE/engine/lib/roots.sh"   # not-a-root: the whole point is that the tree is found at runtime
+
+if ! python3 "$PAZRAS_ENGINE/checks/checks.py" --audit; then
+  echo
+  echo "pre-commit: a $PAZRAS_ENGINE_REL/ test file exists that no registry entry runs." >&2
+  echo "            Add it to $PAZRAS_ENGINE_REL/checks/checks.py, or run:" >&2
+  echo "            python3 $PAZRAS_ENGINE_REL/checks/checks.py --audit" >&2
+  exit 1
+fi
+
+if ! python3 "$PAZRAS_ENGINE/checks/checks.py" --run pre-commit; then
+  echo
+  echo "pre-commit: a registered check failed." >&2
+  echo "            Rerun: python3 $PAZRAS_ENGINE_REL/checks/checks.py --run pre-commit" >&2
+  exit 1
+fi

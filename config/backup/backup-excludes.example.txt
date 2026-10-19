@@ -1,0 +1,93 @@
+# backup-excludes.txt — what restic does not back up. An EXAMPLE; copy it.
+#
+#   cp config/backup/backup-excludes.example.txt config/backup/backup-excludes.txt
+#   $EDITOR config/backup/backup-excludes.txt
+#
+# A fresh clone runs on this file directly: `engine/lib/roots.sh` resolves
+# `PAZRAS_BACKUP_EXCLUDES` to the install's own list when it exists and falls
+# back to this one when it does not, and the master config's `RESTIC_EXCLUDES`
+# reads that variable. So `familiar backup run` has a working exclude list on
+# the day you clone, and the copy is where YOUR machine's exceptions go —
+# paths, disks and services that are yours and have no business in a template.
+#
+# WHY AN EXCLUDE LIST IS NOT OPTIONAL. `restic backup --exclude-file` fails
+# outright (rc=1, nothing backed up) on a file it cannot read. There is no
+# built-in default and no "exclude nothing" fallback.
+#
+# Usage, spelled out because the default is long:
+#   restic backup <paths> --exclude-file <install>/config/backup/backup-excludes.txt
+#
+# Patterns are restic's: a bare `name` matches any path component named that,
+# `/leading` is anchored to the backup root, `**` crosses separators. They are
+# matched against paths INSIDE the snapshot, relative to what you passed on the
+# command line — so keep them relative (no leading `/`) and they survive a move
+# to a new machine, which is the whole point of a versioned config.
+
+# ── secrets: must never enter a repository ─────────────────────────────────
+# A restic repo is encrypted, and that is not a reason to put a key in it: the
+# repo travels to disks and providers, gets copied to a new laptop, and outlives
+# the key it holds. A key that was ever inside is a key to rotate.
+*.1pux
+.env
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+.netrc
+rclone.conf
+github.token
+
+# ── a backup destination must not live inside a backup source ──────────────
+# The repo would ingest itself, and every run would store the previous run.
+.local/share/restic/
+# …and a staging tree, if you keep one under $HOME.
+.cache/pazras-mirror/
+
+# ── bulk data that is regenerable, and therefore not recovery ──────────────
+# `01_PROJECTS/_data` is the PARA convention for bulk research data (datasets,
+# downloads, model weights). It is excluded from restic on purpose and mirrored
+# separately instead: versioning 27 GB of immutable input per run is storage
+# spent on nothing, and the manifest is what makes it re-acquirable.
+01_PROJECTS/_data
+
+# ── regenerable: package and build artefacts ───────────────────────────────
+# Rule: reinstall from a list beats restoring binaries onto a different distro.
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.ipynb_checkpoints/
+.snakemake/
+target/
+build/
+dist/
+.cache/
+.DS_Store
+Thumbs.db
+.Trash-*
+lost+found/
+
+# ── AI harness caches ──────────────────────────────────────────────────────
+# Configurations live in their own repo, transcripts are backed up in place,
+# and the entries below are re-downloadable: plugins, language servers, and
+# per-tool caches. Add your own harness's directory here after a first run
+# shows up large in `restic stats --mode raw-data`.
+.claude/plugins/
+.claude/skills_backup/
+.claude/cache/
+.claude/shell-snapshots/
+.hermes/hermes-agent/
+.hermes/bin/
+.hermes/lsp/
+.opencode/bin/
+.opencode/node_modules/
+.cursor/
+
+# ── root-owned and unreadable as your user ─────────────────────────────────
+# Files the backup cannot read produce restic rc=3 on EVERY run: "completed,
+# but some files unreadable". Nothing is lost, and a recurring warning is how
+# a reader learns to ignore backup failures. Exclude them, or fix ownership.
+# Example (uncomment and adapt):
+# 02_AREAS/B_Tech/config_files/wifi_connections/

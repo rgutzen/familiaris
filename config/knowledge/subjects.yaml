@@ -1,0 +1,220 @@
+# subjects.yaml -- the category vocabulary: three branches by lifecycle, the subjects under system/, A-P under areas/.
+#
+# DIRECTIVE (config/knowledge/): agents READ this file and never edit
+# it -- a vocabulary change is proposed and ratified by the user. Loaded
+# by engine/knowledge/ontology.py through
+# engine/lib/_miniyaml.py, and confined to the subset that reader
+# supports (nested mappings, block sequences, folded `>` scalars, `#`
+# comments) -- the parser is not extended for this file.
+#
+# Every entry carries criteria, a layer (category|concept|association),
+# a column (assertion|coincidence) and a `reviewed:` date.
+#
+# `places:` (R1g, SPECS R2b) are the directories a subject OCCUPIES,
+# repo-relative. Every top-level directory of the repository root and of
+# each engine, config and memory root is claimed by exactly one subject, or
+# is listed under `unmapped:` with its reason. `ontology check` fails on a
+# directory that does neither -- so a new folder forces a filing decision.
+
+branches:
+  - id: system
+    criteria: >
+      The Workshop: what we built and maintain. Mirrors the codebase's own
+      directories one scale down.
+    name: the Workshop
+    falsified_when: WE change what we built
+    retirement: maintained while the system exists
+    layer: category
+    column: assertion
+    reviewed: 2026-09-30
+  - id: areas
+    criteria: >
+      The World: subject knowledge, mirroring Areas A-P. This is where
+      knowledge lands and it never retires.
+    name: the World
+    falsified_when: THE FIELD changes
+    retirement: never
+    layer: category
+    column: assertion
+    reviewed: 2026-09-30
+  - id: projects
+    criteria: >
+      The Workings: a leaf here holds claims that OUTLIVE the plan, because
+      the plan stays in the project's own directory (../../CLAUDE.md rule 5
+      forbids a plan store).
+    name: the Workings
+    falsified_when: A PROJECT changes
+    retirement: >
+      at project end each leaf promotes to `areas/` or is deleted with the
+      project
+    layer: category
+    column: assertion
+    reviewed: 2026-09-30
+
+subjects:
+  - id: knowledge
+    criteria: >
+      Falsified when the WRITTEN RECORD changes: filing, indexing, browsing.
+    name: the Grimoire
+    places:
+      - memory/knowledge
+      - engine/knowledge
+      - config/knowledge
+    leaves: 5
+    layer: category
+    column: assertion
+    reviewed: 2026-10-02
+  - id: consolidation
+    criteria: >
+      Falsified when the ACT OF WRITING changes: consolidation, ranking,
+      promotion.
+    name: the Vigil
+    places:
+      - engine/consolidation
+    leaves: 6
+    layer: category
+    column: assertion
+    reviewed: 2026-10-02
+  - id: harness
+    criteria: Falsified when a harness or a model changes.
+    name: the Guises
+    places:
+      - engine/harness
+    leaves: 7
+    layer: category
+    column: assertion
+    reviewed: 2026-10-02
+  - id: orchestration
+    criteria: >
+      Falsified when WHO DOES THE WORK changes: which familiar, model, tools
+      and permissions a task is given, and how work is split, dispatched and
+      rejoined. Not when a harness or a model itself changes, which is
+      `harness`; not when what a procedure says changes, which is `skills`.
+      Ratified 2026-10-12 (dev/orchestration/PLAN.md decision 12).
+    name: the Loom
+    places:
+      - config/orchestration
+    leaves: 0
+    layer: category
+    column: assertion
+    reviewed: 2026-10-12
+  - id: context
+    criteria: Falsified when what a session carries IN AND OUT changes.
+    name: the Clew
+    places:
+      - engine/context
+    leaves: 2
+    layer: category
+    column: assertion
+    reviewed: 2026-10-02
+  - id: skills
+    criteria: Falsified when a skill or its routing changes.
+    name: the Apothecary
+    places:
+      - memory/skills
+    leaves: 2
+    layer: category
+    column: assertion
+    reviewed: 2026-10-02
+  - id: structure
+    criteria: Falsified when the PARA layout, its config or its CLI changes.
+    name: the Bones
+    places:
+      - engine/structure
+      - config/structure
+    leaves: 3
+    layer: category
+    column: assertion
+    reviewed: 2026-10-02
+  - id: boundaries
+    criteria: Falsified when a rule, the guard or the compile changes.
+    name: the Wards
+    places:
+      - engine/boundaries
+      - config/boundaries
+    leaves: 1
+    layer: category
+    column: assertion
+    reviewed: 2026-10-02
+  - id: checks
+    criteria: >
+      Falsified when a gate, a test or the healthcheck changes. The WEAKEST
+      subject by the category test -- a gate is arguably a concept spanning
+      the whole repo -- and it is flagged for the first review rather than
+      quietly kept.
+    name: the Threshold
+    places:
+      - engine/checks
+    leaves: 1
+    layer: category
+    column: assertion
+    reviewed: 2026-10-02
+  - id: schedule
+    criteria: Falsified when a timer or a unit changes.
+    name: the Almanac
+    places:
+      - engine/schedule
+    leaves: 1
+    layer: category
+    column: assertion
+    reviewed: 2026-10-02
+  - id: backup
+    criteria: Falsified when backups, disks or recovery change.
+    name: the Larder
+    places:
+      - engine/backup
+      - config/backup
+    leaves: 1
+    layer: category
+    column: assertion
+    reviewed: 2026-10-02
+  - id: host
+    criteria: >
+      Falsified when THIS MACHINE or its OS changes -- and not when a tool we
+      install on it changes, which is `harness`. Added during planning because
+      `omarchy-host-traps` had no home at all until it existed.
+    name: the Hearth
+    places:
+      - engine/host
+    leaves: 1
+    layer: category
+    column: assertion
+    reviewed: 2026-10-02
+  - id: practice
+    criteria: Falsified when `config/practice/conventions/` or `config/practice/user/` changes.
+    name: the Craft
+    places:
+      - config/practice
+    leaves: 1
+    layer: category
+    column: assertion
+    reviewed: 2026-10-02
+  - id: publication
+    criteria: >
+      Falsified when what we show OUTWARD changes. Its first leaf is the
+      generated subject glossary (O3c), which is derived from this register and
+      therefore cannot drift from it.
+    name: the Sign
+    places:
+      - docs
+      - engine/publication
+    leaves: 1
+    layer: category
+    column: assertion
+    reviewed: 2026-10-09
+
+# Directories no subject occupies, each with the reason forcing one would be
+# wrong. Keyed by `id:`, which IS the place.
+unmapped:
+  - id: engine/lib
+    reason: >
+      Shared and subject-neutral by design: the roots, the YAML subset
+      reader, the generated-block splice. The bottom of the import order
+      (R1j), so it can belong to no subject above it.
+    reviewed: 2026-10-02
+  - id: engine/cli
+    reason: >
+      The dispatcher over every subject: the entry points and the commands
+      they route to. The top of the import order (R1j), so like lib it is
+      no single subject's.
+    reviewed: 2026-10-07

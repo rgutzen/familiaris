@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# TWO RULES, ONE HOOK, ONE DRAIN OF STDIN.
+#
+#   push_guard.py -- the private tree never pushes to the public repository.
+#                    The rule needs only the destination URL; the refs are of
+#                    no interest to it, but drain them anyway so the writer at
+#                    the other end of the pipe is not left with a broken pipe.
+#   leak_gate.py  -- what leaves for a PUBLIC destination is scanned for
+#                    personal data. This one needs the refs: `remote..local` is
+#                    exactly the delta git is about to send, so the scan reads
+#                    the blobs being published rather than the working tree.
+#
+# WHY IT READS THE TREE IT RUNS IN. git shares hooks through $GIT_COMMON_DIR, so
+# a push from a LINKED WORKTREE runs the main checkout's copy of this file --
+# which is a different branch, and may be an older revision of this script. The
+# tree being pushed is therefore resolved at run time, and the rules are the
+# copies in THAT tree. `GIT_DIR` is cleared for the same reason `checks.py`
+# clears it: with the hook's GIT_DIR, `rev-parse` answers about the main worktree.
+set -euo pipefail
+
+REPO_TREE="$(env -u GIT_DIR -u GIT_WORK_TREE -u GIT_INDEX_FILE -u GIT_PREFIX \
+    -u GIT_COMMON_DIR git rev-parse --show-toplevel)"
+source "$REPO_TREE/engine/lib/roots.sh"   # not-a-root: the whole point is that the tree is found at runtime
+
+# One read, two readers. A push is the whole hazard for the guard, and for the
+# gate it is the set of refs; neither hook may read stdin twice.
+refs="$(cat)"
+
+python3 "$PAZRAS_ENGINE/checks/push_guard.py" --tree "$REPO_TREE" --url "${2:-}"
+
+exec python3 "$PAZRAS_ENGINE/checks/leak_gate.py" \
+    --tree "$REPO_TREE" --url "${2:-}" --quiet <<<"$refs"

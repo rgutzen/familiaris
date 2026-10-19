@@ -1,0 +1,256 @@
+# facets.yaml -- what makes it FALSE: the frontmatter keys whose values are claims.
+#
+# DIRECTIVE (config/knowledge/): agents READ this file and never edit
+# it -- a vocabulary change is proposed and ratified by the user. Loaded
+# by engine/knowledge/ontology.py through
+# engine/lib/_miniyaml.py, and confined to the subset that reader
+# supports (nested mappings, block sequences, folded `>` scalars, `#`
+# comments) -- the parser is not extended for this file.
+#
+# Every entry carries criteria, a layer (category|concept|association),
+# a column (assertion|coincidence) and a `reviewed:` date.
+
+facets:
+  - id: subject
+    criteria: >
+      What change reaches this: where the thing is filed. The one exclusive,
+      rule-based cut -- it buys INFERENCE, predicting `stability`, `control`
+      and who can fix a finding. It is a CATEGORY: it names a place in the
+      system you could point at. `retrieval` spans four modules and is
+      therefore a concept, and lives in `tags:`.
+    layer: category
+    column: assertion
+    where: path
+    on:
+      - leaf
+      - skill
+      - episode
+      - report
+    domain:
+      - knowledge
+      - consolidation
+      - harness
+      - context
+      - skills
+      - structure
+      - boundaries
+      - checks
+      - schedule
+      - backup
+      - host
+      - practice
+      - publication
+      - orchestration
+    derived_for:
+      - leaf
+      - skill
+    declared_for:
+      - episode
+      - report
+    reviewed: 2026-09-30
+  - id: trust
+    criteria: >
+      Whether the claim is read as established or provisional. The one facet
+      whose ascent is human-gated: every other trust transition the pass
+      performs is a demotion, and demotion is safe because its worst case is a
+      true claim read with too much caution (frontmatter.PROMOTED_TRUST).
+    layer: category
+    column: assertion
+    where: frontmatter
+    on:
+      - leaf
+      - skill
+    domain:
+      - quarantine
+      - trial
+      - trusted
+      - deprecated
+    declared_for:
+      - leaf
+      - skill
+    reviewed: 2026-09-30
+  - id: stability
+    criteria: >
+      How fast the claim decays: it sets the freshness half-life H in F =
+      2^(-dv/H) -- permanent never, stable 365 d, evolving 90 d, volatile 30
+      d. Author-declared; the pass may only PROPOSE a migration.
+    layer: category
+    column: assertion
+    where: frontmatter
+    on:
+      - leaf
+    domain:
+      - permanent
+      - stable
+      - evolving
+      - volatile
+    declared_for:
+      - leaf
+    reviewed: 2026-09-30
+  - id: origin
+    criteria: >
+      Where the claim came from -- authored here, imported from elsewhere,
+      learned from a session, derived from external material. A claim's
+      provenance is what decides how much of a wrong answer it can excuse.
+    layer: category
+    column: assertion
+    where: frontmatter
+    on:
+      - leaf
+      - skill
+    domain:
+      - authored
+      - imported
+      - learned
+      - derived
+    declared_for:
+      - leaf
+      - skill
+    reviewed: 2026-09-30
+  - id: authority
+    criteria: >
+      Who stands behind the claim: `agent` or `human`. A human leaf is never
+      auto-pruned, so this facet is a write-authority statement inside the
+      scored tree.
+    layer: category
+    column: assertion
+    where: frontmatter
+    on:
+      - leaf
+      - skill
+    domain:
+      - agent
+      - human
+    declared_for:
+      - leaf
+      - skill
+    reviewed: 2026-09-30
+  - id: control
+    criteria: >
+      Whether the artifact a leaf describes is OURS to change -- `ours`,
+      `upstream` or `shared`. New in O1e and the one signal the retired
+      `tools/` branch really held: it predicts a default `stability` and tells
+      a reader whether a finding is fixable here at all. Default `ours`; ~7
+      leaves will need `upstream`.
+    layer: category
+    column: assertion
+    where: frontmatter
+    on:
+      - leaf
+    domain:
+      - ours
+      - upstream
+      - shared
+    declared_for:
+      - leaf
+    reviewed: 2026-09-30
+  - id: area
+    criteria: >
+      The P.A.Z.R.A.S Area code (A-P) the material belongs to, mirroring
+      ~/02_AREAS/. A coincidence, never an edge: measured `area: [B]` on 28 of
+      30 leaves, so an area edge would make the graph nearly complete and
+      carry no information (meta/memory-ranking.md: area and scope feed the
+      retrieval prior, never a filter).
+    layer: category
+    column: coincidence
+    where: frontmatter
+    on:
+      - leaf
+      - skill
+      - episode
+    domain:
+      - A
+      - B
+      - C
+      - D
+      - E
+      - F
+      - G
+      - H
+      - I
+      - J
+      - K
+      - L
+      - M
+      - N
+      - O
+      - P
+    declared_for:
+      - leaf
+      - skill
+      - episode
+    reviewed: 2026-09-30
+  - id: scope
+    criteria: >
+      Path globs where the claim applies; empty means anywhere. A CONCEPT: it
+      takes many values across many categories, so it cannot be exclusive.
+      Feeds the retrieval prior, never a filter.
+    layer: concept
+    column: coincidence
+    where: frontmatter
+    on:
+      - leaf
+      - skill
+    # open, by design -- uncontrolled
+    domain:
+    declared_for:
+      - leaf
+      - skill
+    reviewed: 2026-09-30
+  - id: tags
+    criteria: >
+      Free terms for recognition, deliberately UNCONTROLLED: making them
+      exclusive collapses the concept layer into the category layer, which is
+      the error this whole schema exists to avoid. An empty `tags:` is not a
+      gap to fill by machine.
+    layer: concept
+    column: coincidence
+    where: frontmatter
+    on:
+      - leaf
+      - skill
+      - episode
+      - report
+    # open, by design -- uncontrolled
+    domain:
+    declared_for:
+      - leaf
+      - skill
+      - episode
+      - report
+    reviewed: 2026-09-30
+  - id: touches
+    criteria: >
+      Which subjects a session actually worked on, read from the files its tool
+      calls named and mapped through each subject's `places:`. MULTI-VALUED, so
+      a CONCEPT and never the exclusive `subject:` -- R1h measured a session
+      spanning several subjects, which is why O5a's entry label retired. An
+      ASSERTION and not a coincidence: unlike `area`, the values differ from
+      entry to entry, and a session that named no path in this system has an
+      EMPTY list rather than a near-universal value. Written into the entry at
+      distill time (stage 1, C2), never derived into the search index -- the
+      index is a disposable cache, and a claim about a session belongs in the
+      session's own record, where pruning a transcript cannot lose it.
+    layer: concept
+    column: assertion
+    where: frontmatter
+    on:
+      - episode
+    domain:
+      - knowledge
+      - consolidation
+      - harness
+      - context
+      - skills
+      - structure
+      - boundaries
+      - checks
+      - schedule
+      - backup
+      - host
+      - practice
+      - publication
+      - orchestration
+    declared_for:
+      - episode
+    reviewed: 2026-10-09

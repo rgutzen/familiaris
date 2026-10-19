@@ -1,0 +1,110 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# rules.example.yaml — a TEMPLATE for your own deny-list. Not compiled.
+#
+# Copy it to a name of your choosing in this directory and edit:
+#
+#   cp config/boundaries/rules.example.yaml config/boundaries/read-write.yaml
+#   $EDITOR config/boundaries/read-write.yaml
+#   python3 engine/boundaries/compile.py            # regenerate the targets
+#   python3 engine/boundaries/compile.py --check    # exit 1 if they are stale
+#
+# Every `*.yaml` in this directory is a DOMAIN, and every domain is compiled
+# together — see engine/boundaries/compile.py. `*.example.yaml` is the one
+# exception: this compiler does not read it, because a template that compiles
+# would enforce paths its reader never chose and would collide with the file
+# they copied it to.
+#
+# Where the rules land, and how hard they bite, is `memory/knowledge/system/
+# boundaries/boundaries.md` — one leaf, one home. In one line: deny rules in
+# this directory reach Claude Code's and opencode's tool call, the pi
+# permission policy and the pi guard, and every other harness gets the
+# generated `<domain>.md` as prose. `--explain PATH --model local|remote`
+# answers "what would happen if I read this" without running anything.
+# ─────────────────────────────────────────────────────────────────────────────
+version: 1
+
+# Which providers run inference ON THIS MACHINE. Everything else is `remote`,
+# meaning tool output leaves the machine and may be retained by a third party
+# you have no contract with. This list is what `models: local` and
+# `models: remote` are resolved against; the harness that calls the model
+# reports its provider name here.
+local_providers:
+  - ollama
+  - local-ollama
+
+defaults:
+  # `all` applies the rule to every model; `local` and `remote` split the axis.
+  # The default is what a rule gets when it does not say.
+  models: all
+  # `deny` refuses outright; `ask` raises a confirmation you answer. Default
+  # `ask` for a whole file means every rule in it prompts unless it says
+  # otherwise — see the note on `decision:` below.
+  decision: deny
+
+rules:
+
+  # ── The operation axis ────────────────────────────────────────────────────
+  # `mode:` says WHICH operations the rule covers:
+  #   no-read-write   the folder is yours: no agent reads it, none writes it
+  #   no-read         writes are fine, reads are not (secrets)
+  #   no-write        reads are fine, writes are not (data a run could destroy)
+  #   no-push         neither read nor write: history leaving the machine
+  # A rule covers one of these. A rule whose name is approximate is a rule an
+  # agent will route around by accident.
+
+  - path: ~/03_ZETTEL
+    mode: no-read-write
+    models: all
+    reason: >
+      The thinking you do by hand. A model reading it changes what you write
+      next, which is the one thing this folder is for. Substitute your own
+      folder: the point of the rule is that it is yours, not that it is this
+      one.
+    instead: propose a note into your inbox folder instead
+    see: memory/knowledge/system/knowledge/memory-architecture.md
+
+  # ── The model axis ────────────────────────────────────────────────────────
+  # A local model reading a file is a file read. A remote model reading it
+  # transmits it, and a transmitted secret is a rotated secret. That asymmetry
+  # is why `models:` exists, and it is the only axis this compiler splits.
+  - paths:
+      - ~/.ssh
+      - ~/.gnupg
+    mode: no-read
+    models: remote
+    reason: >
+      Keys. Reading them into a remote context transmits them, and a
+      transmitted key is a compromised key.
+    instead: name the file and let me read it, or re-run the task on a local model
+    see: memory/knowledge/system/boundaries/boundaries.md
+
+  # ── The decision axis ─────────────────────────────────────────────────────
+  # Use `ask` when the rule's own reason is "the user decides". A rule that
+  # says ask but compiles to a refusal can never be satisfied, and an
+  # unsatisfiable rule teaches an agent to read this file as noise.
+  - path: ~/.config/restic
+    mode: no-write
+    models: all
+    decision: ask
+    reason: >
+      The backup repositories and their password file. Since the last
+      successful run these are the only copy of anything: a write here is a
+      write to your only copy.
+    instead: use restic's own commands, which you run
+
+  # ── What to write, and what not to ────────────────────────────────────────
+  # Every rule needs:
+  #   path: or paths:   what it covers
+  #   mode:             which operations
+  #   reason:           what the denial quotes back to the agent. Write it for
+  #                     the agent that just hit it, not for the reader of the
+  #                     file: "sensitive" is not a reason, "this is the only
+  #                     copy" is.
+  # Optional, and both are worth the line:
+  #   instead:          the action that IS allowed. A boundary with an exit is
+  #                     one an agent can respect without stopping the work.
+  #   see:              the leaf that explains it, for the human it surprises.
+  #
+  # A few rules that name a folder nobody has are worse than no rules. Delete
+  # these four, write the two or three that describe YOUR machine, and leave
+  # the rest until something actually needs shutting.

@@ -1,0 +1,25 @@
+Familiaris
+Copyright (C) 2025-2026 Robin Gutzen
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU Affero General Public License, version 3, as published by
+the Free Software Foundation (see LICENSE). It is distributed WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE.
+
+Commercial licence. The same code is also available under a separate
+commercial licence from the copyright holder, for anyone who wants to use it in
+a product or service without the obligations of the AGPL -- for example, to
+offer a modified version to users over a network without publishing its source.
+Use as your own personal system, and any use that complies with the AGPL, needs
+no commercial licence. To ask about one, open an issue at
+https://github.com/rgutzen/familiaris or contact the author through the GitHub
+profile https://github.com/rgutzen.
+
+Name. "Familiaris" and "familiar" as the name of this project belong to the
+author, Robin Gutzen. The licences cover the code, not the name: a modified
+version may be distributed under the AGPL, but not presented as the original
+project.
+
+Contributions are accepted only under the contributor licence agreement in
+CONTRIBUTING.md.

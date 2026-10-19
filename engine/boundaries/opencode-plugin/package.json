@@ -1,0 +1,10 @@
+{
+  "name": "familiar-boundaries",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.js",
+  "module": "index.js",
+  "description": "Enforces the compiled boundaries (config/boundaries/boundaries.json) inside opencode",
+  "keywords": ["opencode", "opencode-plugin"],
+  "private": true
+}

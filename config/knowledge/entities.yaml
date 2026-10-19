@@ -1,0 +1,150 @@
+# entities.yaml -- who may WRITE it: validated (a contract) or declared (resolvable only).
+#
+# `directive: true` marks a kind the USER owns: an agent proposes a change
+# to it and never makes one, and since R3c the boundary compiler derives an
+# `ask` rule from the pattern below (engine/boundaries/_boundaries.py).
+#
+# DIRECTIVE (config/knowledge/): agents READ this file and never edit
+# it -- a vocabulary change is proposed and ratified by the user. Loaded
+# by engine/knowledge/ontology.py through
+# engine/lib/_miniyaml.py, and confined to the subset that reader
+# supports (nested mappings, block sequences, folded `>` scalars, `#`
+# comments) -- the parser is not extended for this file.
+#
+# Every entry carries criteria, a layer (category|concept|association),
+# a column (assertion|coincidence) and a `reviewed:` date.
+
+entities:
+  - id: leaf
+    criteria: >
+      A knowledge leaf: one claim about this machine or this practice,
+      carrying the contract in knowledge/_leaf-template.md. Scored, decayed
+      and pruned by the pass.
+    layer: category
+    column: assertion
+    validated: true
+    directive: false
+    pattern: knowledge/**/*.md
+    root: memory
+    id_rule: >
+      the path stem -- `related:` names bare stems, so the stem IS the
+      identifier (NAMING rule 4)
+    reviewed: 2026-09-30
+  - id: skill
+    criteria: >
+      An invocable procedure under skills/<branch>/<subject>/<name>/SKILL.md.
+      Validated like a leaf, and asymmetric in one field: it may carry
+      `antitriggers:`. Blast radius is a property of the ENTITY TYPE and not
+      of a facet, which is why this lives here and not in `facets.yaml`: a
+      wrong fact is diluted by surrounding context, a wrongly-fired procedure
+      takes over and acts.
+    layer: category
+    column: assertion
+    validated: true
+    directive: false
+    pattern: skills/*/*/*/SKILL.md
+    root: memory
+    id_rule: the `name:` field in its SKILL.md, else its directory name
+    reviewed: 2026-09-30
+  - id: episode
+    criteria: >
+      One journal entry: what happened on a date, append-only and never scored
+      (invariant 3). The verbatim tier is the transcript; an episode is the
+      distilled record of a session.
+    layer: category
+    column: assertion
+    validated: true
+    directive: false
+    pattern: journal/**/*.md
+    root: memory
+    id_rule: `date` + `session`, which is the stem a capture writes
+    reviewed: 2026-09-30
+  - id: report
+    criteria: >
+      A dated nightly consolidation report and its brief. Written by stage 8
+      and read by a human; its ordinals are the interface to `decide`, which
+      is why a report is a class of its own and not an episode.
+    layer: category
+    column: assertion
+    validated: true
+    directive: false
+    pattern: journal/reports/*.md
+    root: memory
+    id_rule: the path stem (`YYYY-MM-DD_consolidation`)
+    reviewed: 2026-09-30
+  - id: convention
+    criteria: >
+      A standing rule of practice -- voice, code style, collaboration.
+      Directive: an agent proposes, never writes. Declared here so that an
+      edge may RESOLVE to it; it carries no frontmatter contract and is never
+      scored.
+    layer: category
+    column: coincidence
+    validated: false
+    directive: true
+    pattern: config/practice/conventions/*.md
+    root: repo
+    id_rule: the path stem (`voice` -> conventions/voice.md)
+    reviewed: 2026-09-30
+  - id: identity
+    criteria: >
+      Who the user is: identity, mission, voice. Directive, and the
+      always-loaded payload draws from it. Declared so a pointer to it
+      resolves rather than reading as a dangling name.
+    layer: category
+    column: coincidence
+    validated: false
+    directive: true
+    pattern: config/practice/user/*.md
+    root: repo
+    id_rule: the path stem (`user-identity`)
+    reviewed: 2026-09-30
+  - id: ward
+    criteria: >
+      A boundary: what agents may not read, write or push. Directive and
+      compiled outward into every harness. Declared so a rule can be pointed
+      at without being a leaf.
+    layer: category
+    column: coincidence
+    validated: false
+    directive: true
+    pattern: config/boundaries/*.md
+    root: repo
+    id_rule: the path stem (`read-write`)
+    reviewed: 2026-09-30
+  - id: track
+    criteria: >
+      A planning track under dev/<name>/, holding its own SPECS.md and
+      PLAN.md. Declared so that a subject or a finding can name the work it
+      belongs to; not scored, not a leaf.
+    layer: category
+    column: coincidence
+    validated: false
+    directive: false
+    pattern: dev/*/
+    root: repo
+    id_rule: the directory name (`ontology`)
+    reviewed: 2026-09-30
+  - id: shadow
+    criteria: >
+      A session transcript staged for distillation: the verbatim tier, outside
+      git, pruned rather than scored. Declared so the route from a leaf back
+      to the session it came from has a target type.
+    layer: category
+    column: coincidence
+    validated: false
+    directive: false
+    id_rule: the staged filename, under PAZRAS_DATA_DIR/transcripts/
+    reviewed: 2026-09-30
+  - id: external
+    criteria: >
+      The terminal: any path outside memory/, or a URL. An edge to `external`
+      resolves to OUTSIDE, not to nothing -- which is why it produces no
+      finding, and why an external target derives no back-pointer (SPECS.md
+      O1d).
+    layer: category
+    column: coincidence
+    validated: false
+    directive: false
+    id_rule: the path or URL, verbatim
+    reviewed: 2026-09-30

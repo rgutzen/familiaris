@@ -1,0 +1,50 @@
+# ─── local machine state, never shared ───────────────────────────────
+.claude/settings.local.json
+.vscode/
+__pycache__/
+staging/
+*.swp
+*~
+.handoff*
+.temp*
+_temp*
+
+# ─── logs live in $XDG_STATE_HOME; only rotated logs are archived ─────
+logs/
+*.log
+
+# ─── secrets (deny-list; this repo is PRIVATE but hygiene is structural)
+*.1pux
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+.env
+rclone.conf
+*.token
+
+# lore's SQLite DB: holds the Supabase auth session/refresh token in
+# team_config alongside every repo's project memory. Backed up via restic
+# (zettel-system repo, same as this whole tree), never via git — a binary
+# credential store has no business in commit history. Same for the
+# old-machine backup copy merged in 2026-09-01 — it's the same category of
+# file (a lore.db with its own team_config credentials), just parked here
+# instead of in memory/loredb/.
+memory/loredb/
+backups/loredb-old/
+
+# Generated on every disk attach by archive-flush.sh; 392k lines / 59 MB
+# uncompressed. It is an INDEX of the offline tier, not authored content —
+# regenerable, so versioned snapshots of it are churn. Kept compressed and
+# local so the offline archive stays searchable when the archive disk is detached;
+# grep it with zgrep.
+archive-index.txt
+archive-index.txt.gz
+
+# ─── Obsidian: memory/ is a vault; commit config, not UI state ────────
+memory/.obsidian/workspace.json
+memory/.obsidian/workspace-mobile.json
+memory/.obsidian/plugins/
+memory/.obsidian/graph.json
+.trash/
+.smart-env/
