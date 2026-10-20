@@ -9,7 +9,7 @@ Every fact this tree holds, one line each. Paths are relative to `memory/knowled
 against the trigger terms; a match is **explainable**. No match anywhere means the
 fact is not here — try `familiar knowledge journal search`, or say it is unknown.
 
-32 leaves in 1 branches.
+33 leaves in 1 branches.
 
 ## `system/` — The Workshop: what we built and maintain. Mirrors the codebase's own directories one scale down.
 
@@ -41,6 +41,7 @@ fact is not here — try `familiar knowledge journal search`, or say it is unkno
 | `system/knowledge/obsidian-vault.md` | Browsing this tree in Obsidian — graph view, links, what breaks | obsidian, vault, navigation |
 | `system/practice/user-vs-conventions.md` | Filing into `config/practice/user/`, `config/practice/conventions/` or `knowledge/` — which store owns it | user, conventions, filing, icm, layers |
 | `system/publication/glossary.md` | The subject ids, their mythic names and their criteria, generated from the register | glossary, ontology, subjects |
+| `system/publication/publication-model.md` | What is public, what stays private and by which mechanism; the republish loop; the push guard and leak gate | publication, publish, republish, export, leak-scan, push-guard, familiaris |
 | `system/schedule/scheduled-processes.md` | Anything unattended — timers, what runs when, what it may write | systemd, scheduling, timers, generated-artifacts |
 | `system/skills/skill-adoption.md` | Vetting a skill arriving from anywhere — provenance and supply chain | skills, adoption, provenance, supply-chain |
 | `system/skills/skill-routing.md` | How a task reaches a skill: the four resolution signals, zero-install | skills, routing, context, icm |

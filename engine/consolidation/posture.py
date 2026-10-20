@@ -399,7 +399,7 @@ def run(ctx) -> None:
 # to the person. Those facts were already here and in the registers -- the
 # always-loaded set, the directive paths, the writable roots, the generated
 # files -- so the contract is DERIVED from them, never written beside them
-# (`dev/publication` design round 1, Q5). A hand-written copy would be the
+# (the publication track's design round 1, Q5). A hand-written copy would be the
 # fourth statement of the same rules, and the first one to drift.
 #
 # ON DRIFT, REFUSE. A generated file a person has edited is not overwritten

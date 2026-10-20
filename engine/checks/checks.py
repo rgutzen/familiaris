@@ -234,14 +234,14 @@ CHECKS: tuple[Check, ...] = (
         "a published artifact's private source has not moved since its export",
         ("python3", f"{E}/checks/publish_drift.py"),
         frozenset({GATE_HEALTHCHECK, GATE_MANUAL}),
-        instance_only="the state file is `dev/publication/export-state.json` "
-                      "and `dev/` never travels. Whether the sources have "
+        instance_only=f"the state file is `{roots.CONFIG_REL}/publication/export-state.json` "
+                      "and the classification omits it. Whether the sources have "
                       "moved since an artifact was published is a question "
                       "about the tree that exported it, not about the export.",
     ),
     # Track P's allow-list. The public tree is a GENERATED artifact, so the
     # failure that matters is the file nobody thought of -- and a deny-list
-    # fails open on exactly that one. `dev/publication/publish.yaml` classifies
+    # fails open on exactly that one. `publication/publish.yaml` (config) classifies
     # every tracked path, and this fails on a path it does not name and on a
     # rule that no longer matches anything (the deletion nobody re-reads).
     Check(
@@ -249,7 +249,7 @@ CHECKS: tuple[Check, ...] = (
         "every tracked path is classified for publication, and every rule bites",
         ("python3", f"{E}/checks/publish_audit.py"),
         frozenset({GATE_PRE_COMMIT, GATE_HEALTHCHECK, GATE_MANUAL}),
-        instance_only="its subject is `dev/publication/publish.yaml`, which "
+        instance_only=f"its subject is `{roots.CONFIG_REL}/publication/publish.yaml`, which "
                       "the classification itself omits: it describes the tree "
                       "that was exported, and says nothing about the tree "
                       "that came out.",

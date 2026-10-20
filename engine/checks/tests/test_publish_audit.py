@@ -7,7 +7,7 @@ classification can be wrong rather than a test that the module exists.
 
 Each test builds a miniature repository and passes the classification in as a
 dict, because the audit is a pure function of (tree, classification) and a test
-of it should not have to edit `dev/publication/publish.yaml` to prove anything.
+of it should not have to edit `config/publication/publish.yaml` to prove anything.
 The last test is the one that matters: the REAL classification, against the
 REAL tree.
 """
@@ -70,7 +70,7 @@ def _one(path, cls, **kw):
 
 # ── the live repository ──────────────────────────────────────────────────────
 #
-# These two read `dev/publication/publish.yaml`, the classification of the tree
+# These two read `config/publication/publish.yaml`, the classification of the tree
 # the export was made FROM. `dev/` is what the classification omits, so the
 # published tree has neither the file nor anything left to classify: they
 # declare that and skip there, and the miniatures above still run.

@@ -16,17 +16,41 @@
 # tree being pushed is therefore resolved at run time, and the rules are the
 # copies in THAT tree. `GIT_DIR` is cleared for the same reason `checks.py`
 # clears it: with the hook's GIT_DIR, `rev-parse` answers about the main worktree.
+#
+# A TREE OLDER THAN ITS RULES. The hook is shared, so it also runs for a branch
+# that predates one rule or both -- and `set -e` would turn a missing script
+# into a refused push, every push, from that branch. Neither rule is skipped
+# blind, though. The guard's case is the dangerous one: a pre-guard branch still
+# carries `dev/`. So where the tree has no `push_guard.py`, the rule is applied
+# here in its coarse form -- any owner, the public repository's name, a tree
+# with `dev/` -- which refuses a superset of what the script refuses and lets the
+# private remote through. The gate is advisory and has nothing coarse to fall
+# back on, so its absence is said and the push proceeds.
 set -euo pipefail
 
 REPO_TREE="$(env -u GIT_DIR -u GIT_WORK_TREE -u GIT_INDEX_FILE -u GIT_PREFIX \
     -u GIT_COMMON_DIR git rev-parse --show-toplevel)"
-source "$REPO_TREE/engine/lib/roots.sh"   # not-a-root: the whole point is that the tree is found at runtime
+if [[ -r "$REPO_TREE/engine/lib/roots.sh" ]]; then   # not-a-root: the test for the line below
+    source "$REPO_TREE/engine/lib/roots.sh"   # not-a-root: the whole point is that the tree is found at runtime
+else
+    PAZRAS_ENGINE="$REPO_TREE/engine"   # not-a-root: a tree without roots.sh, so the one place that names it is absent
+fi
 
 # One read, two readers. A push is the whole hazard for the guard, and for the
 # gate it is the set of refs; neither hook may read stdin twice.
 refs="$(cat)"
+url="${2:-}"; url="${url%/}"
 
-python3 "$PAZRAS_ENGINE/checks/push_guard.py" --tree "$REPO_TREE" --url "${2:-}"
+if [[ -r "$PAZRAS_ENGINE/checks/push_guard.py" ]]; then
+    python3 "$PAZRAS_ENGINE/checks/push_guard.py" --tree "$REPO_TREE" --url "$url"
+elif [[ -d "$REPO_TREE/dev" && "${url,,}" =~ (^|[/:])[^/:]+/familiaris(\.git)?$ ]]; then
+    echo "push-guard: REFUSED (coarse rule: $REPO_TREE has no push_guard.py) --" \
+         "$url names a repository called familiaris and this checkout has dev/." >&2
+    exit 1
+fi
 
-exec python3 "$PAZRAS_ENGINE/checks/leak_gate.py" \
-    --tree "$REPO_TREE" --url "${2:-}" --quiet <<<"$refs"
+if [[ -r "$PAZRAS_ENGINE/checks/leak_gate.py" ]]; then
+    exec python3 "$PAZRAS_ENGINE/checks/leak_gate.py" \
+        --tree "$REPO_TREE" --url "$url" --quiet <<<"$refs"
+fi
+echo "leak-gate: not in $REPO_TREE -- this push is not scanned" >&2

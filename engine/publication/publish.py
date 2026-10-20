@@ -7,7 +7,7 @@ refreshes, that a human reads the diff of, and that a human pushes. Nothing is
 ever edited only in public, and this script never commits and never pushes.
 
 WHAT IT DOES, in order:
-  1. read the classification (`dev/publication/publish.yaml`) and the tracked
+  1. read the classification (`config/publication/publish.yaml`) and the tracked
      file list, and fail on anything unclassified (`publish_audit.py`, the same
      loader -- one schema, one meaning);
   2. build the tree in a scratch directory: copy `public` paths, apply the
@@ -516,7 +516,7 @@ def source_hash(sources: list[tuple[str, object]], cfg_path: pathlib.Path) -> st
     """One hash over the private inputs: what this export was made of.
 
     `publish_drift.py --record` is the durable version of this number, stamped
-    into `dev/publication/export-state.json` after the human pushes. This is
+    into `config/publication/export-state.json` after the human pushes. This is
     the same question asked at the moment of writing: are the sources a
     different shape than last time?
     """

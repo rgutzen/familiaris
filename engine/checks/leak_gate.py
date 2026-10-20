@@ -57,7 +57,7 @@ name that no declaration covers is a QUESTION ("should this travel?"), which is
 exactly what the declaration file is for.
 
 DECLARED VERSUS UNDECLARED. A hit is cleared by a declaration in the register
-`publish_scan` reads (`dev/publication/leak-exceptions.txt`) when the scanned
+`publish_scan` reads (`config/publication/leak-exceptions.txt`) when the scanned
 paths are that export's. A repository that is not the export carries both halves
 of its own answer in `.pazras/`: `leak-patterns.txt` (the names that must not
 travel FROM THERE, in the register's `name<TAB>regex` format) and

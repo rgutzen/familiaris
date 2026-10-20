@@ -342,6 +342,7 @@ def test_only_the_register_and_its_test_are_exempt_from_themselves():
     grow to cover a file that merely finds the gate inconvenient."""
     assert set(dp.RETIRED_EXEMPT) == {
         "memory/journal/", "dev/", "config/knowledge/violations.yaml",
+        "config/publication/export-state.json",
         "memory/knowledge/system/consolidation/_data/",
         "engine/checks/declared_paths.py",
         "engine/checks/tests/test_declared_paths.py",

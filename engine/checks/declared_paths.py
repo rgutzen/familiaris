@@ -65,7 +65,7 @@ from lib import roots  # noqa: E402
 
 # The publication classification. Named here because a finding that says "fix
 # the classification" has to say where the classification is.
-PUBLICATION = roots.DEV / "publication" / "publish.yaml"
+PUBLICATION = roots.CONFIG / "publication" / "publish.yaml"
 
 PACKAGES = tuple(f"engine/{p}" for p in (
     "lib", "knowledge", "harness", "context", "consolidation", "cli"))
@@ -257,7 +257,9 @@ RETIRED: dict[str, str] = {
 # Where a retired path may still be NAMED, because naming is not depending.
 # The journal is append-only -- rewriting it would falsify the record -- and
 # `dev/` is this track's own working notes, which discuss the move by name.
-# `config/knowledge/violations.yaml` records where a defect WAS.
+# `config/knowledge/violations.yaml` records where a defect WAS, and
+# `config/publication/export-state.json` what each past export DID -- its
+# `surgery` list names the paths it renamed (it lived under `dev/` until P6).
 # `memory/knowledge/system/consolidation/_data/` holds the ontology track's raw
 # measurement envelopes (O4b, O4d, O5c): they quote the tree as it was when the
 # run was made, and editing them would falsify the measurement.
@@ -276,6 +278,7 @@ RETIRED: dict[str, str] = {
 RETIRED_SYNTHETIC = re.compile(r"(?:^|/)tests/|(?:^|/)test_[^/]*\.py$")
 
 RETIRED_EXEMPT = ("memory/journal/", "dev/", "config/knowledge/violations.yaml",
+                  "config/publication/export-state.json",
                   "memory/knowledge/system/consolidation/_data/",
                   "engine/checks/declared_paths.py",
                   "engine/checks/tests/test_declared_paths.py")
@@ -665,7 +668,7 @@ def _resolve(entry: str, root: str, repo: pathlib.Path) -> pathlib.Path:
     # RESOLVING EVERY R_HOME ENTRY AGAINST `repo.parent` IS WHAT BROKE AWAY
     # FROM `~/06_SYSTEM`, and it is right only while the repository is named
     # `06_SYSTEM` and sits in $HOME. From a linked worktree (measured
-    # 2026-10-14, `dev/publication/2026-10-14_recut.md` §2) the same entry
+    # 2026-10-14, the publication track's recut of 2026-10-14 (git history) §2) the same entry
     # asked for `…/worktrees/06_SYSTEM/engine/familiar` and the check reported
     # 14 paths as missing: a gate describing a tree that does not exist rather
     # than a repository that is wrong. A stranger's clone at any other path had

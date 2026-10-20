@@ -127,7 +127,7 @@ git leaves the history intact. `git grep` for the old names before committing.
 - **P's naming rounds.** Product naming for the public artifact is a Track P
   question on the publication-split branch. File naming and product naming are
   different questions and are not merged.
-- **`dev/publication/mythic-lexicon.md` §3 (Title Case).** Re-opened
+- **The mythic lexicon §3 (Title Case)** (moved out of the tree with the outreach series, 2026-10-20). Re-opened
   2026-10-12. The 2026-10-09 verdict dropped it as a "deprecated lore.md file",
   but the deprecated `lore.md` files were the lore.ai tool's stores; this file
   is the mythic register, renamed from `lore.md` to end that confusion. Whether

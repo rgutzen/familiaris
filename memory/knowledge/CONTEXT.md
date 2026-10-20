@@ -10,7 +10,7 @@ needs between `../../CONTEXT.md` and a leaf — one level of disclosure, never t
 <!-- BEGIN:BRANCHES (generated) -->
 | Branch | Holds | n |
 |---|---|---|
-| `system/` | The Workshop: what we built and maintain. Mirrors the codebase's own directories one scale down. | 32 |
+| `system/` | The Workshop: what we built and maintain. Mirrors the codebase's own directories one scale down. | 33 |
 <!-- END:BRANCHES -->
 
 Each branch's `Holds` line is its **criteria in `config/knowledge/subjects.yaml`**

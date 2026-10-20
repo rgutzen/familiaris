@@ -10,14 +10,15 @@ someone following steps under time pressure pays for every figure of speech.
 | [add a boundary](add-a-boundary.md) | write a rule, compile it, and watch the guard refuse the thing it forbids | executed: all four steps, in a scratch `$HOME` |
 | [adopt a skill](adopt-a-skill.md) | vet a skill arriving from outside, then route a task to it | executed: the records written, the routers regenerated, the warning for an undeclared subject read |
 | [recover from backup](recover-from-backup.md) | bring one file back out of a restic repository | executed end to end against a scratch repository; the instance's own repos are not touched |
+| [publish the tree](publish-the-tree.md) | publish a private instance as a generated public repository, and republish it when it drifts | executed: the first publish of this tree, end to end, and the `--check` path on a scratch clone |
 | [add a harness](add-a-harness.md) | put a fifth agent behind the always-on compiler and keep the boundary guard | **half executed**: the compiler half, on a patched scratch copy; the audit, hook and transcript steps need the program itself |
 
 **Each recipe was run once as written, or says what stopped it.** Every command
 block is the output that came back, with elisions marked in the text beside it.
-Three of the four were run on a scratch clone, because the point of the exercise
+Three of the first four were run on a scratch clone, because the point of the exercise
 is what the commands write — and one of them writes outside the tree.
 
-**Still open.** Four recipes are the start, not the set. A recipe is added when
+**Still open.** Five recipes are the start, not the set. A recipe is added when
 someone actually needed it — the list of things a task might need is not
 evidence that anyone will.
 

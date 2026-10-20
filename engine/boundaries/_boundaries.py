@@ -202,7 +202,7 @@ def _load_one(path: Path, cfg: dict) -> list[dict]:
             # guard protected the worktree's copy of `engine/harness/jev.py`
             # and the main tree was unguarded, and a fresh clone regenerated a
             # different file than the one committed (measured 2026-10-14,
-            # `dev/publication/2026-10-14_recut.md` §2). INSTALL is the tree
+            # the publication track's recut of 2026-10-14 (git history) §2). INSTALL is the tree
             # the harnesses read, and it is the same constant in every
             # checkout, which is what makes `compile.py --check` portable.
             expanded_p = os.path.expanduser(p)

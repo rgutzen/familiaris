@@ -45,11 +45,3 @@ misreads the first.
 **Not the software.** The pathways are technological, artistic and communal. This
 repository is one, its scope is text, and the parts of a life it cannot hold are
 most of them.
-
-**Honest limits.** This page states an intention; it measures nothing. No file
-here counts whether a reader's attention came back, and a claim that any
-mechanism brings that closer is an argument rather than a result. The mechanisms
-are checked; the intention is not.
-
-**Still open.** A page that speaks for someone is theirs, not the writer's, and
-the wording here is proposed rather than ratified.

@@ -154,6 +154,22 @@ def hook_path(tree) -> pathlib.Path | None:
     return path if path.is_absolute() else pathlib.Path(tree) / path
 
 
+def arm_command(path: pathlib.Path) -> str:
+    """The install command for `path`: the symlink where it would resolve.
+
+    The symlink is relative to the hooks directory, so it lands in the checkout
+    that owns `$GIT_COMMON_DIR` -- which may be on a branch without this hook.
+    There the symlink is installed and inert, and a reader who followed the
+    advice would be told green by `--check` and guarded by nothing. Where the
+    target is absent, the advice is the copy, which works today.
+    """
+    target = path.parent / ".." / ".." / roots.ENGINE_REL / "checks" / HOOK_NAME
+    if target.exists():
+        return f"{ARM} {path}"
+    return (f"cp {HOOK_FILE} {path} (a symlink would be inert: "
+            f"{target.resolve()} does not exist yet)")
+
+
 def installed(path: pathlib.Path) -> bool:
     """Whether `path` is an install of this hook -- by location, or by content.
 
@@ -204,7 +220,7 @@ def check(tree=None, p=None):
         if not installed(path):
             return False, (f"push-guard: {path} exists and is not this guard, so "
                            f"nothing refuses a push to {public_owner(p)}/"
-                           f"{PUBLIC_REPO}. Replace it: {ARM} {path}")
+                           f"{PUBLIC_REPO}. Replace it: {arm_command(path)}")
         if not os.access(path, os.X_OK):
             return False, (f"push-guard: {path} is not executable, so git runs "
                            f"nothing: chmod +x {path.resolve()}")
@@ -232,11 +248,11 @@ def check(tree=None, p=None):
         return True, (f"push-guard: not installed, and correctly so -- `origin` "
                       f"is {origin}, which until the rename and the `remote "
                       f"set-url` is THIS repository. Arm it once origin names the "
-                      f"private one: {ARM} {path}")
+                      f"private one: {arm_command(path)}")
     return False, (f"push-guard: NOT armed -- {tree} has a `{PRIVATE_MARKER}/` and "
                    f"its origin is {origin or 'unset'}, so a push to "
                    f"{public_owner(p)}/{PUBLIC_REPO} would publish the private tree "
-                   f"and nothing would refuse it. Arm it: {ARM} {path}")
+                   f"and nothing would refuse it. Arm it: {arm_command(path)}")
 
 
 def main(argv: list) -> int:

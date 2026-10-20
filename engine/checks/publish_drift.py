@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """publish-drift -- has the private source moved since an artifact was published?
 
-The public repositories are **generated artifacts**: `dev/publication/export-state.json`
+The public repositories are **generated artifacts**: `config/publication/export-state.json`
 records, per artifact, the private paths it was exported from and a hash of their
 contents at the moment of the publish. Publishing is a human act -- export, review
 the diff, push -- so the failure mode is not a bad export. It is a *stale* one:
@@ -35,12 +35,15 @@ import json
 import pathlib
 import sys
 
-REPO = pathlib.Path(__file__).resolve().parents[2]
-STATE = REPO / "dev" / "publication" / "export-state.json"
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+from lib import roots  # noqa: E402
+
+REPO = roots.REPO
+STATE = roots.CONFIG / "publication" / "export-state.json"
 
 # `"source": "classification"` means "resolve the list from the publication
 # classification at read time". The umbrella is the whole tree, so its sources
-# ARE `dev/publication/publish.yaml`'s own output, and copying that output into
+# ARE `config/publication/publish.yaml`'s own output, and copying that output into
 # the state file would be a second place for the export's shape to be wrong.
 # The failure a copy produces is specific and expensive: an edit to a private
 # file that never travels -- `config/profile.yaml`, the practice tree -- would
@@ -132,6 +135,7 @@ def check(root: pathlib.Path = REPO, state: dict | None = None) -> list[dict]:
         findings.append({
             "artifact": name,
             "repo": art.get("repo"),
+            "clone": art.get("clone"),
             "published_commit": art.get("commit"),
             "published_at": art.get("published_at"),
             "records": art.get("hash"),
@@ -221,8 +225,19 @@ def main(argv: list[str]) -> int:
             print(f"        recorded     {f['records']}")
             if f["missing_paths"]:
                 print(f"        {f['missing_paths']} source path(s) are gone")
-            print("        → export, review the diff, push, then: "
-                  f"publish_drift.py --record {f['artifact']} --commit <new sha>")
+            # The procedure, spelled out where the drift is reported: the
+            # reader who sees DRIFT is the one who needs the commands, and the
+            # clone's location is a fact of the state file, not of memory.
+            # The full recipe is docs/how-to/publish-the-tree.md.
+            clone = f.get("clone") or "<publish clone>"
+            eng = roots.ENGINE_REL
+            print(f"        → republish (docs/how-to/publish-the-tree.md):\n"
+                  f"          python3 {eng}/publication/publish.py --to {clone}\n"
+                  f"          git -C {clone} diff            # read all of it\n"
+                  f"          git -C {clone} add -A && git -C {clone} commit -m '…'"
+                  f" && git -C {clone} push origin main\n"
+                  f"          python3 {eng}/checks/publish_drift.py --record "
+                  f"{f['artifact']} --commit $(git -C {clone} rev-parse HEAD)")
     return 1 if drifted or contradictions else 0
 
 

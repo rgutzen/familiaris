@@ -20,6 +20,6 @@
 | `backup` | the Larder | Falsified when backups, disks or recovery change. | — |
 | `host` | the Hearth | Falsified when THIS MACHINE or its OS changes -- and not when a tool we install on it changes, which is `harness`. Added during planning because `omarchy-host-traps` had no home at all until it existed. | — |
 | `practice/` | the Craft | Falsified when `config/practice/conventions/` or `config/practice/user/` changes. | 1 |
-| `publication/` | the Sign | Falsified when what we show OUTWARD changes. Its first leaf is the generated subject glossary (O3c), which is derived from this register and therefore cannot drift from it. | 1 |
+| `publication/` | the Sign | Falsified when what we show OUTWARD changes. Its first leaf is the generated subject glossary (O3c), which is derived from this register and therefore cannot drift from it. | 2 |
 
-32 leaves in 11 of 14 subjects. A subject folder appears on its first leaf, so `—` means declared and not yet written, never missing.
+33 leaves in 11 of 14 subjects. A subject folder appears on its first leaf, so `—` means declared and not yet written, never missing.

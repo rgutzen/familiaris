@@ -3,7 +3,7 @@
 
 WHY. `engine/` is meant to be publishable as generic code: it changes when we
 change what we built, not when one machine's disk is unplugged. The
-publication survey (`dev/publication/engine-instance-survey.md`, 2026-09-12)
+publication survey (the engine/instance survey (git history), 2026-09-12)
 measured what stands in the way, and R1k made the survey's own search a gate.
 
 WHAT IT SEARCHES FOR, and where each part comes from (P2). Three parts, and

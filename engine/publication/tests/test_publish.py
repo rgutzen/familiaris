@@ -170,7 +170,7 @@ def test_the_diff_counts_added_removed_and_modified(tmp_path):
 # ── the export, end to end ───────────────────────────────────────────────────
 #
 # These four drive the whole exporter, so they need the classification of the
-# tree it exports FROM -- `dev/publication/publish.yaml`, which `dev/`-omission
+# tree it exports FROM -- `config/publication/publish.yaml`, which `dev/`-omission
 # keeps out of the published tree. In the export there is nothing to export and
 # no classification to read, so they declare that and skip; the pieces above
 # still run there, which is where most of this file's value is.
@@ -313,10 +313,10 @@ def test_check_mode_writes_nothing(tmp_path, capsys, green_gate):
 @needs_classification
 def test_the_source_hash_moves_when_a_published_source_moves(tmp_path):
     sources = [("LICENSE", None)]
-    before = publish.source_hash(sources, roots.DEV / "publication" / "publish.yaml")
+    before = publish.source_hash(sources, roots.CONFIG / "publication" / "publish.yaml")
     assert before.startswith("sha256:")
     assert before == publish.source_hash(
-        sources, roots.DEV / "publication" / "publish.yaml")
+        sources, roots.CONFIG / "publication" / "publish.yaml")
 
 
 def test_the_marker_records_what_it_wrote(tmp_path):

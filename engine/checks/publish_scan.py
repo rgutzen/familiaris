@@ -18,7 +18,7 @@ PATTERNS, and their two sources:
   * built in here -- the shapes that are wrong in any tree: an email address,
     an IPv4 address, an absolute home path, a private key, a token, a restic
     passphrase assignment.
-  * `dev/publication/leak-patterns.txt` -- this instance's real names, device
+  * `config/publication/leak-patterns.txt` -- this instance's real names, device
     names and provider names. PRIVATE, never exported (`dev/` is omitted by
     the classification), because a pattern file that names what must not travel
     is itself the thing that must not travel.
@@ -28,7 +28,7 @@ this instance's -- addresses P1 templates, device names P5's provider selector
 removes, prose P4 rewrites. Publishing them silently would be the wrong
 answer; failing on all of them would make the gate useless and teach the
 reader to ignore it. So a hit is DECLARED in
-`dev/publication/leak-exceptions.txt`, with the count observed at declaration
+`config/publication/leak-exceptions.txt`, with the count observed at declaration
 time and the reason, and this scanner fails on:
   * a hit no declaration covers (a new leak);
   * a declared (path, pattern) whose count has GROWN (the declaration is not a
@@ -56,8 +56,8 @@ HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 from lib import roots  # noqa: E402
 
-PATTERN_FILE = roots.DEV / "publication" / "leak-patterns.txt"
-EXCEPTION_FILE = roots.DEV / "publication" / "leak-exceptions.txt"
+PATTERN_FILE = roots.CONFIG / "publication" / "leak-patterns.txt"
+EXCEPTION_FILE = roots.CONFIG / "publication" / "leak-exceptions.txt"
 
 # Never scanned: the export writes none of these, and a bytecode cache carries
 # the absolute source path in `co_filename` (the survey's 2.4x inflation).

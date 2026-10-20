@@ -229,6 +229,21 @@ def test_an_unarmed_private_checkout_is_a_finding(tmp_path):
     assert "NOT armed" in message and "ln -sfn" in message
 
 
+def test_the_advice_is_the_copy_where_a_symlink_would_be_inert(tmp_path):
+    """The instance's own state between the rename and the merge: the checkout
+    git resolves hooks from has no `engine/checks/pre-push`, so the symlink the
+    advice used to name would be installed, reported inert, and guard nothing."""
+    tree = _scratch(tmp_path)
+    (tree / ".git" / "hooks" / pg.HOOK_NAME).unlink()
+    (tree / "engine" / "checks" / pg.HOOK_NAME).unlink()
+    subprocess.run(["git", "-C", str(tree), "remote", "add", "origin",
+                    f"git@github.com:{OWNER}/{pg.PUBLIC_REPO}-other.git"],
+                   check=True)
+    armed, message = pg.check(tree, _profile(tmp_path))
+    assert not armed
+    assert f"cp {pg.HOOK_FILE}" in message and "ln -sfn" not in message
+
+
 def test_origin_still_naming_the_public_repository_is_content(tmp_path):
     """Before the rename and the `remote set-url`, the public name IS this
     repository: arming the guard then would refuse the push that is right, so
@@ -298,3 +313,42 @@ def test_armed_and_inert_where_the_profile_names_nobody(tmp_path):
     armed, message = pg.check(tree, profile.resolve(tree / "config"))
     assert armed, message
     assert "inert" in message and "no public handle" in message
+
+
+# ── a tree older than its rules, through the shared hook ─────────────────────
+
+
+def _older(tmp_path, *missing):
+    """A checkout on a branch that predates some of the rules the hook runs:
+    the hook is a copy in `.git/hooks`, the scripts are not in the tree."""
+    tree = _scratch(tmp_path)
+    hook = tree / ".git" / "hooks" / pg.HOOK_NAME
+    hook.unlink()
+    hook.write_bytes(pg.HOOK_FILE.read_bytes())
+    hook.chmod(0o755)
+    for name in missing:
+        (tree / "engine" / "checks" / name).unlink()
+    return tree
+
+
+def test_a_pre_guard_tree_with_dev_is_still_refused_the_public_name(tmp_path):
+    """The case the fallback exists for: a branch without push_guard.py still
+    carries `dev/`, so skipping the rule would open exactly the push it refuses."""
+    tree = _older(tmp_path, "push_guard.py", "leak_gate.py")
+    done = subprocess.run(
+        ["git", "-C", str(tree), "push",
+         str(_remote(tmp_path, f"{pg.PUBLIC_REPO}.git")), "HEAD"],
+        capture_output=True, text=True)
+    assert done.returncode != 0, done.stdout + done.stderr
+    assert "REFUSED (coarse rule" in done.stderr, done.stderr
+
+
+def test_a_pre_guard_tree_pushes_to_the_private_remote(tmp_path):
+    """And the reason for the fallback: without it, `set -e` refused every push
+    from such a branch, the private remote's included."""
+    tree = _older(tmp_path, "push_guard.py", "leak_gate.py")
+    target = _remote(tmp_path, f"{pg.PUBLIC_REPO}-other.git")
+    done = subprocess.run(["git", "-C", str(tree), "push", str(target), "HEAD"],
+                          capture_output=True, text=True)
+    assert done.returncode == 0, done.stdout + done.stderr
+    assert "not scanned" in done.stderr, done.stderr

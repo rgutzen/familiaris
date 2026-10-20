@@ -1355,7 +1355,7 @@ def places_findings(repo=None) -> list:
     repository, and `is_dir()` answers about the target: on this machine the
     link resolves, in a worktree or a fresh clone it does not, and the check
     was reading the difference as a moved folder (measured 2026-10-14,
-    `dev/publication/2026-10-14_recut.md` §2). The anchor is the NAME --
+    the publication track's recut of 2026-10-14 (git history) §2). The anchor is the NAME --
     whether the link resolves is the business of whatever made it.
     """
     repo = pathlib.Path(repo or REPO)

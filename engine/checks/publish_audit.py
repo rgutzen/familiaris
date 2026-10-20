@@ -5,7 +5,7 @@ WHY THIS EXISTS. The public tree is a *generated* artifact: `publish.py` writes
 it from this repository, a human reads the diff and pushes. The failure that
 matters is therefore not a bad export -- a human reads that -- it is the file
 NOBODY THOUGHT OF. An allow-list is the only shape that fails closed on it:
-`dev/publication/publish.yaml` classifies every tracked path as `public`,
+`config/publication/publish.yaml` classifies every tracked path as `public`,
 `example` or `omit`, and this audit fails on a path the file does not name.
 
 THE PATTERN IS THE THIRD USE OF ONE IDIOM, deliberately:
@@ -50,7 +50,7 @@ HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 from lib import _miniyaml, roots  # noqa: E402
 
-CLASSIFICATION = roots.DEV / "publication" / "publish.yaml"
+CLASSIFICATION = roots.CONFIG / "publication" / "publish.yaml"
 
 CLASSES = ("public", "example", "omit")
 # The one class that changes bytes; the other two are copies and omissions.

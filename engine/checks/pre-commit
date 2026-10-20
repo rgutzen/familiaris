@@ -10,7 +10,7 @@ set -euo pipefail
 # WORKTREE runs this file's main-checkout copy: `readlink -f` then resolves to
 # ~/06_SYSTEM/engine/checks/pre-commit, roots.sh takes its repository from
 # there, and the gate checks a tree that is not the one being committed. The
-# evidence of 2026-10-14 (`dev/publication/2026-10-14_recut.md` §2c): the same
+# evidence of 2026-10-14 (the publication track's recut of 2026-10-14 (git history) §2c): the same
 # commit, at the same minute, reported 6 failing gates when run explicitly from
 # the worktree and `gate 'pre-commit' passed (21 checks)` through the hook —
 # silently green, in the one direction that matters.

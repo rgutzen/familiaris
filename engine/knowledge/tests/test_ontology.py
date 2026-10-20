@@ -419,7 +419,11 @@ def test_places_names_the_directories_a_subject_occupies():
     """
     assert O.places("consolidation") == ("engine/consolidation",)
     assert O.places("boundaries") == ("engine/boundaries", "config/boundaries")
-    assert O.places("publication") == ("docs", "engine/publication")
+    # `config/publication` holds the private registers and is omitted from the
+    # export, whose generated subjects.yaml drops a place that does not exist.
+    assert O.places("publication") == tuple(
+        p for p in ("docs", "config/publication", "engine/publication")
+        if (roots.REPO / p).exists())
     assert O.places("no-such-subject") == ()
 
 
@@ -518,14 +522,17 @@ def test_the_corpus_is_the_whole_tree_and_matches_find():
     reason="the count is this instance's: the classification omits two of the "
            "leaves, so the export's corpus is smaller, and O4b's answer key "
            "was scored against the private one")
-def test_the_instance_corpus_is_the_34_leaves_o4b_was_scored_on():
+def test_the_instance_corpus_is_the_35_leaves_of_the_live_tree():
     """**34, not 31, since O3c/O3e (2026-10-09) and D7 (2026-10-15)**: O3c's
     generated subject glossary landed under `system/publication/` (the branch's
     first leaf), O3e's `file-naming.md` joined `system/structure/`, and D7 gave
     the fifth harness its leaf, `system/harness/codex.md`. O4b was already run
     and reported against the 31 it was scored on; this assertion is about the
-    LIVE tree, and the live tree grew."""
-    assert len(_live_leaves()) == 34
+    LIVE tree, and the live tree grew.
+
+    **35 since P6 (2026-10-20)**: the publication track's durable claims moved
+    into `system/publication/publication-model.md` as the track retired."""
+    assert len(_live_leaves()) == 35
 
 
 def test_every_leaf_in_the_corpus_carries_a_ratified_subject():
@@ -554,12 +561,13 @@ def test_the_corpus_is_the_distribution_o2b_ratified():
     untouched -- asserted rather than assumed, because a move that silently
     joins a new subject would otherwise pass. O4b's score is unaffected: it was
     run and recorded against the 31 (SPECS O4b, `o4b-run{1,2,3}.json`), and its
-    state carries titles and headings, not these leaves."""
+    state carries titles and headings, not these leaves. **Amended by P6
+    (2026-10-20): `publication: 2`** -- the retired track's model leaf."""
     import collections
     assert collections.Counter(s for _, s in O.corpus()) == {
         "harness": 9, "consolidation": 6, "knowledge": 5, "context": 2, "skills": 2,
         "structure": 3, "boundaries": 1, "checks": 1, "schedule": 1,
-        "backup": 1, "host": 1, "practice": 1, "publication": 1,
+        "backup": 1, "host": 1, "practice": 1, "publication": 2,
     }
 
 
