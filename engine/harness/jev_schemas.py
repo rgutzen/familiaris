@@ -337,6 +337,34 @@ SCHEMAS: dict[str, dict] = {
             false="not captured — keep raising it"),
         "action": "mark the decision captured",
     },
+    # Its sibling: stage 4 raises an OVERRULED disagreement the same way
+    # (consolidate.py, "overruled disagreement"); first seen in the 2026-10-15
+    # report, which is what the coverage test reads.
+    "disagreement": {
+        "question": _noul(
+            "An objection the user overruled has not landed anywhere durable. "
+            "Answer whether the stated TARGET is already covered by the leaf "
+            "named in the state -- that is, whether the overruled position and "
+            "its reason have effectively been recorded and the item can close.",
+            true="already captured — close it",
+            false="not captured — keep raising it"),
+        "action": "mark the disagreement captured",
+    },
+    # Stage 6c (item 6d) proposes a binding's model change; first seen in the
+    # 2026-10-22 report. The swap is the user's to ratify (decision 25 forbids a
+    # silent downgrade), so the question asks only whether the proposal is MOOT --
+    # a judge may close a stale row, never accept a model.
+    "binding": {
+        "question": _noul(
+            "The nightly pass proposed changing the model a binding names, from "
+            "the evidence in the state. Ratifying the change is the user's, never "
+            "yours. Answer only whether the proposal is moot -- the binding named "
+            "in the state already uses the proposed model, or no longer exists -- "
+            "so the item can close without a ruling.",
+            true="moot — close it",
+            false="still open — keep raising it"),
+        "action": "close the moot proposal",
+    },
 }
 
 # Kinds whose disposition is a PROMOTION. `trust:`, `supersedes:` and

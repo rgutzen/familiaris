@@ -43,7 +43,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from _boundaries import (SOURCE_DIR, JSON_TARGET, HERMES_MEMORY, advisory_target,
                          PI_PERMISSION_CONFIG, sources, BEGIN, BLOCK_ANY, END,
                          load, path_matches, applies, directive_rules,
-                         ENTITY_REGISTER, DIRECTIVE_DOMAIN)
+                         ENTITY_REGISTER, DIRECTIVE_DOMAIN,
+                         PUSH_PATTERNS, RTK_PREFIX, escape_patterns as _escape_patterns)
 from lib.generated_block import splice
 from lib import roots  # noqa: E402  (engine lib, on the path above)
 
@@ -89,20 +90,6 @@ A boundary in your way is a conversation with the user, not a puzzle to route
 around. Ask.
 """
 
-
-# The one place "push" is spelled out for the gotgenes bash surface. These
-# patterns must stay in sync with wards's GIT_WRITE regex and the
-# opencode plugin's GIT_WRITE — all three are interpretations of the same
-# `no-push` rule and disagreeing about "what is a push" is a boundary leak.
-# ` *` (space + star) also matches the bare command, so `git push *` gates
-# `git push` with no args as well as `git push origin main`.
-PUSH_PATTERNS = (
-    "git push *",
-    "git rebase *",
-    "git filter-branch *",
-    "git filter-repo *",
-    "git commit --amend *",
-)
 
 PI_PERMISSION_SCHEMA = (
     "https://raw.githubusercontent.com/gotgenes/pi-packages/main/packages/"
@@ -155,6 +142,14 @@ def emit_pi_permission(cfg: dict) -> str:
         elif r["mode"] == "no-push":
             for pat in PUSH_PATTERNS:
                 bash_map[pat] = action
+                # The rtk pi extension rewrites a command BEFORE this gate sees
+                # it (`git push x` -> `rtk git push x`), and a prefix pattern
+                # does not match the rewritten form, so without this twin the
+                # ask silently became `*: allow` (measured 2026-10-15).
+                bash_map[f"{RTK_PREFIX}{pat}"] = action
+        elif r["mode"] == "no-host-escape":
+            for pat in _escape_patterns(cfg["vocabulary"]["shell"]["host_escape"]):
+                bash_map[pat] = action
 
     permission = {"*": "allow", "path": path_map, "bash": bash_map}
     if path_read_map:
@@ -163,6 +158,10 @@ def emit_pi_permission(cfg: dict) -> str:
         permission["path_write"] = path_write_map
 
     doc = {"$schema": PI_PERMISSION_SCHEMA, "permission": permission}
+    if cfg.get("authorizer_chain"):
+        # pi-permission-system's chain of `ask` reviewers (docs/configuration.md
+        # §Authorizer chain). Naming a link is what gives it authority.
+        doc["authorizerChain"] = list(cfg["authorizer_chain"])
     return json.dumps(doc, indent=2) + "\n"
 
 

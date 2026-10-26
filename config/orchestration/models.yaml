@@ -1,0 +1,1362 @@
+# Model catalogue for the Loom (track `orchestration`, decisions 15, 20, 21, 22, 25).
+# One entry per model, keyed by the VENDOR's API model id, never by a pi provider id
+# (decision 25). Callable models under `models:`; models worth knowing about that no
+# binding may name under `candidates:`. Harness-agnostic and curated, not a mirror of
+# pi's catalogue (decision 20); entries go stale after `stale_after_days` and are then
+# re-checked at the sources in `sources:` (decision 20).
+# UNITS: every price is USD per million tokens. `context` and `max_out` are tokens.
+# `pool` is what pays: quota (a Claude subscription's quota, compared at API-equivalent
+# list price, decision 24), usd (a metered key), or free (local compute).
+# `benchmarks`: percent, number only; `date` is the model's release date, the page the
+# figure comes from being the release announcement; `grade` follows 2026-10-12-literature.md
+# (A independent, B vendor-reported with method, C vendor claim, D blog).
+# `arena:` NAMES THE CHART ENTRY PER EFFORT LEVEL (items 13a, 14b). `familiar
+# orchestration scout` compares this catalogue with the LM Arena Pareto chart
+# (`paraplouis/llm-pareto-frontier`), whose model names are its own
+# (`Claude Sonnet 5.5 (xHigh)`). The key is the only bridge between the two: a model
+# without one is REPORTED by the scout and never matched by resemblance, because
+# `Claude Haiku 4.5` is a different model from `claude-haiku-5-5` and a guess would
+# have said it was not.
+# ONE KEY PER LEVEL in `capabilities.effort`, or `default` for a model without
+# levels. A level the chart does not rate is written `~`, never left out, so
+# "unrated" is a statement and not a gap. The scout judges a member only at the level
+# its tier runs, because effort multiplies the tokens a task costs and the chart's
+# price is per token. The chart renames its rows (2026-10-20: every lowercase slug
+# became a display name), so a mapped name the chart no longer holds fails
+# `scout --check`. Names re-read from the chart dated 2026-10-20, on 2026-10-22.
+#
+# TWO RUNNERS. A vendor reports its own model; Artificial Analysis runs one uniform
+# harness over almost every model here and is grade A. A name carrying `(AA)`, `AA-LCR`,
+# `CritPt` or `MLCR-AA` is an AA figure (fetched 2026-10-13); everything else is the
+# vendor's. One benchmark run by two organisations is TWO keys, never one merge:
+# their numbers disagree (Opus 5.5 Terminal-Bench 4.0: 59.6 AA, 66.4 vendor).
+# Every figure below was re-checked at its vendor page on 2026-10-13.
+stale_after_days: "60"
+models:
+  - id: claude-opus-5-5
+    name: Claude Opus 5.5
+    arena:
+      low: ~
+      medium: ~
+      high: "Claude Opus 5.5 (High)"
+      xhigh: ~
+      max: ~
+    vendor: anthropic
+    kind: chat
+    jurisdiction: US
+    pool: quota
+    context: "1000000"
+    max_out: "128000"
+    cost:
+      in: "4"
+      cache_hit: "0.20"
+      out: "20"
+      cache_write: "5"
+      note: "batch API 50% off; 5m cache write 5; 1h cache write 8; cache-hit rate is 0.05x input; fast mode (research preview) 8 in / 40 out; the output-300k-2026-03-24 beta header raises max output to 300000"
+    capabilities:
+      tools: "yes"
+      vision: "yes"
+      json: "yes"
+      thinking: always
+      effort: low, medium, high, xhigh, max
+    aliases: claude-opus-5-5
+    benchmarks:
+      - name: Terminal-Bench 4.0
+        score: "66.4"
+        source: https://www.anthropic.com/claude-opus-5-5
+        date: "2026-09-22"
+        grade: B
+      - name: FrontierCode v1.1 (Main)
+        score: "54.4"
+        source: https://www.anthropic.com/claude-opus-5-5
+        date: "2026-09-22"
+        grade: B
+      - name: CursorBench 4.0
+        score: "57.8"
+        source: https://www.anthropic.com/claude-opus-5-5
+        date: "2026-09-22"
+        grade: B
+      - name: AutomationBench (run and reported by Zapier)
+        score: "40.0"
+        source: https://www.anthropic.com/claude-opus-5-5
+        date: "2026-09-22"
+        grade: A
+      - name: Terminal-Bench 4.0 (AA)
+        score: "59.6"
+        source: https://artificialanalysis.ai/models/claude-opus-5-5
+        date: "2026-10-13"
+        grade: A
+      - name: Humanity's Last Exam (AA)
+        score: "61.4"
+        source: https://artificialanalysis.ai/models/claude-opus-5-5
+        date: "2026-10-13"
+        grade: A
+      - name: SciCode (AA)
+        score: "66.9"
+        source: https://artificialanalysis.ai/models/claude-opus-5-5
+        date: "2026-10-13"
+        grade: A
+      - name: AA-LCR
+        score: "84.7"
+        source: https://artificialanalysis.ai/models/claude-opus-5-5
+        date: "2026-10-13"
+        grade: A
+      - name: FrontierCode (AA)
+        score: "52.2"
+        source: https://artificialanalysis.ai/models/claude-opus-5-5
+        date: "2026-10-13"
+        grade: A
+      - name: CritPt
+        score: "31.7"
+        source: https://artificialanalysis.ai/models/claude-opus-5-5
+        date: "2026-10-13"
+        grade: A
+      - name: MLCR-AA
+        score: "66.7"
+        source: https://artificialanalysis.ai/models/claude-opus-5-5
+        date: "2026-10-13"
+        grade: A
+    notes:
+      use_for: "long-running agentic coding and knowledge work, the session default for planning (decision 23) — https://platform.claude.com/docs/en/models/opus-5-5/overview"
+      not_for: "code that disables thinking or forces tool use: thinking cannot be turned off and forced tool use returns an error — https://platform.claude.com/docs/en/models/opus-5-5/overview"
+    gaps: >
+      no alias distinct from the id: the overview's Claude API alias row repeats the
+      dateless id, which is its own pinned snapshot. No SWE-bench Verified figure and no
+      tokens-per-second throughput are published on the vendor pages. The quota itself is
+      unpublished in tokens (decision 24), so pool quota carries no token figure.
+    sources:
+      - https://platform.claude.com/docs/en/about-claude/models/overview
+      - https://platform.claude.com/docs/en/about-claude/pricing
+      - https://platform.claude.com/docs/en/models/opus-5-5/overview
+      - https://platform.claude.com/docs/en/build-with-claude/effort
+      - https://platform.claude.com/docs/en/build-with-claude/structured-outputs
+      - https://www.anthropic.com/claude-opus-5-5
+      - https://claude.com/pricing
+    verified: "2026-10-13"
+  - id: claude-sonnet-5-5
+    name: Claude Sonnet 5.5
+    arena:
+      low: ~
+      medium: ~
+      high: ~
+      xhigh: "Claude Sonnet 5.5 (xHigh)"
+      max: ~
+    vendor: anthropic
+    kind: chat
+    jurisdiction: US
+    pool: quota
+    context: "1000000"
+    max_out: "128000"
+    cost:
+      in: "2"
+      cache_hit: "0.10"
+      out: "10"
+      cache_write: "2.50"
+      note: "batch API 50% off; 5m cache write 2.50; cache-hit rate is 0.05x input, halved from 0.20 on 2026-10-07; the output-300k-2026-03-24 beta header raises max output to 300000"
+    capabilities:
+      tools: "yes"
+      vision: "yes"
+      json: "yes"
+      thinking: adaptive
+      effort: low, medium, high, xhigh, max
+    aliases: claude-sonnet-5-5
+    benchmarks:
+      - name: Terminal-Bench 4.0
+        score: "70.6"
+        source: https://www.anthropic.com/claude-sonnet-5-5
+        date: "2026-09-28"
+        grade: B
+      - name: FrontierCode 1.1 (Main), at Max effort
+        score: "46.2"
+        source: https://www.anthropic.com/claude-sonnet-5-5
+        date: "2026-09-28"
+        grade: B
+      - name: CursorBench 4.0
+        score: "55.5"
+        source: https://www.anthropic.com/claude-sonnet-5-5
+        date: "2026-09-28"
+        grade: B
+      - name: Humanity's Last Exam, with tools
+        score: "64.5"
+        source: https://www.anthropic.com/claude-sonnet-5-5
+        date: "2026-09-28"
+        grade: B
+      - name: Terminal-Bench 4.0 (AA)
+        score: "63.6"
+        source: https://artificialanalysis.ai/models/claude-sonnet-5-5
+        date: "2026-10-13"
+        grade: A
+      - name: Humanity's Last Exam (AA)
+        score: "55.0"
+        source: https://artificialanalysis.ai/models/claude-sonnet-5-5
+        date: "2026-10-13"
+        grade: A
+      - name: SciCode (AA)
+        score: "61.0"
+        source: https://artificialanalysis.ai/models/claude-sonnet-5-5
+        date: "2026-10-13"
+        grade: A
+      - name: AA-LCR
+        score: "82.7"
+        source: https://artificialanalysis.ai/models/claude-sonnet-5-5
+        date: "2026-10-13"
+        grade: A
+      - name: FrontierCode (AA)
+        score: "45.8"
+        source: https://artificialanalysis.ai/models/claude-sonnet-5-5
+        date: "2026-10-13"
+        grade: A
+      - name: CritPt
+        score: "31.4"
+        source: https://artificialanalysis.ai/models/claude-sonnet-5-5
+        date: "2026-10-13"
+        grade: A
+      - name: MLCR-AA
+        score: "75.0"
+        source: https://artificialanalysis.ai/models/claude-sonnet-5-5
+        date: "2026-10-13"
+        grade: A
+    notes:
+      use_for: "well-scoped everyday tasks, bug fixing, and polished documents, slides and spreadsheets — https://www.anthropic.com/claude-sonnet-5-5"
+      not_for: "complex open-ended work needing sustained judgment, where the vendor still puts Opus 5.5 ahead — https://www.anthropic.com/claude-sonnet-5-5"
+    gaps: >
+      no alias distinct from the id. The 2026-09-28 announcement page still shows a 0.20
+      cache read for this model; the pricing page and the Haiku 5.5 announcement give
+      0.10, which is what this entry records. No SWE-bench Verified figure is published.
+      The lowest thinking setting is between_tools, not the effort levels alone.
+    sources:
+      - https://platform.claude.com/docs/en/about-claude/pricing
+      - https://platform.claude.com/docs/en/models/sonnet-5-5/overview
+      - https://platform.claude.com/docs/en/build-with-claude/effort
+      - https://platform.claude.com/docs/en/build-with-claude/structured-outputs
+      - https://www.anthropic.com/claude-sonnet-5-5
+      - https://www.anthropic.com/claude-haiku-5-5
+    verified: "2026-10-13"
+  - id: claude-haiku-5-5
+    name: Claude Haiku 5.5
+    arena:
+      low: ~
+      medium: ~
+      high: ~
+      xhigh: ~
+      max: ~
+    vendor: anthropic
+    kind: chat
+    jurisdiction: US
+    pool: quota
+    context: "1000000"
+    max_out: "128000"
+    cost:
+      in: "0.10"
+      cache_hit: "0.01"
+      out: "0.50"
+      cache_write: "0.125"
+      long_prompt:
+        over: "100000"
+        in: "0.50"
+        cache_hit: "0.05"
+        out: "2.50"
+      note: "prompts over 100000 tokens bill at 0.50 in / 0.05 cache hit / 2.50 out; batch API 50% off; 5m cache write 0.125; the output-300k-2026-03-24 beta header raises max output to 300000"
+    capabilities:
+      tools: "yes"
+      vision: "yes"
+      json: "yes"
+      thinking: adaptive
+      effort: low, medium, high, xhigh, max
+    aliases: claude-haiku-5-5
+    benchmarks:
+      - name: Terminal-Bench 4.0
+        score: "39.2"
+        source: https://www.anthropic.com/claude-haiku-5-5
+        date: "2026-10-07"
+        grade: B
+      - name: FrontierCode 1.1 (Main)
+        score: "46.4"
+        source: https://www.anthropic.com/claude-haiku-5-5
+        date: "2026-10-07"
+        grade: B
+      - name: OSWorld 2.1 (offline subset, partial credit)
+        score: "72.4"
+        source: https://www.anthropic.com/claude-haiku-5-5
+        date: "2026-10-07"
+        grade: B
+      - name: Humanity's Last Exam, no tools
+        score: "45.9"
+        source: https://www.anthropic.com/claude-haiku-5-5
+        date: "2026-10-07"
+        grade: B
+      - name: Terminal-Bench 4.0 (AA)
+        score: "32.8"
+        source: https://artificialanalysis.ai/models/claude-haiku-5-5
+        date: "2026-10-13"
+        grade: A
+      - name: Humanity's Last Exam (AA)
+        score: "44.4"
+        source: https://artificialanalysis.ai/models/claude-haiku-5-5
+        date: "2026-10-13"
+        grade: A
+      - name: SciCode (AA)
+        score: "55.0"
+        source: https://artificialanalysis.ai/models/claude-haiku-5-5
+        date: "2026-10-13"
+        grade: A
+      - name: AA-LCR
+        score: "82.7"
+        source: https://artificialanalysis.ai/models/claude-haiku-5-5
+        date: "2026-10-13"
+        grade: A
+      - name: FrontierCode (AA)
+        score: "41.8"
+        source: https://artificialanalysis.ai/models/claude-haiku-5-5
+        date: "2026-10-13"
+        grade: A
+      - name: CritPt
+        score: "18.9"
+        source: https://artificialanalysis.ai/models/claude-haiku-5-5
+        date: "2026-10-13"
+        grade: A
+      - name: MLCR-AA
+        score: "63.3"
+        source: https://artificialanalysis.ai/models/claude-haiku-5-5
+        date: "2026-10-13"
+        grade: A
+    notes:
+      use_for: "compaction, summarization, database queries, classification and subagent work; the vendor's first Haiku with an adjustable effort setting — https://www.anthropic.com/claude-haiku-5-5"
+      not_for: "complex agentic coding: Terminal-Bench 4.0 39.2 against Opus 5.5's 66.4 — https://www.anthropic.com/claude-haiku-5-5"
+    gaps: >
+      no alias distinct from the id. The vendor gives one context window of 1M tokens;
+      pi --list-models reports 200K for this id, which is the pi defect 2h must record.
+      No SWE-bench Verified figure is published.
+    sources:
+      - https://platform.claude.com/docs/en/about-claude/pricing
+      - https://platform.claude.com/docs/en/models/haiku-5-5/overview
+      - https://platform.claude.com/docs/en/build-with-claude/effort
+      - https://platform.claude.com/docs/en/build-with-claude/structured-outputs
+      - https://www.anthropic.com/claude-haiku-5-5
+    verified: "2026-10-13"
+  - id: deepseek-flash
+    name: DeepSeek Flash
+    arena:
+      low: ~
+      high: ~
+      max: "DeepSeek-V4.1-Flash-20260910 (Max)"
+    vendor: deepseek
+    kind: chat
+    jurisdiction: CN
+    pool: usd
+    context: "1000000"
+    max_out: "384000"
+    cost:
+      in: "0.30"
+      cache_hit: "0.006"
+      out: "1.20"
+      off_peak:
+        peak: "mon-fri 01:00-04:00, 06:00-10:00"
+        factor: "0.5"
+      note: "peak rates; peak is 01:00-04:00 and 06:00-10:00 UTC Monday to Friday, and off-peak is half (0.15 in / 0.003 cache hit / 0.60 out) including weekends and Chinese public holidays"
+    capabilities:
+      tools: "yes"
+      vision: "yes"
+      json: "yes"
+      thinking: "yes"
+      effort: low, high, max
+    aliases: deepseek-v4-flash, deepseek-v4-flash-vision-exp
+    benchmarks:
+      - name: Terminal-Bench 4.0 (AA)
+        score: "26.8"
+        source: https://artificialanalysis.ai/models/deepseek-v4-1-flash
+        date: "2026-10-13"
+        grade: A
+      - name: Humanity's Last Exam (AA)
+        score: "39.2"
+        source: https://artificialanalysis.ai/models/deepseek-v4-1-flash
+        date: "2026-10-13"
+        grade: A
+      - name: SciCode (AA)
+        score: "51.9"
+        source: https://artificialanalysis.ai/models/deepseek-v4-1-flash
+        date: "2026-10-13"
+        grade: A
+      - name: AA-LCR
+        score: "84.0"
+        source: https://artificialanalysis.ai/models/deepseek-v4-1-flash
+        date: "2026-10-13"
+        grade: A
+      - name: FrontierCode (AA)
+        score: "44.0"
+        source: https://artificialanalysis.ai/models/deepseek-v4-1-flash
+        date: "2026-10-13"
+        grade: A
+      - name: CritPt
+        score: "14.3"
+        source: https://artificialanalysis.ai/models/deepseek-v4-1-flash
+        date: "2026-10-13"
+        grade: A
+      - name: MLCR-AA
+        score: "22.8"
+        source: https://artificialanalysis.ai/models/deepseek-v4-1-flash
+        date: "2026-10-13"
+        grade: A
+    notes:
+      use_for: "the cheap cloud tier in private mode: 2500 concurrent requests, tool calls, JSON output and vision, with thinking on by default — https://api-docs.deepseek.com/quick_start/pricing"
+      not_for: "work that must not leave the PRC, and prompts of chat prefix completion or FIM in thinking mode, which are non-thinking-mode features only — https://api-docs.deepseek.com/quick_start/pricing"
+    gaps: >
+      no benchmark figure is published as text: the V4.1-Flash benchmark table on the
+      2026-09-10 news page is an image, so no score could be read. Jurisdiction is not
+      stated on the pricing or news page; CN is the vendor's country and the earlier
+      privacy-policy reading, which was not re-verified today. The vendor states maximum
+      output only as MAXIMUM 384K.
+    sources:
+      - https://api-docs.deepseek.com/quick_start/pricing
+      - https://api-docs.deepseek.com/news/news260910
+    verified: "2026-10-13"
+  - id: mistral-large-4
+    name: Mistral Large 4
+    arena:
+      default: "Mistral Large 4"
+    vendor: mistral
+    kind: chat
+    jurisdiction: EU
+    pool: usd
+    context: "1000000"
+    cost:
+      in: "0.68"
+      cache_hit: "0.07"
+      out: "2.09"
+      note: "sale price while the model is in Public Preview; list is 1.36 in / 0.14 cache hit / 4.18 out, and 1B context inference is priced regionally"
+    capabilities:
+      tools: "yes"
+      vision: "yes"
+      json: "yes"
+      thinking: "yes"
+    aliases: mistral-large-4-0
+    benchmarks:
+      - name: DeepSWE v1.1
+        score: "61.7"
+        source: https://mistral.ai/news/mistral-large-4/
+        date: "2026-10-06"
+        grade: B
+      - name: SWE-Atlas-QnA
+        score: "59.4"
+        source: https://mistral.ai/news/mistral-large-4/
+        date: "2026-10-06"
+        grade: B
+      - name: Terminal-Bench 4
+        score: "28.3"
+        source: https://mistral.ai/news/mistral-large-4/
+        date: "2026-10-06"
+        grade: B
+      - name: Cybench (40 security-competition exercises)
+        score: "93.0"
+        source: https://mistral.ai/news/mistral-large-4/
+        date: "2026-10-06"
+        grade: B
+      - name: Terminal-Bench 4.0 (AA)
+        score: "26.8"
+        source: https://artificialanalysis.ai/models/mistral-large-4
+        date: "2026-10-13"
+        grade: A
+      - name: Humanity's Last Exam (AA)
+        score: "35.0"
+        source: https://artificialanalysis.ai/models/mistral-large-4
+        date: "2026-10-13"
+        grade: A
+      - name: SciCode (AA)
+        score: "54.2"
+        source: https://artificialanalysis.ai/models/mistral-large-4
+        date: "2026-10-13"
+        grade: A
+      - name: AA-LCR
+        score: "81.3"
+        source: https://artificialanalysis.ai/models/mistral-large-4
+        date: "2026-10-13"
+        grade: A
+      - name: CritPt
+        score: "10.6"
+        source: https://artificialanalysis.ai/models/mistral-large-4
+        date: "2026-10-13"
+        grade: A
+    notes:
+      use_for: "agentic coding, agentic workflows and cybersecurity tasks; 52B active of 1.05T parameters with a 1.6B vision encoder — https://docs.mistral.ai/models/mistral-large-4-0"
+      not_for: "work needing a released model: it is Public Preview, the weights are not out, and the vendor warns the benchmark results are preliminary and will change — https://docs.mistral.ai/models/mistral-large-4-0"
+    gaps: >
+      max_out is not stated on the model card, the pricing page or the model selection
+      guide. No -latest alias exists; the docs give two API names and no dated one.
+      Jurisdiction is not stated on the fetched pages: EU follows the vendor's separation
+      of European Union from rest-of-world consumer terms at https://mistral.ai/terms.
+      Thinking is recorded from the card's Output row (reasoning, text); no thinking
+      control or effort levels are documented.
+    sources:
+      - https://docs.mistral.ai/inference/pricing
+      - https://docs.mistral.ai/models/mistral-large-4-0
+      - https://docs.mistral.ai/inference/model-selection-guide
+      - https://mistral.ai/news/mistral-large-4/
+      - https://mistral.ai/terms
+    verified: "2026-10-13"
+  - id: mistral-medium-3-5
+    name: Mistral Medium 3.5
+    arena:
+      default: "Mistral Medium 3.5"
+    vendor: mistral
+    kind: chat
+    jurisdiction: EU
+    pool: usd
+    context: "256000"
+    cost:
+      in: "1.5"
+      cache_hit: "0.15"
+      out: "7.5"
+      note: "no tiering, no peak pricing; cached input is priced on the pricing page but not on the model card"
+    capabilities:
+      tools: "yes"
+      vision: "yes"
+      json: "yes"
+      thinking: "yes"
+    aliases: mistral-medium-3, mistral-medium-latest
+    benchmarks:
+      - name: Terminal-Bench 4.0 (AA)
+        score: "0.0"
+        source: https://artificialanalysis.ai/models/mistral-medium-3-5
+        date: "2026-10-13"
+        grade: A
+      - name: Humanity's Last Exam (AA)
+        score: "13.8"
+        source: https://artificialanalysis.ai/models/mistral-medium-3-5
+        date: "2026-10-13"
+        grade: A
+      - name: SciCode (AA)
+        score: "40.2"
+        source: https://artificialanalysis.ai/models/mistral-medium-3-5
+        date: "2026-10-13"
+        grade: A
+      - name: AA-LCR
+        score: "69.3"
+        source: https://artificialanalysis.ai/models/mistral-medium-3-5
+        date: "2026-10-13"
+        grade: A
+      - name: IFBench (AA)
+        score: "68.8"
+        source: https://artificialanalysis.ai/models/mistral-medium-3-5
+        date: "2026-10-13"
+        grade: A
+      - name: GPQA Diamond (AA)
+        score: "74.8"
+        source: https://artificialanalysis.ai/models/mistral-medium-3-5
+        date: "2026-10-13"
+        grade: A
+      - name: τ²-Bench (AA)
+        score: "94.2"
+        source: https://artificialanalysis.ai/models/mistral-medium-3-5
+        date: "2026-10-13"
+        grade: A
+      - name: CritPt
+        score: "0.0"
+        source: https://artificialanalysis.ai/models/mistral-medium-3-5
+        date: "2026-10-13"
+        grade: A
+      - name: MLCR-AA
+        score: "1.7"
+        source: https://artificialanalysis.ai/models/mistral-medium-3-5
+        date: "2026-10-13"
+        grade: A
+    notes:
+      use_for: "the vendor's frontier-class model for agentic and coding use cases, released as open weights under a Modified MIT license — https://docs.mistral.ai/models/mistral-medium-3-5-26-04"
+      not_for: "long-context work: 256k context window, a quarter of Large 4 at roughly twice the input price — https://docs.mistral.ai/inference/model-selection-guide"
+    gaps: >
+      max_out is not stated on the model card, the pricing page or the model selection
+      guide. No benchmark figure in percent form is published on the vendor pages: the
+      card gives a 0-5 performance rating only. Jurisdiction as for mistral-large-4.
+      Thinking is recorded from the card's Output row; no thinking control is documented.
+    sources:
+      - https://docs.mistral.ai/inference/pricing
+      - https://docs.mistral.ai/models/mistral-medium-3-5-26-04
+      - https://docs.mistral.ai/inference/model-selection-guide
+      - https://mistral.ai/terms
+    verified: "2026-10-13"
+  - id: mistral-small-2603
+    name: Mistral Small 4
+    arena:
+      default: ~
+    vendor: mistral
+    kind: chat
+    jurisdiction: EU
+    pool: usd
+    context: "256000"
+    cost:
+      in: "0.15"
+      cache_hit: "0.015"
+      out: "0.60"
+      note: "no tiering, no peak pricing; 119B parameters with 6.5B active"
+    capabilities:
+      tools: "yes"
+      vision: "yes"
+      json: "yes"
+      thinking: "yes"
+    aliases: mistral-small-latest
+    benchmarks:
+      - name: Terminal-Bench 4.0 (AA)
+        score: "0.0"
+        source: https://artificialanalysis.ai/models/mistral-small-4
+        date: "2026-10-13"
+        grade: A
+      - name: Humanity's Last Exam (AA)
+        score: "9.9"
+        source: https://artificialanalysis.ai/models/mistral-small-4
+        date: "2026-10-13"
+        grade: A
+      - name: SciCode (AA)
+        score: "38.8"
+        source: https://artificialanalysis.ai/models/mistral-small-4
+        date: "2026-10-13"
+        grade: A
+      - name: AA-LCR
+        score: "49.7"
+        source: https://artificialanalysis.ai/models/mistral-small-4
+        date: "2026-10-13"
+        grade: A
+      - name: IFBench (AA)
+        score: "48.2"
+        source: https://artificialanalysis.ai/models/mistral-small-4
+        date: "2026-10-13"
+        grade: A
+      - name: GPQA Diamond (AA)
+        score: "76.9"
+        source: https://artificialanalysis.ai/models/mistral-small-4
+        date: "2026-10-13"
+        grade: A
+      - name: τ²-Bench (AA)
+        score: "41.2"
+        source: https://artificialanalysis.ai/models/mistral-small-4
+        date: "2026-10-13"
+        grade: A
+      - name: CritPt
+        score: "0.3"
+        source: https://artificialanalysis.ai/models/mistral-small-4
+        date: "2026-10-13"
+        grade: A
+    notes:
+      use_for: "cheap cloud work that needs tool calls and images: one hybrid model for instruct, reasoning and coding, Apache 2.0 — https://docs.mistral.ai/models/mistral-small-4-0-26-03"
+      not_for: "the hardest reasoning: the vendor rates performance 3.5/5 against Large 4's 4/5 — https://docs.mistral.ai/inference/model-selection-guide"
+    gaps: >
+      max_out is not stated on the model card, the pricing page or the model selection
+      guide. No benchmark figure in percent form is published: the 2026-03-16
+      announcement reports AA LCR as 0.72 and LiveCodeBench as a figure-only comparison,
+      neither of which is a percentage. Jurisdiction as for mistral-large-4. Thinking is
+      recorded from the card's Output row and the announcement's configurable reasoning
+      effort; the named effort levels are not documented.
+    sources:
+      - https://docs.mistral.ai/inference/pricing
+      - https://docs.mistral.ai/models/mistral-small-4-0-26-03
+      - https://docs.mistral.ai/inference/model-selection-guide
+      - https://mistral.ai/news/mistral-small-4/
+      - https://mistral.ai/terms
+    verified: "2026-10-13"
+  # ADDED 2026-10-23 (Loom, second pool): the chart's second-cheapest frontier row,
+  # reachable through the `mistral` provider that is already installed and keyed.
+  # The catalogue was missing it, so the router could not name it and the scout could
+  # not compare it -- the capacity existed and was invisible (journal 2026-10-23).
+  # vendor is Mistral, not Z.ai: this is Mistral's API id for a model it hosts,
+  # "served without Mistral modifications", so JURISDICTION AND TERMS ARE MISTRAL'S.
+  # Z.ai's own API is a route nobody in this system can call; its cache rate differs.
+  - id: zai-glm-5-3-flash
+    name: Z.ai GLM 5.3 Flash
+    arena:
+      default: "GLM-5.3-Flash"
+    vendor: mistral
+    kind: chat
+    jurisdiction: EU
+    pool: usd
+    context: "1000000"
+    max_out: "128000"
+    cost:
+      in: "0.15"
+      cache_hit: "0.03"
+      out: "0.50"
+      note: "flat: no tiering and no peak pricing; Z.ai's own API prints the same three rates"
+    capabilities:
+      tools: "yes"
+      vision: "yes"
+      json: "yes"
+      thinking: "yes"
+    notes:
+      use_for: "a cheap reader and batch worker with a cache-hit rate a fifth of deepseek-flash's input rate, 1M context and images -- https://docs.mistral.ai/models/zai-glm-5-3-flash"
+      not_for: "work whose result nobody can check before it lands: no benchmark was readable, so the tier this enters must be one whose artifact is verified (read, batch)"
+    gaps: >
+      No benchmark figure: the Artificial Analysis page names the benchmarks of its
+      Intelligence Index but prints no numeric score for this model, and Mistral's card
+      publishes none. The chart's row is arena preference (1476 Elo) and is not carried
+      here as a benchmark. The chart rates no effort level for this model; the vendor
+      documents a thinking toggle, not a level ladder, so `arena:` names one row (`default`)
+      and a tier's effort is whatever pi sends. PI CLAMPS AN UNLISTED LEVEL UPWARD, measured
+      2026-10-24: all six eval cells asked for `--thinking medium` and every session logged
+      `thinkingLevel: high`, so a tier that runs this model must declare
+      `effort_by: zai-glm-5-3-flash=high` or its evidence is recorded at a level it never ran
+      at. Minted from Mistral's card; the Z.ai card was not read.
+    sources:
+      - https://docs.mistral.ai/models/zai-glm-5-3-flash
+      - https://docs.mistral.ai/inference/pricing
+      - https://docs.z.ai/guides/overview/pricing
+      - https://artificialanalysis.ai/models/glm-5-3-flash
+    verified: "2026-10-23"
+  - id: zai-glm-5-3
+    name: Z.ai GLM 5.3
+    arena:
+      default: "GLM-5.3 (Max)"
+    vendor: mistral
+    kind: chat
+    jurisdiction: EU
+    pool: usd
+    context: "1000000"
+    max_out: "128000"
+    cost:
+      in: "1.4"
+      cache_hit: "0.14"
+      out: "4.4"
+      note: "Mistral's cached-input rate; Z.ai's own API prices the same cached token at 0.26, so the route decides the cache bill"
+    capabilities:
+      tools: "yes"
+      vision: "no"
+      json: "yes"
+      thinking: "yes"
+    notes:
+      use_for: "a frontier-class text model at a tenth of Opus's output rate, for the classes that name only a Claude model -- https://docs.mistral.ai/models/zai-glm-5-3"
+      not_for: "images (text-only input) and any class whose diff nobody reads before it lands: no benchmark was readable, so it is not yet an adequacy claim for `edit`, `test` or `docs`"
+    gaps: >
+      The chart holds one row for this model, its Max variant, so `arena:` maps `default`
+      to it and a comparison reads at max thinking. No benchmark figure: Mistral's card
+      publishes none and the Artificial Analysis page (titled "GLM-5.3 (max)") prints no
+      numeric score. Effort levels are undocumented; a thinking toggle is what the vendor
+      documents.
+    sources:
+      - https://docs.mistral.ai/models/zai-glm-5-3
+      - https://docs.mistral.ai/inference/pricing
+      - https://docs.z.ai/guides/overview/pricing
+      - https://artificialanalysis.ai/models/glm-5-3
+    verified: "2026-10-23"
+  - id: ministral-3b-2512
+    name: Ministral 3 3B
+    vendor: mistral
+    kind: chat
+    jurisdiction: EU
+    pool: usd
+    context: "256000"
+    cost:
+      in: "0.10"
+      cache_hit: "0.01"
+      out: "0.10"
+      note: "symmetric: output costs the same as input; no tiering, no peak pricing"
+    capabilities:
+      tools: "yes"
+      vision: "yes"
+      json: "yes"
+      thinking: "no"
+    aliases: ministral-3b-latest
+    benchmarks:
+      - name: Terminal-Bench 4.0 (AA)
+        score: "0.0"
+        source: https://artificialanalysis.ai/models/ministral-3-3b
+        date: "2026-10-13"
+        grade: A
+      - name: Humanity's Last Exam (AA)
+        score: "5.4"
+        source: https://artificialanalysis.ai/models/ministral-3-3b
+        date: "2026-10-13"
+        grade: A
+      - name: SciCode (AA)
+        score: "15.3"
+        source: https://artificialanalysis.ai/models/ministral-3-3b
+        date: "2026-10-13"
+        grade: A
+      - name: AA-LCR
+        score: "17.0"
+        source: https://artificialanalysis.ai/models/ministral-3-3b
+        date: "2026-10-13"
+        grade: A
+      - name: IFBench (AA)
+        score: "26.8"
+        source: https://artificialanalysis.ai/models/ministral-3-3b
+        date: "2026-10-13"
+        grade: A
+      - name: GPQA Diamond (AA)
+        score: "35.8"
+        source: https://artificialanalysis.ai/models/ministral-3-3b
+        date: "2026-10-13"
+        grade: A
+      - name: LiveCodeBench (AA)
+        score: "24.7"
+        source: https://artificialanalysis.ai/models/ministral-3-3b
+        date: "2026-10-13"
+        grade: A
+      - name: τ²-Bench (AA)
+        score: "24.9"
+        source: https://artificialanalysis.ai/models/ministral-3-3b
+        date: "2026-10-13"
+        grade: A
+      - name: CritPt
+        score: "0.0"
+        source: https://artificialanalysis.ai/models/ministral-3-3b
+        date: "2026-10-13"
+        grade: A
+    notes:
+      use_for: "edge deployment and the cheapest cloud tier: language and vision in 3B parameters, Apache 2.0 — https://docs.mistral.ai/models/ministral-3-3b-25-12"
+      not_for: "anything needing quality: the vendor rates performance 1/5, its lowest current rating — https://docs.mistral.ai/inference/model-selection-guide"
+    gaps: >
+      max_out is not stated on the model card, the pricing page or the model selection
+      guide. No benchmark figure in percent form is published; the card gives a 0-5
+      performance rating only. Jurisdiction as for mistral-large-4. The card's Output row
+      is text alone, which is the basis for thinking no; separate Reasoning and Base
+      weights exist on Hugging Face but the API name serves the Instruct model.
+    sources:
+      - https://docs.mistral.ai/inference/pricing
+      - https://docs.mistral.ai/models/ministral-3-3b-25-12
+      - https://docs.mistral.ai/inference/model-selection-guide
+      - https://mistral.ai/terms
+    verified: "2026-10-13"
+  - id: ministral-8b-2512
+    name: Ministral 3 8B
+    vendor: mistral
+    kind: chat
+    jurisdiction: EU
+    pool: usd
+    context: "256000"
+    cost:
+      in: "0.15"
+      cache_hit: "0.015"
+      out: "0.15"
+      note: "symmetric: output costs the same as input; no tiering, no peak pricing"
+    capabilities:
+      tools: "yes"
+      vision: "yes"
+      json: "yes"
+      thinking: "no"
+    aliases: ministral-8b-latest
+    benchmarks:
+      - name: Terminal-Bench 4.0 (AA)
+        score: "0.0"
+        source: https://artificialanalysis.ai/models/ministral-3-8b
+        date: "2026-10-13"
+        grade: A
+      - name: Humanity's Last Exam (AA)
+        score: "4.3"
+        source: https://artificialanalysis.ai/models/ministral-3-8b
+        date: "2026-10-13"
+        grade: A
+      - name: SciCode (AA)
+        score: "20.7"
+        source: https://artificialanalysis.ai/models/ministral-3-8b
+        date: "2026-10-13"
+        grade: A
+      - name: AA-LCR
+        score: "25.7"
+        source: https://artificialanalysis.ai/models/ministral-3-8b
+        date: "2026-10-13"
+        grade: A
+      - name: IFBench (AA)
+        score: "29.1"
+        source: https://artificialanalysis.ai/models/ministral-3-8b
+        date: "2026-10-13"
+        grade: A
+      - name: GPQA Diamond (AA)
+        score: "47.1"
+        source: https://artificialanalysis.ai/models/ministral-3-8b
+        date: "2026-10-13"
+        grade: A
+      - name: LiveCodeBench (AA)
+        score: "30.3"
+        source: https://artificialanalysis.ai/models/ministral-3-8b
+        date: "2026-10-13"
+        grade: A
+      - name: τ²-Bench (AA)
+        score: "26.6"
+        source: https://artificialanalysis.ai/models/ministral-3-8b
+        date: "2026-10-13"
+        grade: A
+      - name: CritPt
+        score: "0.0"
+        source: https://artificialanalysis.ai/models/ministral-3-8b
+        date: "2026-10-13"
+        grade: A
+    notes:
+      use_for: "edge deployment with text and vision: the vendor calls it best-in-class in its size class, Apache 2.0 — https://docs.mistral.ai/models/ministral-3-8b-25-12"
+      not_for: "quality-sensitive work: the vendor rates performance 2/5 — https://docs.mistral.ai/inference/model-selection-guide"
+    gaps: >
+      max_out is not stated on the model card, the pricing page or the model selection
+      guide. No benchmark figure in percent form is published. Jurisdiction as for
+      mistral-large-4. Thinking no is read from the card's Output row (text alone).
+    sources:
+      - https://docs.mistral.ai/inference/pricing
+      - https://docs.mistral.ai/models/ministral-3-8b-25-12
+      - https://docs.mistral.ai/inference/model-selection-guide
+      - https://mistral.ai/terms
+    verified: "2026-10-13"
+  - id: ministral-14b-2512
+    name: Ministral 3 14B
+    vendor: mistral
+    kind: chat
+    jurisdiction: EU
+    pool: usd
+    context: "256000"
+    cost:
+      in: "0.20"
+      cache_hit: "0.02"
+      out: "0.20"
+      note: "symmetric: output costs the same as input; no tiering, no peak pricing"
+    capabilities:
+      tools: "yes"
+      vision: "yes"
+      json: "yes"
+      thinking: "no"
+    aliases: ministral-14b-latest
+    benchmarks:
+      - name: Terminal-Bench 4.0 (AA)
+        score: "0.0"
+        source: https://artificialanalysis.ai/models/ministral-3-14b
+        date: "2026-10-13"
+        grade: A
+      - name: Humanity's Last Exam (AA)
+        score: "4.6"
+        source: https://artificialanalysis.ai/models/ministral-3-14b
+        date: "2026-10-13"
+        grade: A
+      - name: SciCode (AA)
+        score: "23.8"
+        source: https://artificialanalysis.ai/models/ministral-3-14b
+        date: "2026-10-13"
+        grade: A
+      - name: AA-LCR
+        score: "26.3"
+        source: https://artificialanalysis.ai/models/ministral-3-14b
+        date: "2026-10-13"
+        grade: A
+      - name: IFBench (AA)
+        score: "32.0"
+        source: https://artificialanalysis.ai/models/ministral-3-14b
+        date: "2026-10-13"
+        grade: A
+      - name: GPQA Diamond (AA)
+        score: "57.2"
+        source: https://artificialanalysis.ai/models/ministral-3-14b
+        date: "2026-10-13"
+        grade: A
+      - name: LiveCodeBench (AA)
+        score: "35.1"
+        source: https://artificialanalysis.ai/models/ministral-3-14b
+        date: "2026-10-13"
+        grade: A
+      - name: τ²-Bench (AA)
+        score: "27.2"
+        source: https://artificialanalysis.ai/models/ministral-3-14b
+        date: "2026-10-13"
+        grade: A
+      - name: CritPt
+        score: "0.0"
+        source: https://artificialanalysis.ai/models/ministral-3-14b
+        date: "2026-10-13"
+        grade: A
+    notes:
+      use_for: "the largest Ministral, for local and cloud work with a 256k window at 0.20 per million either way, Apache 2.0 — https://docs.mistral.ai/models/ministral-3-14b-25-12"
+      not_for: "matching Mistral Small 4: the vendor rates it 2/5 against Small 4's 3.5/5, and Small 4 is cheaper per output token — https://docs.mistral.ai/inference/model-selection-guide"
+    gaps: >
+      max_out is not stated on the model card, the pricing page or the model selection
+      guide. No benchmark figure in percent form is published. Jurisdiction as for
+      mistral-large-4. Thinking no is read from the card's Output row (text alone).
+    sources:
+      - https://docs.mistral.ai/inference/pricing
+      - https://docs.mistral.ai/models/ministral-3-14b-25-12
+      - https://docs.mistral.ai/inference/model-selection-guide
+      - https://mistral.ai/terms
+    verified: "2026-10-13"
+  - id: codestral-2508
+    name: Codestral
+    vendor: mistral
+    kind: chat
+    jurisdiction: EU
+    pool: usd
+    context: "128000"
+    cost:
+      in: "0.30"
+      cache_hit: "0.03"
+      out: "0.90"
+      note: "no tiering, no peak pricing; text in, text out only"
+    capabilities:
+      tools: "yes"
+      vision: "no"
+      json: "yes"
+      thinking: "no"
+    aliases: codestral-latest
+    notes:
+      use_for: "low-latency, high-frequency code work: fill-in-the-middle, code generation and code completion — https://docs.mistral.ai/models/codestral-25-08"
+      not_for: "anything with an image or a long document: input is text only and the context is 128k, the smallest in this catalogue — https://docs.mistral.ai/models/codestral-25-08"
+    gaps: >
+      max_out is not stated on the model card, the pricing page or the model selection
+      guide. No benchmark figure in percent form is published; the card gives a 0-5
+      performance rating only. Jurisdiction as for mistral-large-4.
+    sources:
+      - https://docs.mistral.ai/inference/pricing
+      - https://docs.mistral.ai/models/codestral-25-08
+      - https://docs.mistral.ai/inference/model-selection-guide
+      - https://mistral.ai/terms
+    verified: "2026-10-13"
+  - id: qwen3:4b-instruct-2507-q4_K_M
+    name: Qwen3 4B Instruct 2507
+    vendor: ollama
+    kind: chat
+    jurisdiction: local
+    pool: free
+    context: "262144"
+    cost:
+      in: "0"
+      cache_hit: "0"
+      out: "0"
+      note: "local inference on this machine; no per-token charge, the cost is the electricity and the time"
+    capabilities:
+      tools: "yes"
+      vision: "no"
+      thinking: "no"
+    quantised: q4_K_M
+    benchmarks:
+      - name: Humanity's Last Exam (AA)
+        score: "4.5"
+        source: https://artificialanalysis.ai/models/qwen3-4b-2507-instruct
+        date: "2026-10-13"
+        grade: A
+      - name: AA-LCR
+        score: "11.3"
+        source: https://artificialanalysis.ai/models/qwen3-4b-2507-instruct
+        date: "2026-10-13"
+        grade: A
+      - name: IFBench (AA)
+        score: "33.5"
+        source: https://artificialanalysis.ai/models/qwen3-4b-2507-instruct
+        date: "2026-10-13"
+        grade: A
+      - name: GPQA Diamond (AA)
+        score: "51.7"
+        source: https://artificialanalysis.ai/models/qwen3-4b-2507-instruct
+        date: "2026-10-13"
+        grade: A
+      - name: LiveCodeBench (AA)
+        score: "37.7"
+        source: https://artificialanalysis.ai/models/qwen3-4b-2507-instruct
+        date: "2026-10-13"
+        grade: A
+      - name: τ²-Bench (AA)
+        score: "26.6"
+        source: https://artificialanalysis.ai/models/qwen3-4b-2507-instruct
+        date: "2026-10-13"
+        grade: A
+      - name: CritPt
+        score: "0.0"
+        source: https://artificialanalysis.ai/models/qwen3-4b-2507-instruct
+        date: "2026-10-13"
+        grade: A
+    notes:
+      use_for: "exact commands on a narrow toolset, the bash worker: 4.02B parameters in 2.5GB, Apache 2.0 — https://ollama.com/library/qwen3:4b-instruct-2507-q4_K_M"
+      not_for: "anything the parent will quote verbatim, and any prompt near the context limit: this is the 4B, and its prefill is the reason role definitions keep their toolset narrow — https://ollama.com/library/qwen3"
+    gaps: >
+      max_out is not stated on the model page or the tags page. json and effort are not
+      stated. vision no is read from the tags page, which lists the input modality as
+      Text. tools is stated for the qwen3 family on the model page, whose capability
+      chips are shared by all 58 tags rather than per tag; so is thinking, which the
+      vendor's card contradicts for this tag ("supports only non-thinking mode",
+      huggingface.co/Qwen/Qwen3-4B-Instruct-2507), and the vendor wins. Public benchmark
+      scores are images on the page, not text, so none is recorded; the tag runs at q4,
+      so any published score would be an upper bound (decision 21).
+    sources:
+      - https://ollama.com/library/qwen3
+      - https://ollama.com/library/qwen3:4b-instruct-2507-q4_K_M
+      - https://ollama.com/library/qwen3/tags
+      - https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507
+    verified: "2026-10-13"
+  - id: qwen3:30b-a3b-thinking-2507-q4_K_M
+    name: Qwen3 30B A3B Thinking 2507
+    vendor: ollama
+    kind: chat
+    jurisdiction: local
+    pool: free
+    context: "262144"
+    cost:
+      in: "0"
+      cache_hit: "0"
+      out: "0"
+      note: "local inference on this machine; no per-token charge, the cost is the electricity and the time"
+    capabilities:
+      tools: "yes"
+      vision: "no"
+      thinking: "yes"
+    quantised: q4_K_M
+    benchmarks:
+      - name: Terminal-Bench 4.0 (AA)
+        score: "0.0"
+        source: https://artificialanalysis.ai/models/qwen3-30b-a3b-2507-reasoning
+        date: "2026-10-13"
+        grade: A
+      - name: Humanity's Last Exam (AA)
+        score: "10.3"
+        source: https://artificialanalysis.ai/models/qwen3-30b-a3b-2507-reasoning
+        date: "2026-10-13"
+        grade: A
+      - name: SciCode (AA)
+        score: "33.0"
+        source: https://artificialanalysis.ai/models/qwen3-30b-a3b-2507-reasoning
+        date: "2026-10-13"
+        grade: A
+      - name: AA-LCR
+        score: "61.3"
+        source: https://artificialanalysis.ai/models/qwen3-30b-a3b-2507-reasoning
+        date: "2026-10-13"
+        grade: A
+      - name: IFBench (AA)
+        score: "50.7"
+        source: https://artificialanalysis.ai/models/qwen3-30b-a3b-2507-reasoning
+        date: "2026-10-13"
+        grade: A
+      - name: GPQA Diamond (AA)
+        score: "70.7"
+        source: https://artificialanalysis.ai/models/qwen3-30b-a3b-2507-reasoning
+        date: "2026-10-13"
+        grade: A
+      - name: LiveCodeBench (AA)
+        score: "70.7"
+        source: https://artificialanalysis.ai/models/qwen3-30b-a3b-2507-reasoning
+        date: "2026-10-13"
+        grade: A
+      - name: τ²-Bench (AA)
+        score: "28.1"
+        source: https://artificialanalysis.ai/models/qwen3-30b-a3b-2507-reasoning
+        date: "2026-10-13"
+        grade: A
+      - name: CritPt
+        score: "0.3"
+        source: https://artificialanalysis.ai/models/qwen3-30b-a3b-2507-reasoning
+        date: "2026-10-13"
+        grade: A
+    notes:
+      use_for: "cited recon across many files, the explorer: 30.5B parameters, MoE with 3B active, 19GB — https://ollama.com/library/qwen3:30b-a3b-thinking-2507-q4_K_M"
+      not_for: "a first answer, or many spawns: 19GB of weights load per child, and the measured 30k-token prefill on this machine takes 1.5 to 3.5 minutes — https://ollama.com/library/qwen3"
+    gaps: >
+      max_out is not stated on the model page or the tags page. json and effort are not
+      stated. vision no is read from the tags page, which lists the input modality as
+      Text. tools and thinking are stated for the qwen3 family on the model page, whose
+      capability chips are shared by all 58 tags rather than per tag. Benchmark scores on
+      the page are images, not text, so none is recorded, and the tag runs at q4, so a
+      published score would be an upper bound (decision 21). Prefill speed on this
+      machine is measured elsewhere and is not carried here.
+    sources:
+      - https://ollama.com/library/qwen3
+      - https://ollama.com/library/qwen3:30b-a3b-thinking-2507-q4_K_M
+      - https://ollama.com/library/qwen3/tags
+    verified: "2026-10-13"
+  - id: jev-1.13.0
+    name: Jev
+    vendor: typesafe
+    kind: typed
+    jurisdiction: US
+    pool: usd
+    context: "64000"
+    cost:
+      in: "0.042"
+      out: "0"
+      note: "charged per input token only, 42 dollars per billion; output tokens are free. 64k covers the state plus all questions, and the state plus the single longest question is capped at 32k"
+    capabilities:
+      tools: "no"
+      vision: "no"
+      json: "yes"
+      thinking: "no"
+    aliases: jev-latest, jev-preview
+    notes:
+      use_for: "classification against a key, the batch task: one request returns typed answers to many independent questions about one state, with a calibrated probability and a confidence value per answer — https://docs.typesafe.ai/concepts/system-one"
+      not_for: "any free-form item: a System One model returns only score, choice and noul answers, and does not write replies, produce code or explain its reasoning — https://docs.typesafe.ai/concepts/system-one"
+    gaps: >
+      no benchmark figure exists: the vendor states it deliberately chose not to publish
+      performance against public benchmarks, and publishes workflow comparisons instead
+      (193.6x faster, 444.6x cheaper on its own workflows).
+      max_out is not stated, and no per-answer token limit is published. Jurisdiction is
+      not stated as such; US follows the vendor's San Francisco base and its statement
+      that the service currently runs on the US West Coast. json yes means the answer
+      shapes are typed values in a JSON response, not JSON mode.
+    sources:
+      - https://docs.typesafe.ai/models
+      - https://docs.typesafe.ai/concepts/system-one
+      - https://typesafe.ai
+      - https://typesafe.ai/blog/introducing-system-one-models-and-jev
+      - engine/harness/jev.py
+    verified: "2026-10-13"
+candidates:
+  - id: claude-fable-5-1
+    name: Claude Fable 5.1
+    arena:
+      low: ~
+      medium: ~
+      high: ~
+      xhigh: ~
+      max: "Claude Fable 5.1 (Max)"
+    vendor: anthropic
+    kind: chat
+    jurisdiction: US
+    pool: quota
+    context: "1000000"
+    max_out: "128000"
+    cost:
+      in: "10"
+      cache_hit: "0.25"
+      out: "50"
+      cache_write: "12.50"
+      note: "batch API 50% off; 5m cache write 12.50; 1h cache write 20; cache-hit rate is 0.025x input, a quarter of the standard multiplier"
+    capabilities:
+      tools: "yes"
+      vision: "yes"
+      json: "yes"
+      thinking: always
+      effort: low, medium, high, xhigh, max
+    aliases: claude-fable-5-1
+    benchmarks:
+      - name: Terminal-Bench-Science 0.1
+        score: "52.6"
+        source: https://www.anthropic.com/claude-fable-and-mythos-5-1
+        date: "2026-09-01"
+        grade: B
+      - name: Terminal-Bench 4.0
+        score: "55.8"
+        source: https://www.anthropic.com/claude-fable-and-mythos-5-1
+        date: "2026-09-01"
+        grade: B
+      - name: CursorBench 3.2.0
+        score: "73.4"
+        source: https://www.anthropic.com/claude-fable-and-mythos-5-1
+        date: "2026-09-01"
+        grade: B
+      - name: AutomationBench
+        score: "31.4"
+        source: https://www.anthropic.com/claude-fable-and-mythos-5-1
+        date: "2026-09-01"
+        grade: B
+      - name: Terminal-Bench 4.0 (AA)
+        score: "52.0"
+        source: https://artificialanalysis.ai/models/claude-fable-5-1
+        date: "2026-10-13"
+        grade: A
+      - name: Humanity's Last Exam (AA)
+        score: "59.1"
+        source: https://artificialanalysis.ai/models/claude-fable-5-1
+        date: "2026-10-13"
+        grade: A
+      - name: SciCode (AA)
+        score: "63.1"
+        source: https://artificialanalysis.ai/models/claude-fable-5-1
+        date: "2026-10-13"
+        grade: A
+      - name: AA-LCR
+        score: "85.3"
+        source: https://artificialanalysis.ai/models/claude-fable-5-1
+        date: "2026-10-13"
+        grade: A
+      - name: GPQA Diamond (AA)
+        score: "93.7"
+        source: https://artificialanalysis.ai/models/claude-fable-5-1
+        date: "2026-10-13"
+        grade: A
+      - name: FrontierCode (AA)
+        score: "49.0"
+        source: https://artificialanalysis.ai/models/claude-fable-5-1
+        date: "2026-10-13"
+        grade: A
+      - name: CritPt
+        score: "29.7"
+        source: https://artificialanalysis.ai/models/claude-fable-5-1
+        date: "2026-10-13"
+        grade: A
+      - name: MLCR-AA
+        score: "71.1"
+        source: https://artificialanalysis.ai/models/claude-fable-5-1
+        date: "2026-10-13"
+        grade: A
+    notes:
+      use_for: "demanding reasoning and long-horizon agentic work, or when evals on Opus 5.5 at higher effort fall short — https://platform.claude.com/docs/en/models/fable-5-1/overview"
+      not_for: "the default session: on the Pro plan Fable is usage credits while Opus, Sonnet and Haiku are included, so it is paid beyond the subscription — https://claude.com/pricing"
+    why_candidate: "the top capability tier, and Pro pays it from usage credits rather than the subscription quota, so no binding may name it."
+    gaps: >
+      no alias distinct from the id. No SWE-bench Verified figure is published. Mythos
+      5.1 is the same model under stricter safeguards and is not listed here: it is
+      limited-availability, not callable.
+    sources:
+      - https://platform.claude.com/docs/en/about-claude/models/overview
+      - https://platform.claude.com/docs/en/about-claude/pricing
+      - https://platform.claude.com/docs/en/models/fable-5-1/overview
+      - https://platform.claude.com/docs/en/build-with-claude/effort
+      - https://platform.claude.com/docs/en/build-with-claude/structured-outputs
+      - https://www.anthropic.com/claude-fable-and-mythos-5-1
+      - https://claude.com/pricing
+    verified: "2026-10-13"
+  - id: deepseek-v4-pro
+    name: DeepSeek V4 Pro
+    arena:
+      default: "DeepSeek-V4-Pro"
+    vendor: deepseek
+    kind: chat
+    jurisdiction: CN
+    pool: usd
+    context: "1000000"
+    max_out: "384000"
+    cost:
+      in: "1.32"
+      cache_hit: "0.044"
+      out: "3.96"
+      off_peak:
+        peak: "mon-fri 01:00-04:00, 06:00-10:00"   # the vendor's one schedule, as deepseek-flash's note gives it
+        factor: "0.5"
+      note: "peak rates; off-peak is half (0.66 in / 0.022 cache hit / 1.98 out). The rates are nominal while the id is being routed to V4.1-Flash"
+    capabilities:
+      tools: "yes"
+      vision: "no"
+      json: "yes"
+      thinking: "yes"
+    benchmarks:
+      - name: Terminal-Bench 4.0 (AA)
+        score: "14.1"
+        source: https://artificialanalysis.ai/models/deepseek-v4-pro
+        date: "2026-10-13"
+        grade: A
+      - name: Humanity's Last Exam (AA)
+        score: "41.0"
+        source: https://artificialanalysis.ai/models/deepseek-v4-pro
+        date: "2026-10-13"
+        grade: A
+      - name: SciCode (AA)
+        score: "51.0"
+        source: https://artificialanalysis.ai/models/deepseek-v4-pro
+        date: "2026-10-13"
+        grade: A
+      - name: AA-LCR
+        score: "80.3"
+        source: https://artificialanalysis.ai/models/deepseek-v4-pro
+        date: "2026-10-13"
+        grade: A
+      - name: GPQA Diamond (AA)
+        score: "92.8"
+        source: https://artificialanalysis.ai/models/deepseek-v4-pro
+        date: "2026-10-13"
+        grade: A
+      - name: CritPt
+        score: "18.0"
+        source: https://artificialanalysis.ai/models/deepseek-v4-pro
+        date: "2026-10-13"
+        grade: A
+      - name: MLCR-AA
+        score: "17.8"
+        source: https://artificialanalysis.ai/models/deepseek-v4-pro
+        date: "2026-10-13"
+        grade: A
+    notes:
+      use_for: "nothing today: the 2026-09-10 note says tests by multiple parties put V4.1-Flash ahead of V4-Pro on performance, cost, speed and total runtime — https://api-docs.deepseek.com/news/news260910"
+      not_for: "quoting a version: from 04:00 UTC on 2026-09-14 all deepseek-v4-pro requests route to V4.1-Flash at V4.1-Flash rates until V4.1-Pro launches — https://api-docs.deepseek.com/news/news260910"
+    why_candidate: "the id still carries its own prices on the pricing page while the news page says it is being phased out and routes to Flash, so which of the two holds today is unresolved."
+    gaps: >
+      no benchmark figure is published as text: the comparison table on the news page is
+      an image. Jurisdiction as for deepseek-flash: not stated on the fetched pages. The
+      contradiction between the pricing page and the news page is recorded in the
+      why_candidate line rather than resolved.
+    sources:
+      - https://api-docs.deepseek.com/quick_start/pricing
+      - https://api-docs.deepseek.com/news/news260910
+    verified: "2026-10-13"

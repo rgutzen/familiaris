@@ -26,6 +26,10 @@ $ git clone <repo> $HOME/06_SYSTEM
 $ cd $HOME/06_SYSTEM
 ```
 
+![Adopting a skill: where it goes and which mode](../assets/figures/adopt-decide.svg)
+
+*Steps 1–3 as one path: claim or procedure, registered subject, then mode from the source of the body.*
+
 ## 1 · Is it a skill, or a claim?
 
 A fact goes in the knowledge tree; a procedure goes here. The test is which
@@ -134,6 +138,13 @@ Leave a `description:` unquoted. The frontmatter reader strips a trailing commen
 but not surrounding quotes, so a quoted description reaches the router with its
 quotes in it — visible today in the shipped `code-review` row.
 
+An `invocation: user` skill generates a slash command whose body is the wrapper
+"Read `<SKILL.md>` and follow it" — right for a procedure the calling model should
+execute itself, wrong for a skill that dispatches its work to a child: there the
+wrapper makes the *parent* the executor. `command_body:` replaces the wrapper with
+the skill's own text, one line, placing `$ARGUMENTS` itself (`deepen` is the shipped
+example). A skill without the key keeps the wrapper, so no existing command changes.
+
 ## 5 · Read the body before you trust it
 
 A `SKILL.md` is executable text from a stranger that will govern agent
@@ -178,7 +189,8 @@ front page, and it is capped, because every session pays it.
 
 The `cmds` rows are the only writes this command makes outside the tree, and only
 for `invocation: user` skills; a reader with no harness home gets `skipped`
-rather than an invented directory.
+rather than an invented directory. The text of each command is the default wrapper
+unless the skill declares `command_body:` (see §4).
 
 ## 7 · Confirm the route
 
@@ -208,6 +220,10 @@ A term listed there selects two skills and cannot resolve on vocabulary alone.
 The fix is a narrower trigger, not a louder one.
 
 ## Lifecycle, and who decides what
+
+![Skill trust tiers and who moves a skill](../assets/figures/skill-lifecycle.svg)
+
+*Automatic moves follow use and disuse; promotion and deletion by the user are the accented edges.*
 
 Promotion to `trusted` happens on use — automatically, when the usage threshold
 is crossed — and the user may promote a skill at any time as well; demotion on

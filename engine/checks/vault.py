@@ -27,9 +27,10 @@ import re
 import sys
 
 HERE = pathlib.Path(__file__).resolve().parent
-REPO = HERE.parents[1]
 sys.path.insert(0, str(HERE.parent))       # `lib/`, the house idiom
 from lib import roots  # noqa: E402
+
+REPO = roots.REPO
 
 # The vault, and the file that says so. `app.json` rather than the directory:
 # an empty `.obsidian/` is not a configured vault, and Obsidian writes this one

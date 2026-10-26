@@ -20,6 +20,11 @@ rather than prose injected in advance. `engine/context` holds the navigation and
 the measurement: what a harness costs, what a route costs, and what a pointer is
 worth.
 
+
+![The clew: what a session carries in, and what it must leave behind](../../assets/figures/lore-context.svg)
+
+*the clew: what a session carries in, and what it must leave behind.*
+
 ## The design choice, and why
 
 **Pointers are measured, not assumed.** A staged corpus of real sessions was

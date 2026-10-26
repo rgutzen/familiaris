@@ -57,12 +57,21 @@ load_pazras_config() {
 
     # The profile first: the Areas and the storage paths are declared there
     # (P1), and the master config's restic section reads the storage paths. A
-    # profile that does not parse leaves AREAS empty, so validation fails on
-    # it instead of running on a guess.
-    if ! eval "$(python3 "$PAZRAS_ENGINE/lib/profile.py" --sh structure)"; then
+    # profile with problems is refused here rather than run on defaults:
+    # `--sh` always exits 0 and emits a usable fallback (roots.sh needs that),
+    # so its status says nothing, and `eval "$(...)"` would hide a failed
+    # reader anyway. `--check` decides; the output is captured, then evaluated.
+    local profile_problems profile_sh
+    if ! profile_problems="$(python3 "$PAZRAS_ENGINE/lib/profile.py" --check 2>&1 >/dev/null)"; then
+        echo "❌ Error: the profile has problems ($PAZRAS_PROFILE_FILE):" >&2
+        printf '%s\n' "$profile_problems" >&2
+        return 1
+    fi
+    if ! profile_sh="$(python3 "$PAZRAS_ENGINE/lib/profile.py" --sh structure)"; then
         echo "❌ Error: could not read the profile ($PAZRAS_PROFILE_FILE)" >&2
         return 1
     fi
+    eval "$profile_sh"
 
     # Source the configuration
     if source "$config_file"; then

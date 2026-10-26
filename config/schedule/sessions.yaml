@@ -1,0 +1,135 @@
+# The declared half of `familiar schedule sessions` (step 9a, 2026-10-15).
+#
+# WHAT IS HERE. The defaults for a scheduled session, and the path of the
+# standing prompt every session is given. The one-shot schedules themselves are
+# RUNTIME state ($PAZRAS_DATA_DIR/sessions/<slug>/schedule.json) and are
+# deliberately not versioned: a date is not a policy. A recurring session --
+# a fresh session from the same prompt at each firing -- would be declared here
+# and rendered by the same `timers-gen.sh` when it is asked for; the one-shot
+# path is what shipped first.
+#
+# THE MODEL IS A CATALOGUE ID, not a vendor string: `--model`/`--class` on the
+# command line override the default, the resolution goes through
+# `profiles.resolve` under the ACTIVE profile (decision 25/26), and the record
+# says which of the three chose it. `effort` is pi's `--thinking` vocabulary and
+# is validated against the catalogue -- a model that does not think refuses a
+# level rather than having it clamped.
+#
+# Loaded through `engine/lib/_miniyaml.py`: block mappings and sequences only,
+# every value a string.
+
+defaults:
+  # Decision 23: the session default is Opus through the bridge, for planning.
+  model: claude-opus-5-5
+  effort: high
+  cwd: ~/06_SYSTEM
+  # `per-item`: commit on `branch` as the standing prompt says, with the gate
+  # green before each commit. `none` for a session that may only read.
+  commit: per-item
+  # Empty means "the branch the tree is on", which the run records.
+  branch: ""
+  standing_prompt: config/schedule/session-prompt.md
+  nice: "15"
+  # systemd coalesces wakeups and defaults timer accuracy to ONE MINUTE: a
+  # session due at 06:00.00 would start up to 59s late (measured 2026-10-15:
+  # due 00:31:22, started 00:31:50). A session's time is often the point, so
+  # the unit asks for a second.
+  accuracy: 1s
+  timeout: 12h
+  # A JOB (dev/schedule 1a): when several are ready, the lowest priority runs
+  # first, then the oldest.
+  priority: "50"
+  # The named conditions that hold a job back (`start_when`) and that end a run
+  # at its next item boundary (`stop_when`). Their predicates are 1b's
+  # (`conditions.py`); `add` copies these lists into the job, so the record says
+  # what the job was declared with.
+  start_when:
+    - budget
+    - user_active
+    - conflict
+    - slot
+  # Decision 2: the user starting to work stops a run at its next item; decision
+  # 3: so does a declared conflict, which also has a backstop (`hard_stop: due`).
+  stop_when:
+    - user_active
+    - conflict
+
+# A REFUSED run is held on the SAME job, never re-declared (PLAN defects 4-6).
+retry:
+  # Consecutive refusals since the last run that was not refused; a run the
+  # window let through resets the count.
+  max: "6"
+  # The window's refusal names its reset time; the job is held until then plus
+  # this lead.
+  after_reset: 1m
+  # When no reset time is readable (a lock refusal, an unparsed message).
+  fallback: 30m
+
+# A chain (dev/schedule 1f, `chain: until-done`): SPECS ticks are its state.
+chain:
+  # Decision 5: this many runs in a row without progress pause the chain.
+  stall_after: "2"
+
+# The named conditions (dev/schedule 1b, `engine/schedule/conditions.py`). A
+# condition HOLDS when it is in the way; `familiar schedule sessions conditions`
+# prints each one's current value and why.
+conditions:
+  budget:
+    # Decision 1: unattended work may use the whole account. A fraction of each
+    # window; a reading at or above it holds the job until that window resets.
+    five_hour_max: "1.0"   # TEMPORARY for dev/schedule 1i: restored after the reading
+    weekly_max: "1.0"
+    # The probe reads the account from CLAUDE_CONFIG_DIR (the engine sets it to the
+    # job's own, 2c), but its RESULT is reused for 15 s in ONE file
+    # (~/.cache/omarchy/agent-usage/claude-limits.json) with no account in the key:
+    # measured 2026-10-22, a work-account probe seconds after a personal one returned the
+    # personal numbers while its tier said Team. `--force` is the only account-true
+    # reading; it costs 0.8-1.2 s, and `probe_interval` is what keeps a tick cheap.
+    probe:
+      - omarchy-agent-usage-claude
+      - --limits-only
+      - --force
+    probe_interval: 15s
+    # Only these pi providers spend the Claude window.
+    providers:
+      - claude-bridge
+      - anthropic
+    # A spent window fails the model calls by itself; nothing to interrupt.
+    hard_stop: none
+  user_active:
+    # Decision 9: an interactive session in ANY harness -- a process with one of
+    # these names on a terminal, not inside a scheduled run.
+    harnesses:
+      - claude
+      - pi
+      - opencode
+      - hermes
+    # A session whose terminal saw no input or output for this long is not the
+    # user working (a pi left open since the afternoon, measured 2026-10-21).
+    # Empty: any open session counts. Decided by the user 2026-10-21.
+    idle_after: 15m
+    # Which sessions count. `job_cwd`: only one whose working directory is the
+    # job's cwd or inside it (a pi in another project does not hold this job);
+    # `any`: every open session. Decided by the user 2026-10-21.
+    scope: job_cwd
+    # `hard_stop` (1c): when the dispatcher interrupts a run this condition stops.
+    # `none` -- the run stops at its next item boundary (`checkpoint`), however
+    # long that takes; `due` -- at the condition's own time; a delay -- that long
+    # after the run first saw it hold.
+    hard_stop: none
+  conflict:
+    # Decision 3: no blackout hours, but no collision with a process that writes
+    # the same tree. A relative lock is under $PAZRAS_DATA_DIR.
+    processes:
+      familiar-memory:
+        at: "03:30"
+        trees:
+          - ~/06_SYSTEM
+        lead: 30m
+        lock: consolidation.lock
+    # The pass's own start time: it commits the tree, so a run must be gone by then.
+    hard_stop: due
+  slot:
+    # Decision 6: serial for now.
+    max_parallel: "1"
+    hard_stop: none

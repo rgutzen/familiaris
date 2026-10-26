@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>One memory, many entry points</title>
+  <!-- 06-system: font source is system; no font link is ever emitted. -->
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:   #f5f5f5;
+      --color-ink:     #2d3142;
+      --color-muted:   #4f5d75;
+      --color-accent:  #bf4520;
+      --font-sans:     'Geist', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace;
+    }
+    body { font-family: var(--font-sans); background: var(--color-paper); color: var(--color-ink); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 3rem 2rem; }
+    .frame { max-width: 1200px; width: 100%; min-width: 0; }
+    .diagram-container { width: 100%; overflow-x: auto; }
+    .eyebrow { font-family: var(--font-mono); font-size: 0.66rem; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--color-muted); margin-bottom: 0.5rem; }
+    h1 { font-family: var(--font-serif); font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem); font-weight: 400; letter-spacing: -0.02em; line-height: 1.15; color: var(--color-ink); margin-bottom: 1.5rem; }
+    svg { width: 100%; min-width: 960px; display: block; }
+    @media print { .diagram-container { overflow-x: visible; } svg { min-width: 0; } }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Architecture &middot; harness</p>
+    <h1>One memory, many entry points</h1>
+    <div class="diagram-container">
+      <svg viewBox="0 0 960 656" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="lore-harness-title lore-harness-desc">
+        <title id="lore-harness-title">One memory, many entry points</title>
+        <desc id="lore-harness-desc">Architecture of the Guises: five harness entry points, plus the local models they reach, read one memory tree through the surfaces yielded by engine/context/l1.py, with retrieval from MCP servers on the way in and answers returned through an output filter; the tree is the part that does not change.</desc>
+        <defs>
+          <pattern id="lore-harness-dots" width="22" height="22" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="0.9" fill="rgba(45,49,66,0.10)"/></pattern>
+          <marker id="lore-harness-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+          <marker id="lore-harness-arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#bf4520"/></marker>
+          <marker id="lore-harness-arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/></marker>
+        </defs>
+        <rect width="100%" height="100%" fill="#f5f5f5"/>
+        <rect width="100%" height="100%" fill="url(#lore-harness-dots)" opacity="0.55"/>
+
+        <!-- zone: the entry points, painted first -->
+        <rect x="272" y="56" width="256" height="440" rx="8" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.20)" stroke-width="1" stroke-dasharray="4,4"/>
+
+        <!-- connectors -->
+        <!-- retrieval: the MCP servers give the four wired harnesses retrieval -->
+        <line x1="188" y1="220" x2="300" y2="220" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#lore-harness-arrow-link)"/>
+        <line x1="188" y1="292" x2="300" y2="292" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#lore-harness-arrow-link)"/>
+        <line x1="188" y1="364" x2="300" y2="364" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#lore-harness-arrow-link)"/>
+        <line x1="188" y1="436" x2="300" y2="436" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#lore-harness-arrow-link)"/>
+        <!-- the entry points read through the surfaces; codex only audited -->
+        <line x1="500" y1="132" x2="580" y2="132" stroke="#4f5d75" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#lore-harness-arrow)"/>
+        <line x1="500" y1="220" x2="580" y2="220" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#lore-harness-arrow)"/>
+        <line x1="500" y1="292" x2="580" y2="292" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#lore-harness-arrow)"/>
+        <line x1="500" y1="364" x2="580" y2="364" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#lore-harness-arrow)"/>
+        <line x1="500" y1="436" x2="580" y2="436" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#lore-harness-arrow)"/>
+        <!-- the surfaces yield the tree: the focal edge -->
+        <line x1="724" y1="284" x2="784" y2="284" stroke="#bf4520" stroke-width="1.2" marker-end="url(#lore-harness-arrow-accent)"/>
+        <!-- answers come back through the output filter -->
+        <path d="M860 464 V524 Q860 532 852 532 H500" fill="none" stroke="#4f5d75" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#lore-harness-arrow)"/>
+        <line x1="400" y1="504" x2="400" y2="464" stroke="#4f5d75" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#lore-harness-arrow)"/>
+
+        <!-- zone label -->
+        <rect x="280" y="50" width="100" height="14" rx="2" fill="#f5f5f5"/>
+        <text x="288" y="60" fill="#5a6580" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start" letter-spacing="0.14em">ENTRY POINTS</text>
+        <text x="288" y="84" fill="#5a6580" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start">+ the local models they can reach</text>
+        <text x="400" y="482" fill="#5a6580" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">engine/harness &#183; hooks &#183; skills &#183; settings &#183; traps</text>
+
+        <!-- arrow labels -->
+        <rect x="734" y="266" width="40" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="754" y="275" fill="#4f5d75" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">YIELDS</text>
+        <rect x="568" y="510" width="48" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="592" y="519" fill="#4f5d75" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">ANSWERS</text>
+
+        <!-- MCP servers -->
+        <rect x="40" y="192" width="148" height="272" rx="6" fill="#f5f5f5"/>
+        <rect x="40" y="192" width="148" height="272" rx="6" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+        <text x="114" y="322" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">MCP servers</text>
+        <text x="114" y="342" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">retrieval</text>
+
+        <!-- codex: audited, wired to nothing -->
+        <rect x="300" y="104" width="200" height="56" rx="6" fill="#f5f5f5"/>
+        <rect x="300" y="104" width="200" height="56" rx="6" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.20)" stroke-width="1" stroke-dasharray="4,3"/>
+        <text x="400" y="128" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">codex</text>
+        <text x="400" y="146" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">wired to nothing</text>
+
+        <!-- the four wired harnesses -->
+        <rect x="300" y="192" width="200" height="56" rx="6" fill="#f5f5f5"/>
+        <rect x="300" y="192" width="200" height="56" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <text x="400" y="224" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">Claude Code</text>
+
+        <rect x="300" y="264" width="200" height="56" rx="6" fill="#f5f5f5"/>
+        <rect x="300" y="264" width="200" height="56" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <text x="400" y="296" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">pi</text>
+
+        <rect x="300" y="336" width="200" height="56" rx="6" fill="#f5f5f5"/>
+        <rect x="300" y="336" width="200" height="56" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <text x="400" y="368" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">hermes</text>
+
+        <rect x="300" y="408" width="200" height="56" rx="6" fill="#f5f5f5"/>
+        <rect x="300" y="408" width="200" height="56" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <text x="400" y="440" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">opencode</text>
+
+        <!-- the surfaces: yielded from code, not listed in a config -->
+        <rect x="580" y="104" width="144" height="360" rx="6" fill="#f5f5f5"/>
+        <rect x="580" y="104" width="144" height="360" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <text x="652" y="272" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">the surfaces</text>
+        <text x="652" y="292" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">engine/context/l1.py</text>
+        <text x="652" y="310" fill="#5a6580" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">code, not config</text>
+
+        <!-- the tree: the design choice's focal element -->
+        <rect x="784" y="104" width="152" height="360" rx="6" fill="#f5f5f5"/>
+        <rect x="784" y="104" width="152" height="360" rx="6" fill="rgba(191,69,32,0.08)" stroke="#bf4520" stroke-width="1"/>
+        <text x="860" y="276" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">the tree</text>
+        <text x="860" y="296" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">one memory, in files</text>
+
+        <!-- the output filter -->
+        <rect x="300" y="504" width="200" height="56" rx="6" fill="#f5f5f5"/>
+        <rect x="300" y="504" width="200" height="56" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <text x="400" y="528" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">output filter</text>
+        <text x="400" y="548" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">small enough to read</text>
+
+        <!-- the design choice the page names -->
+        <text x="40" y="588" fill="#4f5d75" font-size="14" font-family="'Instrument Serif', serif" font-style="italic">the harness is replaceable; the tree is not</text>
+
+        <!-- legend -->
+        <line x1="40" y1="612" x2="920" y2="612" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+        <text x="40" y="632" fill="#4f5d75" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start" letter-spacing="0.18em">LEGEND</text>
+        <line x1="120" y1="628" x2="152" y2="628" stroke="#bf4520" stroke-width="1.2"/>
+        <text x="160" y="632" fill="#4f5d75" font-size="8.5" font-family="'Geist', system-ui, sans-serif" text-anchor="start">the read path</text>
+        <line x1="300" y1="628" x2="332" y2="628" stroke="#2e5aa8" stroke-width="1.2"/>
+        <text x="340" y="632" fill="#4f5d75" font-size="8.5" font-family="'Geist', system-ui, sans-serif" text-anchor="start">retrieval from MCP</text>
+        <line x1="480" y1="628" x2="512" y2="628" stroke="#4f5d75" stroke-width="1" stroke-dasharray="4,3"/>
+        <text x="520" y="632" fill="#4f5d75" font-size="8.5" font-family="'Geist', system-ui, sans-serif" text-anchor="start">answers returned &#183; codex, audit only</text>
+      </svg>
+    </div>
+  </div>
+</body>
+</html>

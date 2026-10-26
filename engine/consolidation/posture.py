@@ -80,25 +80,27 @@ CONTEXT_SOURCE = roots.ENGINE / "context/navigation.py"
 PASS_COMMIT_GREP = "^memory: nightly consolidation"
 HISTORY_LIMIT = 60
 
-# The directive paths, ASKED OF THE ENTITY REGISTER (`entities.yaml`), and
+# The human-owned paths, ASKED OF THE ENTITY REGISTER (`entities.yaml`), and
 # prefix-matched against repo-relative paths. R3d: this was a tuple, which is a
 # second register -- it could not know that a kind had been added, moved or
 # stopped being marked directive, and after R3b it named paths that had already
-# left. `DIRECTIVE_FILES` is the part no entity kind covers: a repo-root file the
-# router declares directive, which is a declaration in `CONTEXT.md` rather than
-# a register entry.
-DIRECTIVE_FILES = ("ROADMAP.md",)
+# left. `UNATTENDED_READONLY` is the part no entity kind covers, and it is NOT
+# the directive rule: `CONTEXT.md` lets an INTERACTIVE agent edit `ROADMAP.md`
+# provided it flags the edit in the turn, and closes it to the unattended pass.
+# Only the pass is checkable from history -- which is what `machine_written`
+# reads -- so only that half is declared here.
+UNATTENDED_READONLY = ("ROADMAP.md",)
 
 
 def directive_prefixes() -> tuple:
     """Every path property 4 protects: the register's directories, plus the
-    repo-root files no entity kind covers.
+    repo-root file the unattended pass must not write.
 
     A FUNCTION, not a constant, and that is the R3d point twice over: the
     register can change under a running process, and a frozen tuple is a
     register nobody can update without restarting the pass.
     """
-    return ontology.directive_dirs() + DIRECTIVE_FILES
+    return ontology.directive_dirs() + UNATTENDED_READONLY
 
 # THE BRIDGE. A pass commit is a record, and the paths in it are the paths of
 # its DATE -- so a path a later move renamed is still what history says. These
@@ -128,7 +130,8 @@ WRITABLE_ROOTS = ("memory/knowledge/", "memory/skills/")
 # rather than injected -- outside check 3's subject by name, not by a
 # line-shaped heuristic that would also hide a real prose edit.
 GENERATED = ("memory/knowledge/INDEX.md",)
-GENERATED_NAMES = ("CONTEXT.md",)
+# `INDEX.md` by name too: since O3d (2026-10-21) every subject has one.
+GENERATED_NAMES = ("CONTEXT.md", "INDEX.md")
 
 # A `knowledge/**` diff line the pass is allowed to make: a frontmatter key, or
 # the `---` fence itself. Anything else is prose, and prose is check 3's whole
@@ -167,7 +170,7 @@ def check_injected_surface(repo: pathlib.Path) -> list[Finding]:
         elif declared != set(ALWAYS_LOADED):
             out.append(Finding(
                 "injected-surface",
-                f"the always-loaded set has drifted: familiar-context compiles "
+                f"the always-loaded set has drifted: `familiar context l1` compiles "
                 f"{sorted(declared)}, this check knows {sorted(ALWAYS_LOADED)}. "
                 f"Reconcile before trusting the rest of this check."))
     written = machine_written(repo)
@@ -471,7 +474,7 @@ def render_vault(contract: dict) -> str:
         "on_drift": "a generated file a person edited is reported, never overwritten",
         "homes": f"the named homes the engine opens ({roots.rel(roots.LIB)}/roots.py)",
         "always_loaded": "reaches every session unasked; nothing machine-written may be here",
-        "human_owned": "directive: an agent proposes, the user edits (entities.yaml)",
+        "human_owned": "the user decides: a directive path an agent does not edit, `ROADMAP.md` flagged in the turn (CONTEXT.md)",
         "machine_writable": "the nightly pass writes frontmatter here, never prose",
         "generated": "rewritten whole by a generator; see on_drift",
         "places": "which subject owns which directory (subjects.yaml)",

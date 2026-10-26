@@ -5,12 +5,12 @@ origin: authored
 authority: agent
 trust: trusted
 last_verified: 2026-10-09
-use_count: 7
-last_used: 2026-10-11
+use_count: 11
+last_used: 2026-10-19
 promoted_from: []           # 06_SYSTEM session 2026-08-29, commit 186c643; no journal entry covers it
 source:
 supersedes:
-related: [orchestrators, boundaries, claude-code, hermes, context-budget, mcp-servers, pi, rtk]
+related: [orchestrators, boundaries, claude-code, hermes, context-budget, mcp-servers, pi, rtk, codex]
 tags: [opencode, plugins, harness]
 scope: []
 area: [B]
@@ -123,8 +123,13 @@ key is rejected upstream. `deepseek/deepseek-v4-flash` works in the same
 session, so this is credential-specific, not a gateway or plugin fault:
 
 ```bash
-opencode run --model deepseek/deepseek-v4-flash "..."   # works
+opencode run --model deepseek/deepseek-flash "..."   # works
 ```
+
+(2026-10-15: `deepseek-v4-flash` is retired. opencode's catalogue lists
+`deepseek/deepseek-flash` and `deepseek/deepseek-v4-pro`, and the slim preset
+names `deepseek/deepseek-flash` for its subagent lanes. Under the old id those
+lanes could not launch at all.)
 
 Until the anthropic key is refreshed, **every default-model opencode session
 fails on its first turn.** Either re-authenticate (`opencode providers`) or

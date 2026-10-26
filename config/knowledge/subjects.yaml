@@ -80,10 +80,10 @@ subjects:
     name: the Guises
     places:
       - engine/harness
-    leaves: 7
+    leaves: 11
     layer: category
     column: assertion
-    reviewed: 2026-10-02
+    reviewed: 2026-10-25
   - id: orchestration
     criteria: >
       Falsified when WHO DOES THE WORK changes: which familiar, model, tools
@@ -94,10 +94,13 @@ subjects:
     name: the Loom
     places:
       - config/orchestration
-    leaves: 0
+      - engine/orchestration
+      - config/relay
+      - engine/relay
+    leaves: 4
     layer: category
     column: assertion
-    reviewed: 2026-10-12
+    reviewed: 2026-10-25
   - id: context
     criteria: Falsified when what a session carries IN AND OUT changes.
     name: the Clew
@@ -112,6 +115,7 @@ subjects:
     name: the Apothecary
     places:
       - memory/skills
+      - engine/skills
     leaves: 2
     layer: category
     column: assertion
@@ -138,14 +142,16 @@ subjects:
     reviewed: 2026-10-02
   - id: checks
     criteria: >
-      Falsified when a gate, a test or the healthcheck changes. The WEAKEST
-      subject by the category test -- a gate is arguably a concept spanning
-      the whole repo -- and it is flagged for the first review rather than
-      quietly kept.
+      Falsified when a gate, a test, the healthcheck, or an evaluation's rule
+      changes: whether a component is working, and whether it is worth it.
+      The WEAKEST subject by the category test -- a gate is arguably a concept
+      spanning the whole repo -- and it is flagged for the first review rather
+      than quietly kept. The evaluation half was ruled 2026-10-25
+      (dev/evaluation/PLAN.md decision 2).
     name: the Threshold
     places:
       - engine/checks
-    leaves: 1
+    leaves: 2
     layer: category
     column: assertion
     reviewed: 2026-10-02
@@ -154,10 +160,11 @@ subjects:
     name: the Almanac
     places:
       - engine/schedule
-    leaves: 1
+      - config/schedule
+    leaves: 2
     layer: category
     column: assertion
-    reviewed: 2026-10-02
+    reviewed: 2026-10-25
   - id: backup
     criteria: Falsified when backups, disks or recovery change.
     name: the Larder
@@ -198,10 +205,10 @@ subjects:
     places:
       - docs
       - engine/publication
-    leaves: 1
+    leaves: 2
     layer: category
     column: assertion
-    reviewed: 2026-10-09
+    reviewed: 2026-10-25
 
 # Directories no subject occupies, each with the reason forcing one would be
 # wrong. Keyed by `id:`, which IS the place.

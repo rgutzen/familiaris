@@ -233,8 +233,9 @@ def main(argv: list[str]) -> int:
             eng = roots.ENGINE_REL
             print(f"        → republish (docs/how-to/publish-the-tree.md):\n"
                   f"          python3 {eng}/publication/publish.py --to {clone}\n"
-                  f"          git -C {clone} diff            # read all of it\n"
-                  f"          git -C {clone} add -A && git -C {clone} commit -m '…'"
+                  f"          git -C {clone} add -A && git -C {clone} diff --cached"
+                  f"   # read all of it, new files included\n"
+                  f"          git -C {clone} commit -m '…'"
                   f" && git -C {clone} push origin main\n"
                   f"          python3 {eng}/checks/publish_drift.py --record "
                   f"{f['artifact']} --commit $(git -C {clone} rev-parse HEAD)")

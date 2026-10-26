@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 960 540" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="skill-lifecycle-title skill-lifecycle-desc" id="skill-lifecycle-root">
+        <title id="skill-lifecycle-title">Skill trust tiers and who moves a skill</title>
+        <desc id="skill-lifecycle-desc">State machine of a skill's trust tier: it enters at quarantine or trial, use and disuse move it automatically, the user may promote it at any time, and only the user deletes a deprecated skill.</desc>
+        <defs>
+      <style>#skill-lifecycle-root { --color-paper:   #f5f5f5;
+      --color-ink:     #2d3142;
+      --color-muted:   #4f5d75;
+      --color-accent:  #bf4520;
+      --font-sans:     'Geist', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace; }
+      #skill-lifecycle-root { font-family: var(--font-sans); color: var(--color-ink); }
+      #skill-lifecycle-root .diagram-container { width: 100%; overflow-x: auto; }
+      @media print {
+#skill-lifecycle-root .diagram-container { overflow-x: visible; }
+}</style>
+          <marker id="skill-lifecycle-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+          <marker id="skill-lifecycle-arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#bf4520"/></marker>
+        </defs>
+        <rect width="100%" height="100%" fill="#f5f5f5"/>
+
+        <!-- Transitions first -->
+        <path d="M 52 166 V 104 Q 52 96 60 96 H 148" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#skill-lifecycle-arrow)"/>
+        <path d="M 52 178 V 240 Q 52 248 60 248 H 148" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#skill-lifecycle-arrow)"/>
+        <line x1="308" y1="236" x2="492" y2="236" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#skill-lifecycle-arrow)"/>
+        <line x1="308" y1="260" x2="492" y2="260" stroke="#bf4520" stroke-width="1.4" marker-end="url(#skill-lifecycle-arrow-accent)"/>
+        <path d="M 572 212 V 178 Q 572 170 564 170 H 236 Q 228 170 228 178 V 212" fill="none" stroke="#4f5d75" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#skill-lifecycle-arrow)"/>
+        <line x1="228" y1="284" x2="228" y2="380" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#skill-lifecycle-arrow)"/>
+        <line x1="308" y1="416" x2="552" y2="416" stroke="#bf4520" stroke-width="1.4" marker-end="url(#skill-lifecycle-arrow-accent)"/>
+        <rect x="70" y="76" width="68" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="104" y="85" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">AFTER READ</text>
+        <rect x="70" y="228" width="68" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="104" y="237" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">AFTER READ</text>
+        <rect x="370" y="216" width="60" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="400" y="225" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">AUTO · USE</text>
+        <rect x="358" y="270" width="84" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="400" y="279" fill="#bf4520" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">USER · PROMOTE</text>
+        <rect x="362" y="150" width="76" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="400" y="159" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">AUTO · DISUSE</text>
+        <rect x="240" y="326" width="76" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="278" y="335" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">AUTO · DISUSE</text>
+        <rect x="388" y="396" width="84" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="430" y="405" fill="#bf4520" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">USER · DELETE</text>
+
+        <!-- Start, end, states -->
+        <circle cx="52" cy="172" r="6" fill="#2d3142"/>
+        <circle cx="560" cy="416" r="8" fill="none" stroke="#2d3142" stroke-width="1"/>
+        <circle cx="560" cy="416" r="5" fill="#2d3142"/>
+        <rect x="148" y="60" width="160" height="72" rx="8" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <text x="228" y="94" fill="#2d3142" font-size="14" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">quarantine</text>
+        <text x="228" y="112" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">imported skills enter here</text>
+        <rect x="148" y="212" width="160" height="72" rx="8" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <text x="228" y="246" fill="#2d3142" font-size="14" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">trial</text>
+        <text x="228" y="264" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">or here, not trusted yet</text>
+        <rect x="492" y="212" width="160" height="72" rx="8" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <text x="572" y="246" fill="#2d3142" font-size="14" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">trusted</text>
+        <text x="572" y="264" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">promoted by use or you</text>
+        <rect x="148" y="380" width="160" height="72" rx="8" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <text x="228" y="414" fill="#2d3142" font-size="14" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">deprecated</text>
+        <text x="228" y="432" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">still on disk, not routed</text>
+        <text x="580" y="414" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif">deleted</text>
+        <text x="580" y="428" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">not reversible</text>
+        <text x="492" y="340" fill="#2d3142" font-size="14" font-style="italic" font-family="'Instrument Serif', serif">Skills with authority: human or</text>
+        <text x="492" y="358" fill="#2d3142" font-size="14" font-style="italic" font-family="'Instrument Serif', serif">invocation: user never demote on their own.</text>
+
+        <!-- Legend -->
+        <line x1="40" y1="484" x2="920" y2="484" stroke="#2d3142" stroke-width="0.8" stroke-opacity="0.10"/>
+        <text x="40" y="500" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.18em">LEGEND · WHO MOVES THE SKILL</text>
+        <line x1="40" y1="518" x2="68" y2="518" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#skill-lifecycle-arrow)"/>
+        <text x="76" y="522" fill="#4f5d75" font-size="8.5" font-family="'Geist', sans-serif">Automatic (use, disuse)</text>
+        <line x1="240" y1="518" x2="268" y2="518" stroke="#4f5d75" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#skill-lifecycle-arrow)"/>
+        <text x="276" y="522" fill="#4f5d75" font-size="8.5" font-family="'Geist', sans-serif">Demotion on disuse</text>
+        <line x1="420" y1="518" x2="448" y2="518" stroke="#bf4520" stroke-width="1.4" marker-end="url(#skill-lifecycle-arrow-accent)"/>
+        <text x="456" y="522" fill="#4f5d75" font-size="8.5" font-family="'Geist', sans-serif">The user decides</text>
+      </svg>

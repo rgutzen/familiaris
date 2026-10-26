@@ -298,8 +298,8 @@ def test_the_real_strict_sources_are_clean():
 
 def test_generated_outputs_mirror_the_generator_that_declares_them():
     """`GENERATED_OUTPUTS` names files by hand because the two packages cannot
-    import each other -- the same mirror posture.py keeps of pazras.py's
-    ALWAYS_LOADED, checked the same way. If brief.py renames its report, this
+    import each other -- the same mirror `consolidation/posture.py` keeps of
+    `context/navigation.py`'s ALWAYS_LOADED, checked the same way. If brief.py renames its report, this
     check must fail rather than silently exempting a name that no longer
     exists."""
     root = pathlib.Path(__file__).resolve().parents[3]

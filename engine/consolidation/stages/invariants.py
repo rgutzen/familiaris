@@ -186,6 +186,21 @@ DECLARED: dict[str, Declaration] = {
             "side by construction."),
         directional=Claim(NOT_APPLICABLE, "no relation between documents."),
     ),
+    "bindings": Declaration(
+        stage="bindings", shape=PROPOSAL_ONLY,
+        idempotent=Claim(
+            NOT_APPLICABLE,
+            "reads `labels.jsonl` and `delegations.jsonl` and records proposals; it "
+            "writes no file at all, and `bindings.yaml` is the one file a proposal "
+            "is FOR the user to change. There is no write to repeat. If it ever "
+            "gains one this claim becomes OWED."),
+        disjoint=Claim(NOT_APPLICABLE, "writes nothing."),
+        directional=Claim(
+            NOT_APPLICABLE,
+            "proposal-only, one target per proposal (`the binding`), no relation "
+            "graph to walk. Its arithmetic is `bindings.proposal_for`, whose tests "
+            "pin which binding each proposal names."),
+    ),
     "label": Declaration(
         stage="label", shape=PROPOSAL_ONLY,
         idempotent=Claim(

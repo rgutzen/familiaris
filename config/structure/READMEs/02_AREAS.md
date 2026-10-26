@@ -16,7 +16,7 @@ each domain of interest. The same topic can show up in an area (active
 work) and in the Zettelkasten (developed understanding) without conflict;
 cross-references and tags are what connect them, not folder placement.
 
-## The 16 areas (source of truth: `config/structure/pazras-master-config.sh`)
+## The 17 areas (source of truth: `config/profile.yaml`)
 
 | Code | Area | Domain |
 |---|---|---|
@@ -36,6 +36,7 @@ cross-references and tags are what connect them, not folder placement.
 | N | Finance | Personal finance management |
 | O | Travel | Travel planning and experiences |
 | P | Home | Housing and living-space management |
+| Q | Ventures | Founding, building and running ventures |
 
 Not every area has a folder yet — one is created on demand via
 `familiar structure init` once there's something to put in it. An empty area in

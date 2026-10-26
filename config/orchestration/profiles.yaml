@@ -1,0 +1,150 @@
+# Billing profiles for the Loom (track `orchestration`, decisions 19, 25, 26).
+# A profile is a property of the pi process (`pi-<profile>` sets PI_PROFILE); plain `pi`
+# is `private`. Per profile, per vendor: the pi `provider` id (`none` when pi does not
+# serve the vendor), the `key_env` variable (presence checked, never its value) or the
+# `login` credentials file (Claude), and the ACCOUNT's privacy settings, each with a
+# `source`. A vendor with no key or login in the profile is unavailable, never borrowed
+# (decision 26). A value the user has not confirmed reads `unknown — the user's to confirm`.
+# `jurisdictions` is the allowed set (decision 19): private allows all.
+# `privacy_class` turns catalogue `jurisdiction` + account `training` into one string:
+# `local` is a jurisdiction that wins outright; otherwise `<jurisdiction>-<suffix>`.
+# 15a (2026-10-24): a `pool: quota` model is UNAVAILABLE once the account's
+# windows are this full, so a binding's `fallbacks:` fire when the Claude budget is
+# spent and not only when a key is missing. The reading is `price.live_quota()` --
+# the fuller of the five-hour and weekly fractions, probe cached by the schedule
+# track. 0.98 and not the quota_weight table's 0.80 step: `dear` is a price signal
+# and must still run, `spent` is an availability fact. A reading the probe cannot
+# give is never a block (the same rule as `quota_weight`'s weight 1).
+window_closed_at: "0.98"
+
+default: private
+
+privacy_class:
+  local: local
+  suffix:
+    no: no-training
+    none: no-training
+    opt-in: opt-in
+    undisclosed: undisclosed
+    unknown: unknown
+
+profiles:
+  private:
+    jurisdictions:
+      - local
+      - EU
+      - US
+      - CN
+    vendors:
+      anthropic:
+        provider: claude-bridge
+        login: ~/.claude/.credentials.json
+        training:
+          value: unknown — the user's to confirm
+          note: Pro/Max trains only if the opt-in account setting is on
+          source: https://code.claude.com/docs/en/data-usage
+        retention:
+          value: unknown — the user's to confirm
+          note: deleted within 30 days if not opted in
+          source: https://privacy.claude.com/en/articles/10023548
+        zdr:
+          value: unknown — the user's to confirm
+          source: https://code.claude.com/docs/en/data-usage
+      deepseek:
+        provider: deepseek
+        key_env: DEEPSEEK_API_KEY
+        training:
+          value: undisclosed
+          note: the user agreement counts the API as a Service; no API opt-out found (a blog's reading, grade D)
+          source: https://cdn.deepseek.com/policies/en-US/deepseek-privacy-policy.html
+        retention:
+          value: stored in the PRC
+          source: https://cdn.deepseek.com/policies/en-US/deepseek-privacy-policy.html
+        zdr:
+          value: unknown — the user's to confirm
+          source: https://cdn.deepseek.com/policies/en-US/deepseek-privacy-policy.html
+      mistral:
+        provider: mistral
+        key_env: MISTRAL_API_KEY
+        training:
+          value: no
+          note: API data is not used for model training
+          source: https://docs.mistral.ai/admin/monitor-comply/privacy-data-controls
+        retention:
+          value: unknown — the user's to confirm
+          source: https://docs.mistral.ai/admin/monitor-comply/privacy-data-controls
+        zdr:
+          value: unknown — the user's to confirm
+          note: available on paid pay-as-you-go plans; whether it is enabled here is unconfirmed
+          source: https://docs.mistral.ai/admin/monitor-comply/zero-data-retention
+      ollama:
+        provider: ollama
+        training:
+          value: none
+          source: https://ollama.com/
+        retention:
+          value: local disk
+          source: https://ollama.com/
+        zdr:
+          value: n/a — local
+          source: https://ollama.com/
+      typesafe:
+        provider: none
+        note: called only by engine/harness/jev.py, never through pi
+  work:
+    jurisdictions:
+      - local
+      - EU
+      - US
+      - CN
+    vendors:
+      anthropic:
+        provider: claude-bridge
+        login: ~/.claude-work/.credentials.json
+        training:
+          value: unknown — the user's to confirm
+          source: https://code.claude.com/docs/en/data-usage
+        retention:
+          value: unknown — the user's to confirm
+          source: https://privacy.claude.com/en/articles/10023548
+        zdr:
+          value: unknown — the user's to confirm
+          source: https://code.claude.com/docs/en/data-usage
+      deepseek:
+        provider: deepseek-work
+        key_env: DEEPSEEK_API_KEY_WORK
+        training:
+          value: unknown — the user's to confirm
+          source: https://cdn.deepseek.com/policies/en-US/deepseek-privacy-policy.html
+        retention:
+          value: unknown — the user's to confirm
+          source: https://cdn.deepseek.com/policies/en-US/deepseek-privacy-policy.html
+        zdr:
+          value: unknown — the user's to confirm
+          source: https://cdn.deepseek.com/policies/en-US/deepseek-privacy-policy.html
+      mistral:
+        provider: mistral-work
+        key_env: MISTRAL_API_KEY_WORK
+        training:
+          value: unknown — the user's to confirm
+          source: https://docs.mistral.ai/admin/monitor-comply/privacy-data-controls
+        retention:
+          value: unknown — the user's to confirm
+          source: https://docs.mistral.ai/admin/monitor-comply/privacy-data-controls
+        zdr:
+          value: unknown — the user's to confirm
+          source: https://docs.mistral.ai/admin/monitor-comply/zero-data-retention
+      ollama:
+        provider: ollama
+        training:
+          value: none
+          source: https://ollama.com/
+        retention:
+          value: local disk
+          source: https://ollama.com/
+        zdr:
+          value: n/a — local
+          source: https://ollama.com/
+      typesafe:
+        provider: none
+        note: called only by engine/harness/jev.py, never through pi

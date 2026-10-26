@@ -28,7 +28,7 @@ before ending a turn; fix silently, never report the check.
 
 Ask until you can restate the user's intent and its done-criterion; state both
 before costly work. 
-<!-- For multi-step work the done-criterion is a `SPECS.md` that passes `familiar orchestration dispatch --check`; dispatch it before implementing. -->
+For multi-step work the done-criterion is a `SPECS.md` that passes `familiar orchestration dispatch --check`; dispatch it before implementing.
 Once the picture is approved, apply the established decisions instead of re-asking.
 
 **Ask when**

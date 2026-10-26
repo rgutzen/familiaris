@@ -8,6 +8,10 @@ commits or pushes on its own.
 Run every command from the private tree's root. `<clone>` is the publish clone,
 `<handle>` the forge account named as `identity.handle` in the profile.
 
+![Publishing the private tree as a public repository](../assets/figures/publish-flow.svg)
+
+*Each publish crosses two gates and a human diff review; a direct push from the private tree is refused. The dashed lane runs once.*
+
 ## Once: the clone, the record, the hooks
 
 1. **Create the public repository empty**: no README, no licence, no
@@ -35,11 +39,16 @@ Run every command from the private tree's root. `<clone>` is the publish clone,
 
 ## Each publish
 
+`publish.py` copies the working tree, not a commit: uncommitted work in the
+private checkout travels. Publish from a clean checkout of the pushed commit,
+for example `git worktree add --detach <dir> HEAD`, and run the commands below
+from there.
+
 ```bash
 python3 engine/checks/publish_drift.py               # DRIFT means the public tree is stale
 python3 engine/publication/publish.py --to <clone>   # build, gate, write, scan
-git -C <clone> diff --stat && git -C <clone> diff    # read all of it
-git -C <clone> add -A
+git -C <clone> add -A                                # stage first: plain `diff` hides new files
+git -C <clone> diff --cached --stat && git -C <clone> diff --cached   # read all of it
 git -C <clone> commit -m "familiaris: <what changed>"
 git -C <clone> push origin main
 python3 engine/checks/publish_drift.py --record familiaris --commit "$(git -C <clone> rev-parse HEAD)"
@@ -89,4 +98,6 @@ from `<clone>`.
 Executed 2026-10-19/20 against the real clone for the first publish
 (`publish.py`, the review, one commit, the push and the `--record`), and the
 `--check` and drift paths against a scratch clone of the published repository.
-The once-only steps 1–3 are as run on 2026-10-19.
+The once-only steps 1–3 are as run on 2026-10-19. The second publish
+(2026-10-26, the licence change) ran from a detached worktree, after the export
+gate had gone red on eight checks.

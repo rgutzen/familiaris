@@ -5,8 +5,8 @@ origin: authored
 authority: human
 trust: trusted
 last_verified: 2026-08-29
-use_count: 3
-last_used: 2026-10-09
+use_count: 7
+last_used: 2026-10-15
 promoted_from: []           # 06_SYSTEM session 2026-08-29, commit 186c643; no journal entry covers it
 source:
 supersedes: 02_AREAS/B_Tech/SKILLS/OBSIDIAN-CLAUDE-SETUP.md

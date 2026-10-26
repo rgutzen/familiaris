@@ -15,6 +15,9 @@ $ cd $HOME/06_SYSTEM
 $ cp config/profile.example.yaml config/profile.yaml
 ```
 
+![Recover one file from a restic backup](../assets/figures/recover.svg)
+*Six steps in order; the check in step 5 is the gate before anything is written to the live tree.*
+
 Every `restoring` line below is elided at the restoring user and machine, marked
 `…@…`; nothing else in these blocks is elided.
 

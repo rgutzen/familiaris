@@ -17,9 +17,20 @@ pi-agent -l -v                  # + model and toolset
 pi-agent <name> "<task>"        # run one; --cwd, --timeout, --model, --session
 ```
 
-`pi-agent` is `engine/harness/pi-agent`; the dotfiles hold only a symlink to it, so it stays on `PATH`.
+`pi-agent` is `engine/orchestration/pi-agent` (moved from `engine/harness/` 2026-10-15, 1d); the dotfiles hold only a symlink to it, so it stays on `PATH`.
 The roster's directory is `roots.SUBAGENTS` in `../../engine/lib/roots.py`.
 Parallel fan-out is shell `&` + `wait`; there is no orchestrator.
+
+## The pre-selections
+
+`selection.yaml` is **policy, not measurement** (decision 27): per task class, an
+ordered list of tiers, each naming the models that are *adequate* at that
+difficulty, with the reason a person is meant to argue with. The cheapest member
+of the applicable tier runs; a benchmark score only orders a tier and never
+disqualifies a model. `familiar orchestration selection --check | --explain
+<class> | --for <class> [--difficulty d]` reads it, `dispatch` suggests from it,
+and an item nobody declared takes its class's first tier. `bindings.yaml` answers
+*who does one call*; this file answers *which class of work gets which models*.
 
 ## The roster
 
@@ -30,8 +41,18 @@ adding a definition without a row reports as an orphan (`familiar context links
 
 | agent | for |
 |---|---|
-| `bash.md` | exact commands on the 4B; verified stdout only |
-| `explore.md` | cited recon across files on the 30B |
+| `explore.md` | code retrieval: `path:line` + verbatim quote only (option B role) |
+| `research.md` | web fan-out: URL + verbatim quote only (option B role) |
+| `review.md` | findings against a diff: `path:line` + quote + the defect (option B role) |
+| `bash.md` | exact commands on the 4B; verified stdout only. Kept for use by hand; not a B role, because it is not read-only |
+| `deepen.md` | a prompt rewritten deeper, not bigger, before a session executes it. `tools:` empty means `--no-tools` (`pi_call.run` emits it for a falsy list), so the improver reads nothing and writes nothing |
+
+The three B roles are read-only and return a *verifiable* artifact (SPECS 5a):
+the caller, or `familiar orchestration bindings run`, checks every quote
+against its file or names its URL. Their model is a catalogue id, resolved under
+the active profile; `deepseek-flash` is the default where privacy allows, and a
+profile that cannot serve it makes `pi-agent` exit 3 with the reason (decision
+26), so the caller passes `--model <a local id>` instead.
 
 ## When delegation is worth it
 

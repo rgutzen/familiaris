@@ -164,7 +164,7 @@ def test_a_clean_history_has_nothing_to_say(repo):
 # ── 1. nothing machine-written is injected ───────────────────────────────────
 
 def test_the_always_loaded_set_is_checked_against_the_compiler(repo, monkeypatch):
-    """The mirror is the risk: a file added to `familiar-context.py`'s ALWAYS_LOADED
+    """The mirror is the risk: a file added to the context CLIt.py`'s ALWAYS_LOADED
     and not here would silently widen the injected surface."""
     monkeypatch.setattr(posture, "ALWAYS_LOADED", ("CONTEXT.md",))
     findings = posture.check_injected_surface(repo)

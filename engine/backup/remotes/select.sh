@@ -119,6 +119,16 @@ REMOTE_NAME=""
 REMOTE_ROOT=""
 
 
+# The adapters' own guard. `remote_available` is an authenticated round trip
+# (2.5 s for the shipped client), and `backup reconcile` calls `remote_delete`
+# once per orphan: probing each time cost ~42 minutes per 1,000 deletions. Once
+# `remote_prepare` has proved the client in this run, REMOTE_NAME is set and
+# the probe is skipped; an adapter called without it still probes.
+remote_ready() {
+    [[ -n "$REMOTE_NAME" ]] || remote_available
+}
+
+
 remote_prepare() {
     # Load the adapter and prove the client is usable HERE, in one call: the
     # off-site half of every caller is "skip quietly if this is not set up", and

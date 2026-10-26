@@ -8,6 +8,10 @@ what proves the rule bites.
 `config/boundaries/` is **directive**: you write the rule. An agent proposes one
 and stops, because a boundary an agent can edit is not a boundary.
 
+![One rule, every surface](../assets/figures/boundary-fanout.svg)
+
+*One rule, compiled once, becomes four surfaces: two enforce, two only state it.*
+
 ## Run it somewhere scratch first
 
 Two of the compiled targets are files under `$HOME` — the Pi permission policy
@@ -76,14 +80,19 @@ rules:
     instead: propose the change and let the user make it
 ```
 
-`mode:` says which operations the rule covers, and it is a closed vocabulary —
-`no-read`, `no-write`, `no-read-write`, `no-push`. The four names are not
-guessable from English, so run the check and read the refusal rather than
-guessing twice:
+`mode:` says which operations the rule covers, and the modes themselves are
+declared in `config/boundaries/vocabulary.yaml` — today `no-read`, `no-write`,
+`no-read-write`, `no-push`. **That file is where the words mean something**: it
+also lists which shell commands count as a write (`rm`, `perl -i`,
+`find -delete`, `git clean`…), which git commands count as a push (`push`,
+`rebase`, `commit --amend`, `reset --hard`…), and where each harness's tools
+carry a path. Adding a command to those lists is a config edit and a recompile;
+no judge names one in code. The names are not guessable from English, so run the
+check and read the refusal rather than guessing twice:
 
 ```console
 $ python3 engine/boundaries/compile.py --check
-boundaries/compile.py: boundaries: private-notes.yaml: rule 1: mode 'write' not one of ['no-push', 'no-read', 'no-read-write', 'no-write']
+boundaries/compile.py: boundaries: private-notes.yaml: rule 1: mode 'write' not one of ['no-push', 'no-read', 'no-read-write', 'no-write'] (declared in the vocabulary)
 ```
 
 Three more fields, each with its own refusal, so a mistyped rule fails here

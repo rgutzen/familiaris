@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Loom — the orchestration roster</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:   #f5f5f5;
+      --color-ink:     #2d3142;
+      --color-muted:   #4f5d75;
+      --color-accent:  #bf4520;
+      --color-accent-tint: rgba(191, 69, 32, 0.08);
+      --color-soft:    #5a6580;
+      --font-sans:     'Geist', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', 'Noto Serif', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+    }
+
+    .frame { max-width: 1200px; width: 100%; }
+    .diagram-container { width: 100%; overflow-x: auto; }
+
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      color: var(--color-ink);
+      margin-bottom: 1.5rem;
+    }
+
+    svg { width: 100%; min-width: 960px; display: block; }
+    @media print {
+      .diagram-container { overflow-x: visible; }
+      svg { min-width: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Org chart · Diagram Design</p>
+    <h1>The Loom — the orchestration roster</h1>
+
+    <div class="diagram-container">
+      <svg viewBox="0 0 960 560" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="lore-orchestration-title lore-orchestration-desc">
+        <title id="lore-orchestration-title">The Loom — the orchestration roster</title>
+        <desc id="lore-orchestration-desc">Org chart of the orchestration roster: the caller, the one weaver, dispatches the read-only B roles explore, research and review through pi-agent, reaches bash only by hand, and no orchestrator exists yet.</desc>
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+          <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#bf4520"/></marker>
+          <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/></marker>
+        </defs>
+
+        <rect width="100%" height="100%" fill="#f5f5f5"/>
+
+        <!-- Connectors first, nodes on top -->
+
+        <!-- caller -> explore -->
+        <path d="M 432 120 V 184 A 8 8 0 0 1 424 192 H 196 A 8 8 0 0 0 188 200 V 240" fill="none" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+        <!-- caller -> research -->
+        <path d="M 480 120 V 240" fill="none" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+        <!-- caller -> review -->
+        <path d="M 528 120 V 184 A 8 8 0 0 0 536 192 H 764 A 8 8 0 0 1 772 200 V 240" fill="none" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+        <!-- caller -> bash, by hand (not routed) -->
+        <path d="M 576 84 H 904 A 8 8 0 0 1 912 92 V 444 A 8 8 0 0 1 904 452 H 864" fill="none" stroke="#4f5d75" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+
+        <!-- Arrow labels: opaque masks, 8px gap to their stroke -->
+        <rect x="286" y="172" width="48" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="310" y="181" fill="#5a6580" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">DISPATCH</text>
+
+        <rect x="488" y="160" width="56" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="516" y="169" fill="#5a6580" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">PI-AGENT</text>
+
+        <rect x="708" y="64" width="64" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="740" y="73" fill="#5a6580" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">BY HAND</text>
+
+        <!-- Focal: the caller, one weaver -->
+        <rect x="384" y="48" width="192" height="72" rx="6" fill="#f5f5f5"/>
+        <rect x="384" y="48" width="192" height="72" rx="6" fill="rgba(191, 69, 32, 0.08)" stroke="#bf4520" stroke-width="1"/>
+        <text x="480" y="74" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">The caller — one weaver</text>
+        <text x="480" y="92" fill="#5a6580" font-size="10" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">splits, dispatches, rejoins</text>
+        <text x="480" y="108" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">pi-agent &lt;name&gt; "&lt;task&gt;"</text>
+
+        <!-- B role: explore -->
+        <rect x="96" y="240" width="184" height="88" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="104" y="246" width="44" height="12" rx="2" fill="none" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+        <text x="126" y="255" fill="rgba(45,49,66,0.80)" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">B ROLE</text>
+        <text x="188" y="276" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">Explore</text>
+        <text x="188" y="292" fill="#5a6580" font-size="10" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">code retrieval</text>
+        <text x="188" y="310" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">path:line + verbatim quote</text>
+
+        <!-- B role: research -->
+        <rect x="388" y="240" width="184" height="88" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="396" y="246" width="44" height="12" rx="2" fill="none" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+        <text x="418" y="255" fill="rgba(45,49,66,0.80)" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">B ROLE</text>
+        <text x="480" y="276" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">Research</text>
+        <text x="480" y="292" fill="#5a6580" font-size="10" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">web fan-out</text>
+        <text x="480" y="310" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">URL + verbatim quote</text>
+
+        <!-- B role: review -->
+        <rect x="680" y="240" width="184" height="88" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="688" y="246" width="44" height="12" rx="2" fill="none" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+        <text x="710" y="255" fill="rgba(45,49,66,0.80)" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">B ROLE</text>
+        <text x="772" y="276" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">Review</text>
+        <text x="772" y="292" fill="#5a6580" font-size="10" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">findings on a diff</text>
+        <text x="772" y="310" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">path:line + quote + defect</text>
+
+        <!-- bash: live but not routed -->
+        <rect x="680" y="416" width="184" height="80" rx="6" fill="#f5f5f5"/>
+        <rect x="680" y="416" width="184" height="80" rx="6" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+        <rect x="688" y="422" width="72" height="12" rx="2" fill="none" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+        <text x="724" y="431" fill="rgba(45,49,66,0.80)" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">NOT A B ROLE</text>
+        <text x="772" y="454" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">Bash</text>
+        <text x="772" y="470" fill="#5a6580" font-size="10" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">exact commands on the 4B</text>
+        <text x="772" y="486" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">verified stdout only</text>
+
+        <!-- gap: no orchestrator yet -->
+        <rect x="96" y="416" width="184" height="80" rx="6" fill="#f5f5f5"/>
+        <rect x="96" y="416" width="184" height="80" rx="6" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.20)" stroke-width="1" stroke-dasharray="4,3"/>
+        <rect x="104" y="422" width="88" height="12" rx="2" fill="none" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+        <text x="148" y="431" fill="rgba(45,49,66,0.80)" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">OPEN QUESTION</text>
+        <text x="188" y="454" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">No orchestrator</text>
+        <text x="188" y="470" fill="#5a6580" font-size="10" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">parallel fan-out by shell</text>
+        <text x="188" y="486" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">shell &amp; + wait</text>
+
+        <!-- callout: the design choice -->
+        <text x="480" y="448" fill="#4f5d75" font-size="14" font-family="'Instrument Serif', 'Noto Serif', serif" font-style="italic" text-anchor="middle">Work may be split across agents;</text>
+        <text x="480" y="468" fill="#4f5d75" font-size="14" font-family="'Instrument Serif', 'Noto Serif', serif" font-style="italic" text-anchor="middle">authority over the result is not.</text>
+
+        <!-- legend -->
+        <line x1="30" y1="516" x2="930" y2="516" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+        <text x="30" y="538" fill="#4f5d75" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="0.14em">LEGEND</text>
+        <rect x="110" y="528" width="24" height="14" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <text x="142" y="538" fill="#4f5d75" font-size="8" font-family="'Geist Mono', ui-monospace, monospace">READ-ONLY B ROLE</text>
+        <rect x="310" y="528" width="24" height="14" rx="2" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+        <text x="342" y="538" fill="#4f5d75" font-size="8" font-family="'Geist Mono', ui-monospace, monospace">BY HAND, NOT ROUTED</text>
+        <rect x="540" y="528" width="24" height="14" rx="2" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.20)" stroke-width="1" stroke-dasharray="4,3"/>
+        <text x="572" y="538" fill="#4f5d75" font-size="8" font-family="'Geist Mono', ui-monospace, monospace">NONE YET</text>
+        <text x="930" y="538" fill="#5a6580" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end">ROUTING: ORCHESTRATION.MD</text>
+      </svg>
+    </div>
+  </div>
+</body>
+</html>

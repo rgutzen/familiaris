@@ -91,12 +91,15 @@ declare -gA RESTIC_REPOS=(
 # Repos live OUTSIDE the PAZRAS tree: a repo inside its own backup set
 # ingests itself and compounds every run.
 # The paths come from the profile's `storage:` (P1); the environment still wins.
-RESTIC_ROOT="${RESTIC_ROOT:-$PAZRAS_STORAGE_RESTIC_ROOT}"
-RESTIC_PASSWORD_FILE="${RESTIC_PASSWORD_FILE:-$PAZRAS_STORAGE_RESTIC_PASSWORD_FILE}"
+# Every expansion is guarded: with `set -u` — which every caller of this file
+# sets — an unguarded `$PAZRAS_*` aborts the source outright where the profile
+# is not loaded (bootstrap.sh sources this file directly).
+RESTIC_ROOT="${RESTIC_ROOT:-${PAZRAS_STORAGE_RESTIC_ROOT:-}}"
+RESTIC_PASSWORD_FILE="${RESTIC_PASSWORD_FILE:-${PAZRAS_STORAGE_RESTIC_PASSWORD_FILE:-}}"
 # The exclude list: the install's own when it has one, the shipped example when
 # it does not. `roots.sh` resolves WHICH (see the note there) and the nested
 # default keeps this file usable on its own, without the loader.
-RESTIC_EXCLUDES="${RESTIC_EXCLUDES:-${PAZRAS_BACKUP_EXCLUDES:-$PAZRAS_INSTALL/config/backup/backup-excludes.txt}}"
+RESTIC_EXCLUDES="${RESTIC_EXCLUDES:-${PAZRAS_BACKUP_EXCLUDES:-${PAZRAS_INSTALL:-}/config/backup/backup-excludes.txt}}"
 
 # Stable mountpoint for the archive disk. STORAGE-MODEL.md §2/§5:
 # mount at ONE path regardless of where the disk appears (udisks auto-mounts at
@@ -104,7 +107,7 @@ RESTIC_EXCLUDES="${RESTIC_EXCLUDES:-${PAZRAS_BACKUP_EXCLUDES:-$PAZRAS_INSTALL/co
 # and restic snapshot records the same `/home/<user>/05_ARCHIVES-EXTERNAL/…`
 # prefix. The disk root holds the archive tier AND `_Backups/restic/`.
 # The path is the profile's `storage.archive_mount` (P1).
-ARCHIVE_MOUNT="${ARCHIVE_MOUNT:-$PAZRAS_STORAGE_ARCHIVE_MOUNT}"
+ARCHIVE_MOUNT="${ARCHIVE_MOUNT:-${PAZRAS_STORAGE_ARCHIVE_MOUNT:-}}"
 
 # --- remote reconciliation ------------------------------------------------
 # Uploads never delete: rsync without --delete and the remote adapter's
@@ -174,8 +177,28 @@ declare -gA PAZRAS_TIMERS=(
     ["pazras-validate"]="on_calendar=Sun *-*-* 09:00:00;exec=06_SYSTEM/engine/familiar structure validate;desc=PAZRAS configuration validation;nice=19;randomized_delay=20m"
     ["pazras-verify"]="on_calendar=*-*-01 05:00:00;exec=06_SYSTEM/engine/familiar backup verify 5%%;desc=PAZRAS restic integrity check;nice=19;randomized_delay=20m"
     ["pazras-reconcile"]="on_calendar=*-01,04,07,10-05 06:00:00;exec=06_SYSTEM/engine/familiar backup reconcile;desc=Reconcile remote restic copies with the local repo (dry-run — apply with backup reconcile --execute);nice=19;randomized_delay=20m"
+    ["familiar-highlights"]="on_calendar=*-*-* 06:00:00;exec=06_SYSTEM/engine/familiar consolidation brief --highlights --send;desc=Send the nightly pass's highlights to the phone through the relay;nice=15;randomized_delay=;timeout_start=2m;doc=06_SYSTEM/dev/remote/SPECS.md"
     ["familiar-journal-index"]="on_calendar=*-*-* 06:15:00;exec=06_SYSTEM/engine/familiar knowledge journal index;desc=Rebuild the local embedding index over journal/ (D4, incremental);nice=15;doc=06_SYSTEM/memory/knowledge/system/knowledge/journal-index.md"
-    ["familiar-healthcheck"]="on_calendar=Wed *-*-* 07:00:00;exec=06_SYSTEM/engine/familiar checks healthcheck;desc=System health check — stow links, derived-file drift, timer results, mounts;nice=15;randomized_delay=20m;extra_path=%h/.miniforge3/bin;doc=06_SYSTEM/memory/knowledge/system/checks/healthcheck.md"
+    ["claude-window"]="on_calendar=*:0/5;exec=06_SYSTEM/engine/familiar orchestration ping;desc=Open a Claude window on purpose — a 5-minute tick that pings Haiku when the last 5h window has ended (state-driven, no interval);nice=19;randomized_delay=;accuracy=1s;persistent=false;timeout_start=5m;doc=06_SYSTEM/dev/orchestration/SPECS.md"
+    ["familiar-dispatch"]="on_calendar=*:0/5;exec=06_SYSTEM/engine/familiar schedule sessions tick;desc=The scheduler's dispatcher — start the job that is due and whose conditions allow;nice=15;randomized_delay=;accuracy=1s;persistent=false;timeout_start=2m;extra_path=/usr/share/omarchy/bin:%h/.local/share/mise/shims;doc=06_SYSTEM/dev/schedule/SPECS.md"
+    # THE HEALTHCHECK'S THREE TIERS (engine/checks/checks.py: daily < weekly < monthly,
+    # each run covers the tiers below it). Cadence follows cost and drift: the daily
+    # tier is file and live-state checks (about 30 s, no network, no model) because
+    # the nightly pass and the machine move them every day; the weekly tier adds the
+    # test suites and the network (about 3 min); the monthly tier adds the checks that
+    # start harness CLIs (about 8 min), which move when a harness is upgraded. The
+    # mise shims are on the PATH because the checks call pi and the harness CLIs.
+    ["familiar-healthcheck-daily"]="on_calendar=*-*-* 06:45:00;exec=06_SYSTEM/engine/familiar checks healthcheck --tier daily;desc=Daily health check — drift, live state, last unit results (no network, no model);nice=15;randomized_delay=10m;timeout_start=15m;extra_path=%h/.miniforge3/bin:%h/.local/share/mise/shims;doc=06_SYSTEM/memory/knowledge/system/checks/healthcheck.md"
+    ["familiar-healthcheck"]="on_calendar=Wed *-*-* 07:00:00;exec=06_SYSTEM/engine/familiar checks healthcheck --tier weekly;desc=Weekly health check — the daily tier plus the test suites, updates and the network;nice=15;randomized_delay=20m;timeout_start=30m;extra_path=%h/.miniforge3/bin:%h/.local/share/mise/shims;doc=06_SYSTEM/memory/knowledge/system/checks/healthcheck.md"
+    ["familiar-healthcheck-monthly"]="on_calendar=*-*-03 07:30:00;exec=06_SYSTEM/engine/familiar checks healthcheck --tier monthly;desc=Monthly health check — the weekly tier plus the checks that drive each harness CLI;nice=19;randomized_delay=20m;timeout_start=1h;extra_path=%h/.miniforge3/bin:%h/.local/share/mise/shims;doc=06_SYSTEM/memory/knowledge/system/checks/healthcheck.md"
+    # 13c. `--check` exits 1 when a nomination is NEW since the last run, and that
+    # is a FAILED service on purpose: notify@ is where a person sees it, and a
+    # quiet week stays a green unit. A dismissal (13a) silences it.
+    ["familiar-scout"]="on_calendar=Mon *-*-* 07:30:00;exec=06_SYSTEM/engine/familiar orchestration scout --check;desc=The model chart's weekly scout — nominate a model the chart moved, for the reader calibration to measure;nice=19;randomized_delay=20m;extra_path=%h/.local/share/mise/shims;doc=06_SYSTEM/dev/orchestration/SPECS.md"
+    # The evaluation layer's weekly read: every adapter appends one batch of
+    # readings and decides nothing (verdicts are the user's, at the monthly
+    # review). Exit 1 means an instrument broke, which is notify@'s to show.
+    ["familiar-evals"]="on_calendar=Mon *-*-* 08:00:00;exec=06_SYSTEM/engine/familiar checks evals read;desc=The evaluation layer's weekly read — one batch of readings per measured component, no verdict;nice=19;randomized_delay=10m;timeout_start=10m;extra_path=%h/.local/share/mise/shims;doc=06_SYSTEM/memory/knowledge/system/checks/component-evaluation.md"
 )
 
 # =============================================================================

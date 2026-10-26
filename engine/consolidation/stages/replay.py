@@ -147,7 +147,7 @@ def _touches(path: pathlib.Path) -> tuple[str, ...]:
     """
     seen = {s for rel in pointers.touched_paths(path)
             if (s := ontology.subject_at(rel))}
-    return tuple(s for s in ontology.SUBJECTS if s in seen)
+    return tuple(s for s in ontology.subject_ids() if s in seen)
 
 
 def run(ctx) -> bool:
@@ -243,7 +243,7 @@ def run(ctx) -> bool:
             + "---\n\n"
             f"{text.strip()}\n\n"
             f"---\n\n*Distilled from the verbatim transcript `{tid}` "
-            f"(`~/.local/share/pazras/transcripts/`) by `{model.MODEL}`. "
+            f"(`~/.local/share/pazras/transcripts/`) by `{model.MODEL}`. "  # not-a-root: provenance prose in a journal entry, the default spelling on purpose
             f"Machine-written: treat as a pointer to the transcript, not as an "
             f"authored record.*\n")
         # Make a possible duplicate VISIBLE. Idempotency matches on transcript

@@ -31,9 +31,7 @@ this constant.
 """
 from __future__ import annotations
 
-import os
-import subprocess
-
+from harness import pi_call
 from lib import roots
 
 # The profile's `models.consolidation` (P1), so a second install picks its own
@@ -49,54 +47,23 @@ MODEL = roots.PROFILE.models.get("consolidation") or DEFAULT_MODEL
 TIMEOUT = 300
 
 
-class ModelError(RuntimeError):
-    pass
+# `pi_call`'s error, under the name the pass's stages already catch.
+ModelError = pi_call.PiError
 
 
 def available() -> bool:
     from shutil import which
-    return which("pi") is not None
+    return which(pi_call.PI) is not None
 
 
 def ask(prompt: str, timeout: int = TIMEOUT) -> str:
-    """One turn, no session state. Raises ModelError rather than returning junk."""
+    """One turn, no session state. Raises ModelError rather than returning junk.
+
+    Spawned through `pi_call` (pi.md §Starting a pi process), which owns stdin, NO_COLOR,
+    the cwd default (/tmp, so the call picks up no project config) and the error
+    mapping. What is chosen HERE: no tools (a pure LLM call; tools would only add
+    latency and failure modes), no session, and no project trust."""
     if not available():
         raise ModelError("pi is not on PATH")
-    try:
-        # cwd matters: pi picks up project config from it. /tmp keeps the
-        # call free of whatever repo the pass happens to be standing in.
-        # --no-session: one turn, nothing persisted; --no-tools: no tool loop
-        # (a pure LLM call, tools would only add latency and failure modes).
-        r = subprocess.run(["pi", "--print", "--no-session", "--no-tools",
-                            "--model", MODEL, prompt],
-                           capture_output=True, text=True, timeout=timeout,
-                           cwd="/tmp", env=dict(os.environ, NO_COLOR="1"))
-    except subprocess.TimeoutExpired:
-        raise ModelError(f"timed out after {timeout}s")
-    except OSError as exc:
-        raise ModelError(str(exc))
-    if r.returncode != 0:
-        raise ModelError((r.stderr or r.stdout).strip()[:300] or "non-zero exit")
-    out = _strip_chrome(r.stdout)
-    if not out.strip():
-        raise ModelError("empty response")
-    return out.strip()
-
-
-def _strip_chrome(text: str) -> str:
-    """pi --print writes only the answer to stdout; strip stray ANSI if any."""
-    return _decolour(text)
-
-
-def _decolour(s: str) -> str:
-    out, i = [], 0
-    while i < len(s):
-        if s[i] == "\x1b":
-            j = i + 1
-            while j < len(s) and s[j] not in "mK":
-                j += 1
-            i = j + 1
-            continue
-        out.append(s[i])
-        i += 1
-    return "".join(out)
+    return pi_call.answer(prompt, approve=False, session=None, model=MODEL,
+                          tools=(), timeout=timeout)

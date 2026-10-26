@@ -68,7 +68,9 @@ def test_pazras_profile_names_the_file(tmp_path, monkeypatch):
 
 
 @pytest.mark.parametrize("text, needle", [
-    ("areas: [a, b]\n", "areas"),
+    # A flow list is rejected by the parser itself since 2026-10-20, so the
+    # problem names the subset rather than the key. Either way it is REPORTED.
+    ("areas: [a, b]\n", "flow collections are not part of this subset"),
     ("colour: blue\n", "unknown key"),
     ("areas:\n  A_X:\n    code: A\n", "missing tag, description"),
     ("areas:\n  A_X:\n    code: A\n    tag: x\n    description: x\n"

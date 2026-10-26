@@ -5,12 +5,12 @@ origin: authored
 authority: agent
 trust: trusted
 last_verified: 2026-09-11
-use_count: 7
-last_used: 2026-10-09
+use_count: 12
+last_used: 2026-10-19
 promoted_from: []
 source:
 supersedes:
-related: [pi, hermes, opencode, claude-code, journal-index, boundaries]
+related: [pi, hermes, opencode, claude-code, journal-index, boundaries, codex]
 tags: [mcp, retrieval, pi, hermes, opencode, claude-code, harness]
 scope: []
 area: [B]
@@ -111,7 +111,7 @@ tokens, the fixed-prefill trap `hermes.md` already documents on the local
 iGPU — expect minutes, not seconds, with a local model).
 
 **opencode's default model has no working credential** (`opencode.md`) — use
-`--model deepseek/deepseek-v4-flash` (or any working provider) to verify a
+`--model deepseek/deepseek-flash` (or any working provider) to verify a
 tool call live.
 
 ## Verification
@@ -135,7 +135,7 @@ asyncio.run(main())'
 
 # per harness, live
 claude -p --dangerously-skip-permissions "call mcp__familiar-mcp__journal_search with query X"
-opencode run --model deepseek/deepseek-v4-flash "call the familiar knowledge journal_search tool with query X"
+opencode run --model deepseek/deepseek-flash "call the familiar knowledge journal_search tool with query X"
 hermes chat -q "call the familiar knowledge journal_search tool with query X" --oneshot -t file,familiar-mcp
-pi -p --provider deepseek --model deepseek-v4-flash "use the mcp tool to call journal_search with query X"
+pi -p --provider deepseek --model deepseek-flash "use the mcp tool to call journal_search with query X"
 ```

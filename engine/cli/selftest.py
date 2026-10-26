@@ -36,7 +36,10 @@ import tempfile
 import time
 
 HERE = pathlib.Path(__file__).resolve().parent
-PY = HERE / "familiar-memory.py"
+# The hook path the harnesses actually run (3b). It was the back-end's own file;
+# measuring anything but the front door would measure a path nobody uses.
+FAMILIAR = HERE.parent / "familiar"
+PY = FAMILIAR
 
 # One payload per resolution signal in skill-routing.md Sec.Resolution order.
 # `caller.type` and the `args` vocabulary are what steer the classification.
@@ -104,7 +107,7 @@ def signals() -> int:
     for name, obj in PAYLOADS.items():
         payload = json.dumps(obj)
         with tempfile.TemporaryDirectory() as a:
-            got = _run([str(PY), "capture", "--harness=claude", "--event=PostToolUse"],
+            got = _run([str(PY), "context", "capture", "--harness=claude", "--event=PostToolUse"],
                        payload, pathlib.Path(a))
         g = TS.sub('"ts":"-"', got)
         print("  %-9s %s" % (name, g))
@@ -119,7 +122,7 @@ def signals() -> int:
                      "cwd": "/tmp"})
     with tempfile.TemporaryDirectory() as a:
         env = dict(os.environ, PAZRAS_DATA_DIR=a)
-        subprocess.run([str(PY), "capture", "--harness=claude", "--event=SessionEnd"],
+        subprocess.run([str(PY), "context", "capture", "--harness=claude", "--event=SessionEnd"],
                        input=se.encode(), env=env, stdout=subprocess.DEVNULL,
                        stderr=subprocess.DEVNULL, check=False)
         line = (pathlib.Path(a) / "session.log").read_text().split("\t", 1)[-1]
@@ -141,7 +144,7 @@ def hook_cost(n: int = 20) -> int:
             times = []
             for _ in range(n):
                 t0 = time.perf_counter()
-                subprocess.run([str(cmd), "capture", "--harness=claude",
+                subprocess.run([str(cmd), "context", "capture", "--harness=claude",
                                 "--event=PostToolUse"], input=payload.encode(), env=env,
                                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                                check=False)
@@ -150,8 +153,8 @@ def hook_cost(n: int = 20) -> int:
             print("  %-8s median %6.1f ms   min %6.1f   max %6.1f   (n=%d)"
                   % (label, times[n // 2], times[0], times[-1], n))
 
-        out = subprocess.run([sys.executable, "-X", "importtime", str(PY), "capture",
-                              "--harness=claude", "--event=PostToolUse"],
+        out = subprocess.run([sys.executable, "-X", "importtime", str(PY), "context",
+                              "capture", "--harness=claude", "--event=PostToolUse"],
                              input=payload.encode(), env=env,
                              capture_output=True, check=False)
     rows = []
@@ -182,7 +185,7 @@ def schema() -> int:
 
     with tempfile.TemporaryDirectory() as d:
         base = pathlib.Path(d)
-        _run([str(PY), "capture", "--harness=claude", "--event=PostToolUse"],
+        _run([str(PY), "context", "capture", "--harness=claude", "--event=PostToolUse"],
              json.dumps(PAYLOADS["browse"]), base)
         got = ledger.read(base, ledger.USAGE)
         if got.malformed or len(got) != 1:

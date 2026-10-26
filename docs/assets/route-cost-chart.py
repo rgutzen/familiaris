@@ -17,6 +17,8 @@ from __future__ import annotations
 import sys
 import pathlib
 
+INK, MUTED, ACCENT, PAPER = "#2d3142", "#4f5d75", "#bf4520", "#f5f5f5"
+
 # (label, worst-case tokens) -- from `familiar context tree`, 2026-10-09.
 ROUTES = [
     ("the class list (ontology)", 6313),
@@ -44,10 +46,16 @@ def png_chart(path, routes=ROUTES) -> pathlib.Path:
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
+    # 06-system skin: paper, ink, muted, accent; Geist when installed.
+    plt.rcParams.update({"font.family": ["Geist", "DejaVu Sans"],
+                         "text.color": INK, "axes.labelcolor": INK,
+                         "xtick.color": MUTED, "ytick.color": INK,
+                         "axes.edgecolor": MUTED})
     labels = [n for n, _ in routes][::-1]
     values = [v for _, v in routes][::-1]
-    fig, ax = plt.subplots(figsize=(7.5, 4), dpi=140)
-    ax.barh(labels, values, color="#3b6ea5")
+    fig, ax = plt.subplots(figsize=(7.5, 4), dpi=140, facecolor=PAPER)
+    ax.set_facecolor(PAPER)
+    ax.barh(labels, values, color=[ACCENT if v == max(values) else MUTED for v in values])
     for y, v in enumerate(values):
         ax.text(v + 60, y, f"{v:,}", va="center", fontsize=7.5)
     ax.set_xlabel("worst-case tokens to answer one routing question", fontsize=8)
@@ -57,7 +65,7 @@ def png_chart(path, routes=ROUTES) -> pathlib.Path:
         ax.spines[side].set_visible(False)
     fig.tight_layout()
     out = pathlib.Path(path)
-    fig.savefig(out)
+    fig.savefig(out, facecolor=PAPER)
     return out
 
 

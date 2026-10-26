@@ -4,18 +4,18 @@ summary: Why the read/write boundary rules exist, how they compile, what they mi
 origin: authored
 authority: agent
 trust: trusted
-last_verified: 2026-08-31
-use_count: 10
-last_used: 2026-10-11
+last_verified: 2026-10-16
+use_count: 18
+last_used: 2026-10-20
 promoted_from: []
 source:
 supersedes:
-related: [memory-mechanisms, memory-architecture, claude-code, opencode, hermes, mcp-servers, memory-poisoning-posture, pi]
+related: [memory-mechanisms, memory-architecture, claude-code, opencode, hermes, mcp-servers, memory-poisoning-posture, pi, delegation-and-asks, the-loom, codex, publication-model, phone-relay]
 tags: [boundaries, enforcement, hooks, privacy, guard]
 scope: []
 area: [B]
 stability: stable
-verified_log: [2026-08-31]
+verified_log: [2026-10-16, 2026-08-31]
 ---
 
 # Boundaries — one config, three harnesses
@@ -27,6 +27,10 @@ genuinely enforced, and — the part that matters — what is not.
 Read [[memory-mechanisms]] first for the level 1–4 table. Everything below is
 an application of it: **a rule at level 2 stops a call; a rule at level 4 asks
 politely.** The whole point of compiling is that both come from the same line.
+
+This leaf runs past the 300-line ceiling deliberately: it is the one place the
+four harnesses are compared side by side, so the per-harness sections belong in
+the same read as the compile model they share. A split would duplicate it.
 
 ## Why a config, and not prose
 
@@ -49,8 +53,10 @@ A rule written five times drifts. A rule compiled from one file cannot.
 | `engine/boundaries/compile.py` | the compiler, three emitters | agent |
 | `engine/boundaries/guard.py` | Claude Code `PreToolUse` hook — **level 2** | agent |
 | `engine/boundaries/opencode-plugin/` | opencode plugin — **level 2** | agent |
-| `engine/boundaries/pi-guard/` | Pi extension — **level 2** | agent |
+| `engine/boundaries/pi-guard/` | Pi extension — **level 2**, the `models:` axis | agent |
+| `engine/boundaries/pi-emitter/` | Pi extension — logs every permission decision to `permission-decisions.jsonl` (8e) | agent |
 | `config/boundaries/boundaries.json` | compiled rules, both guards read it | **generated** |
+| `~/.pi/agent/extensions/pi-permission-system/config.json` | the gotgenes policy pi enforces — **level 2** | **generated** |
 | `../../../../config/boundaries/read-write.md` | prose restatement — **level 4** | **generated** |
 
 ```bash
@@ -69,6 +75,7 @@ node engine/boundaries/opencode-plugin/test-plugin.mjs    # 18 cases
 | `no-read` | reads only | writes still allowed |
 | `no-write` | writes, deletes, moves | **reads stay allowed, deliberately** |
 | `no-push` | `git push`, rebase, `--amend`, `filter-*` | commit and branch stay free |
+| `no-host-escape` | a container launch that reaches the host | `--privileged`, `--device`, host namespaces, root-equivalent caps, binds of `~` or `/dev`, `/etc`, the docker socket; list in `vocabulary.yaml` `shell.host_escape` |
 
 ## Decisions — how hard a rule bites
 
@@ -216,6 +223,37 @@ printf 'export { FamiliarBoundaries } from "%s/engine/boundaries/opencode-plugin
   "$HOME/06_SYSTEM" > ~/.config/opencode/plugin/familiar-boundaries.js
 ```
 
+### Pi — enforced, level 2, and the one harness with an authorizer chain
+
+Pi reads **two** compiled artifacts, because the packages split the job:
+
+| target | who reads it | rules it carries |
+|---|---|---|
+| `~/.pi/agent/extensions/pi-permission-system/config.json` | the gotgenes permission-system package | every `models: all` rule — `no-push` → `bash: ask`, `no-read-write` → `path: deny`, `no-write` → `path_write: deny` |
+| `config/boundaries/boundaries.json` | `engine/boundaries/pi-guard/` | the `models: local|remote` axis, which gotgenes has no vocabulary for |
+
+Two pi-specific traps, both of which turned an ask into an allow by accident:
+
+- **Order is security.** gotgenes resolves last-match-wins, so the catch-all
+  `"*": "allow"` is emitted FIRST and every deny after it. A deny written before
+  the catch-all is silently shadowed back to allow.
+- **A prefix rule does not match a rewritten command.** The `rtk` extension
+  rewrites `git push x` to `rtk git push x` *before* the gate runs, so the `git
+  push *` pattern fell through to the catch-all. Since 2026-10-15 the compiler
+  emits an `rtk` twin of every push pattern (and of `git commit --amend`; not of
+  rebase or filter-branch/-repo). **A new pi `bash` rule needs its rewritten
+  form too**; `rtk rewrite "<cmd>"` prints it. Claude Code's guard matches
+  anywhere in the command and never had this gap.
+
+`read-write.yaml`'s `authorizer_chain:` names the `ask` reviewers consulted
+before the user is asked; it currently lists `familiar-delegations` alone. A
+link grants nothing until named there, and the package downgrades any link's
+`allow` on a *path* surface to `defer`. Which wrapped calls the link allows,
+and what it refuses, is in [[delegation-and-asks]].
+
+Hatch: `touch ~/.pi/agent/guard.disabled` — the same file name all three
+harnesses use.
+
 ### hermes — advisory only, level 4, with a level-2 hook available
 
 **hermes has a blocking hook surface; this system does not use it yet.** The
@@ -292,7 +330,23 @@ State these rather than implying the loop is airtight.
   it, but they run in no automatic gate. The path is now a `roots-twin` of
   `BOUNDARIES_JSON`, so `test_roots.py` (pre-commit) fails on the next move.
 
+- **`no-host-escape` reads the command line only** (added 2026-10-22, after a
+  `--privileged` systemd container hung up the host's `/dev/tty1` and killed
+  the desktop session twice). It does not see flags inside a script
+  (`./run-test.sh`), a compose file (`privileged: true`), an alias, or a
+  variable (`$FLAGS`). In pi the gotgenes globs are coarser than the two
+  judges: they ask for `--pid=1 ... --network host`, and they do not need a
+  `run`/`exec` subcommand. The only complete control sits in the daemon: a
+  dockerd authorization plugin (e.g. OPA authz) refuses the API call whatever
+  issued it. Offered as an option, not installed.
+
 ## Verification
+
+- `boundaries-compile --check` in the pre-commit gate: every target is current.
+- `familiar orchestration asks --review` reads the package's own review log —
+  715 asks, 667 of them shape floors (8e). **A rule whose name is in angle
+  brackets is the package's, never the user's.**
+- The link's live behaviour is in [[delegation-and-asks]] §the chain link.
 
 ```bash
 engine/boundaries/compile.py --check          # all targets in sync
@@ -339,7 +393,16 @@ in another; the second is that it can differ **between two modes, and two
 versions, of one harness**. Never state a harness's level without naming the
 mode and the version it was verified on.
 
-## Verified guard behaviour (2026-08-31)
+## Verified guard behaviour
+
+Newest first; each date is the run that observed it.
+
+### 2026-10-16 — pi's chain link and the rtk twin
+
+Two headless runs: a wrapped delegation allowed without the user, and a rewritten
+push deferred then denied. Recorded in [[delegation-and-asks]].
+
+### 2026-08-31 — Claude Code, opencode, and the `no-push` rule
 
 - **`no-push` is the rule that produced the `decision:` axis.** Its prose said
   *"ask before pushing"* while it compiled to a hard deny, so on 2026-08-31 the
@@ -373,3 +436,42 @@ mode and the version it was verified on.
   transcript of a session that was *working* there, and sends that to a remote
   model. `../../../../engine/consolidation/stages/replay.py` therefore derives its exclusion list from the
   compiled rules rather than keeping its own, and fails closed.
+
+## Parity corpus
+
+**One fixture, `engine/boundaries/fixtures/parity.json`, is run by every bash
+judge:** `guard.py`, the opencode plugin and pi-guard. Each judge's own suite
+runs the whole corpus. An `expected_fail` entry names a judge that diverges
+today and gives the reason. That makes the "known weaker" gap data rather than
+prose. When a gap closes, the entry is deleted. As of 2026-10-20 there are 87
+cases and **no entries**: the shared JS judge tokenises as POSIX does, which
+closed the `\rm` gap the opencode judge had.
+
+**Two evaluators, not three.** `guard.py` (Python) and
+`engine/boundaries/shared/judge.mjs` (JavaScript, shared by the opencode plugin
+and pi-guard) read the same compiled `vocabulary` and are held equal by the
+corpus. A third copy was deleted, not written: copying one regex three times had
+copied its bugs three times.
+
+**pi's glob is `find`** — "Find paths using glob patterns" (pi 1.3.0,
+`docs/cli.md`). It takes `pattern` as well as `path`, and both are checked; a
+pattern naming a protected path is judged like a path.
+
+**The vocabulary is YAML.** `config/boundaries/vocabulary.yaml` says what a
+`mode:` denies, which shell commands write (`rm`, `perl -i`, `find -delete`,
+`git clean`, `git checkout --`), what counts as a push (`push`, `rebase`,
+`filter-branch`, `filter-repo`, `commit --amend`, `reset --hard`), and where
+each harness's tools carry a path. The judges name none of it in code. A long
+flag must be a whole token (`--` is not `--detach`); a short one may lead a
+cluster (`-i` matches `-i.bak`).
+
+**A quoted push asks, by design.** `GIT_WRITE` matches the raw command string,
+so `echo 'git push'` asks. Matching tokens instead would let
+`bash -c 'git push'`, `eval "git push"` and `ssh host 'git push'` through
+without asking. The corpus pins all four cases to `ask`. A false positive
+costs one prompt; a false negative is an unasked push.
+
+A third gap closed the same day. Every judge missed `echo x>path` as a write,
+because REDIRECT required whitespace before `>`. All three copies were fixed
+together.
+

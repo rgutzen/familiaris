@@ -19,6 +19,11 @@ packages built rather than fetched. Each is a fact about *this* Arch install,
 recorded because the failure is not diagnosable from its symptom and the next
 person to meet it is usually the same person a year later.
 
+
+![The hearth: the machine and its OS under every layer of the system](../../assets/figures/lore-host.svg)
+
+*the hearth: the machine and its OS under every layer of the system.*
+
 ## The design choice, and why
 
 **The subject exists because its leaf had nowhere to go.** The register records

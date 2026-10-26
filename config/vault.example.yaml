@@ -25,7 +25,7 @@ always_loaded:
   - config/practice/user/user-identity.md
   - config/practice/conventions/collaboration.md
 
-# directive: an agent proposes, the user edits (entities.yaml)
+# the user decides: a directive path an agent does not edit, `ROADMAP.md` flagged in the turn (CONTEXT.md)
 human_owned:
   - config/boundaries/
   - config/practice/conventions/
@@ -41,7 +41,10 @@ machine_writable:
 generated:
   - memory/knowledge/INDEX.md
   - "memory/knowledge/**/CONTEXT.md"
+  - "memory/knowledge/**/INDEX.md"
   - "memory/skills/**/CONTEXT.md"
+  - "memory/skills/**/INDEX.md"
+  - config/boundaries/containers.md
   - config/boundaries/directives.md
   - config/boundaries/git.md
   - memory/skills/TRIGGERS.md
@@ -59,10 +62,14 @@ places:
     - engine/harness/
   orchestration:
     - config/orchestration/
+    - engine/orchestration/
+    - config/relay/
+    - engine/relay/
   context:
     - engine/context/
   skills:
     - memory/skills/
+    - engine/skills/
   structure:
     - engine/structure/
     - config/structure/
@@ -73,6 +80,7 @@ places:
     - engine/checks/
   schedule:
     - engine/schedule/
+    - config/schedule/
   backup:
     - engine/backup/
     - config/backup/

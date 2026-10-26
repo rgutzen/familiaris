@@ -146,7 +146,7 @@ facets:
     reviewed: 2026-09-30
   - id: area
     criteria: >
-      The P.A.Z.R.A.S Area code (A-P) the material belongs to, mirroring
+      The P.A.Z.R.A.S Area code (A-Q) the material belongs to, mirroring
       ~/02_AREAS/. A coincidence, never an edge: measured `area: [B]` on 28 of
       30 leaves, so an area edge would make the graph nearly complete and
       carry no information (meta/memory-ranking.md: area and scope feed the
@@ -175,6 +175,7 @@ facets:
       - N
       - O
       - P
+      - Q
     declared_for:
       - leaf
       - skill

@@ -29,7 +29,7 @@ is the failure this router prevents.
 |---|---|---|
 | `areas` | The World: subject knowledge, mirroring Areas A-P. This is where knowledge lands and it never retires. | — |
 | `projects` | The Workings: a leaf here holds claims that OUTLIVE the plan, because the plan stays in the project's own directory (../../CLAUDE.md rule 5 forbids a plan store). | — |
-| `system/` | The Workshop: what we built and maintain. Mirrors the codebase's own directories one scale down. | 8 |
+| `system/` | The Workshop: what we built and maintain. Mirrors the codebase's own directories one scale down. | 16 |
 <!-- END:BRANCHES -->
 
 A branch without a trailing slash has no skill yet — declared, not missing.

@@ -5,8 +5,8 @@ origin: authored
 authority: agent
 trust: trial
 last_verified: 2026-08-30
-use_count: 15
-last_used: 2026-10-09
+use_count: 18
+last_used: 2026-10-14
 promoted_from: []
 source: see §Sources
 supersedes:

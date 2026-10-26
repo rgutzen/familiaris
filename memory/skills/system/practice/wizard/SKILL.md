@@ -4,8 +4,8 @@ origin: authored
 authority: human
 trust: trusted
 last_verified: 2026-08-29
-use_count: 0
-last_used:
+use_count: 6
+last_used: 2026-10-15
 promoted_from: []           # vendored from 02_AREAS/B_Tech/SKILLS, commit 42082fb; no journal entry
 source: 02_AREAS/B_Tech/SKILLS/code-wizard/  # path removed on vendoring (42082fb); body is ours
 supersedes:

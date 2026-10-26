@@ -227,9 +227,17 @@ def leaf_hash(repo, target: str) -> str:
 
 
 def record_dismissal(base, repo, target: str, kind: str, note: str = "",
-                     target_kind: str = "leaf") -> str:
+                     target_kind: str = "leaf", *, retired: bool = False) -> str:
+    """`retired` (dev/remote R6c) is a decision the user dropped or marked
+    superseded: it never lands in a leaf, so the 30-day opaque window would
+    re-raise a question already answered. A retired row never expires."""
     if target_kind not in TARGET_KINDS:
         raise ValueError(f"target_kind must be one of {TARGET_KINDS}")
+    if retired:
+        append(base, DISMISSALS, {"ts": _now(), "target": target, "kind": kind,
+                                  "target_kind": "opaque", "note": note,
+                                  "retired": True})
+        return ""
     if target_kind == "opaque":
         # No file to hash: an opaque target hashes to "" unconditionally and
         # "" == "" would suppress it forever. Time-box instead (see covers).
@@ -241,6 +249,11 @@ def record_dismissal(base, repo, target: str, kind: str, note: str = "",
                               "target_kind": "leaf", "leaf_sha": sha,
                               "note": note})
     return sha
+
+
+def retired(base) -> set:
+    """Targets the user retired for good (R6c): dropped or superseded decisions."""
+    return {r.get("target") for r in read(base, DISMISSALS).rows if r.get("retired")}
 
 
 class Dismissals:

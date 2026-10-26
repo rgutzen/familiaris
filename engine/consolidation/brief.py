@@ -47,6 +47,7 @@ from consolidation.stages import preflight
 from lib import roots
 
 NAME = "BRIEF.md"
+HIGHLIGHTS = "HIGHLIGHTS.md"
 
 # Screen budget, per section. The brief has exactly one job -- answer three
 # questions in one read -- and a 200-line answer is a search result with extra
@@ -278,6 +279,20 @@ def _since(anchor: dict, today: dt.date) -> dt.date:
         return today - dt.timedelta(days=FALLBACK_DAYS)
 
 
+def _scheduled(ctx, anchor: dict) -> list[str]:
+    """dev/schedule 1g: each scheduled job that ran since the last pass, or whose
+    state needs the user, read from its record under `<data>/sessions/`. Imported
+    here and guarded: a defect in the scheduler is one line of this brief, never a
+    brief that failed to render."""
+    try:
+        from schedule import notify                           # noqa: PLC0415
+        lines = notify.brief_lines({"PAZRAS_DATA_DIR": str(ctx.base)},
+                                   since=_since(anchor, ctx.today))
+    except Exception as exc:                                  # noqa: BLE001
+        return [f"- *the scheduler's records could not be read: {type(exc).__name__}: {exc}*"]
+    return _capped(lines, "`familiar schedule sessions list`")
+
+
 # ── render and write ─────────────────────────────────────────────────────────
 
 def render(ctx) -> str:
@@ -304,6 +319,11 @@ def render(ctx) -> str:
         "this pass's warnings and errors, and what sessions recorded as failing",
         _failed(ctx, anchor),
         "Nothing failed in this pass, and no recent session recorded a failure.")
+    L += _section(
+        "Scheduled sessions",
+        "what ran unattended since the last pass, and where each job stands",
+        _scheduled(ctx, anchor),
+        "Nothing ran unattended, and no job waits on you.")
     L += ["---", "",
           f"*Tonight's full report: "
           f"`{roots.MEMORY_REL}/journal/reports/{ctx.today.isoformat()}_consolidation.md`. "
@@ -313,18 +333,116 @@ def render(ctx) -> str:
 
 
 def write(ctx) -> pathlib.Path:
-    """One file, fixed name. Dry runs write outside git, like the report."""
+    """One file, fixed name. Dry runs write outside git, like the report. The
+    phone's highlights are written beside it from the same pass (R6a): the
+    failure counts only exist here, before `_capped` cuts them."""
     d = (ctx.base / "reports") if ctx.dry_run else (ctx.agents / "journal" / "reports")
     d.mkdir(parents=True, exist_ok=True)
     p = d / NAME
     p.write_text(render(ctx))
+    (d / HIGHLIGHTS).write_text(highlights(ctx))
     return p
 
 
-def read(agents) -> str:
+def read(agents, name: str = NAME) -> str:
     """The current brief, for `familiar consolidation brief` and the MCP tool."""
-    p = pathlib.Path(agents) / "journal" / "reports" / NAME
+    p = pathlib.Path(agents) / "journal" / "reports" / name
     try:
         return p.read_text()
     except OSError:
         return ""
+
+
+# ── the phone's screen (dev/remote R5c) ─────────────────────────────────────
+
+#: `/brief <word>` -> the section it shows.
+PHONE_SECTIONS = {"changed": "What changed", "open": "What's open",
+                  "failed": "What failed", "scheduled": "Scheduled sessions"}
+
+
+def phone(text: str, section: str = "", *, limit: int = 3000) -> str:
+    """The brief, phone-sized. No section: each heading with its bullet count -- the
+    brief quotes journal bullets, and Telegram is not end-to-end encrypted, so the
+    default sends headings only (the user's choice, 2026-10-21). A section: its
+    lines, cut at `limit`."""
+    title = next((l[2:].strip() for l in text.splitlines() if l.startswith("# ")), "Brief")
+    parts: dict = {}
+    current = None
+    for line in text.splitlines():
+        if line.startswith("## "):
+            current = line[3:].strip()
+            parts[current] = []
+        elif current and line.strip() and not line.startswith("---"):
+            parts[current].append(line)
+    if not section:
+        rows = [title]
+        for name, lines in parts.items():
+            n = sum(1 for l in lines if l.lstrip().startswith(("- ", "* ", "|")))
+            word = next((k for k, v in PHONE_SECTIONS.items() if v == name), "")
+            rows.append(f"{name}: {n} line(s)" + (f"  (/brief {word})" if word else ""))
+        return "\n".join(rows)
+    name = PHONE_SECTIONS.get(section)
+    if name is None:
+        return f"/brief takes one of: {', '.join(PHONE_SECTIONS)}"
+    body = "\n".join(l for l in parts.get(name, []) if not l.startswith("*")) or "(empty)"
+    out = f"{title} -- {name}\n{body}"
+    return out if len(out) <= limit else out[:limit] + "\n[... cut]"
+
+
+
+# ── the morning highlights (dev/remote R6a) ─────────────────────────────────
+
+#: Lines the highlights may take before they say how much was cut.
+HIGHLIGHT_LINES = 20
+
+# A note's per-file prefix: `<transcript>.jsonl: ` or `<leaf>.md: `. Stripped so
+# 493 notes with one cause count as one line, not 493.
+_NOTE_PREFIX = re.compile(r"^\S+\.(?:jsonl|md|json|yaml):\s*")
+
+
+def _cause(text: str) -> str:
+    return _NOTE_PREFIX.sub("", text.splitlines()[0] if text else "").strip()[:120]
+
+
+def highlights(ctx) -> str:
+    """The pass in ~20 plain lines for Telegram: what waits on the user, what
+    broke (grouped by cause), how the unattended jobs ended. Deterministic, like
+    the brief: counted, never summarised. The last line names `/review`."""
+    from collections import Counter
+    L = [f"Nightly pass {ctx.today.isoformat()}"]
+    if ctx.aborted:
+        L.append(f"ABORTED at preflight: {ctx.aborted.splitlines()[0][:120]}")
+    kinds = Counter(p.kind for p in ctx.proposals)
+    if kinds:
+        L += ["", f"Waiting on you: {sum(kinds.values())}"]
+        L += [f"  {n} {k}" for k, n in kinds.most_common()]
+    causes = Counter((n.level, _cause(n.text)) for n in ctx.notes
+                     if n.level in ("warn", "error"))
+    expected = {sid for sid, _, _ in _expected_stages()}
+    missing = sorted(expected - {s.split(" ", 1)[0] for s in ctx.stages_run})
+    if causes or (missing and not ctx.aborted):
+        L += ["", "Failed:"]
+        L += [f"  {n}x {lvl}: {c}" for (lvl, c), n in causes.most_common(6)]
+        if len(causes) > 6:
+            L.append(f"  ... {len(causes) - 6} more cause(s): /brief failed")
+        if missing and not ctx.aborted:
+            L.append(f"  stage(s) not run: {', '.join(missing)}")
+    sched = [l for l in _scheduled(ctx, preflight.last_run(ctx.base))
+             if l.startswith("- `")]
+    if sched:
+        L += ["", "Unattended jobs:"]
+        L += ["  " + re.sub(r"[`*]", "", l[2:]).split(";", 1)[0][:90] for l in sched[:5]]
+    if len(L) > HIGHLIGHT_LINES:
+        L = L[:HIGHLIGHT_LINES - 1] + [f"[... cut, /brief for the rest]"]
+    L += ["", "/review to decide the open items" if kinds else "Nothing waits on you."]
+    return "\n".join(L) + "\n"
+
+
+def stale_prefix(text: str, today: dt.date) -> str:
+    """'' when the highlights are today's, else a first line saying how old they
+    are (R6b): yesterday's pass resent at 06:00 must not read as tonight's."""
+    m = re.search(r"(\d{4}-\d{2}-\d{2})", text.splitlines()[0] if text else "")
+    if m and m.group(1) == today.isoformat():
+        return ""
+    return (f"NO PASS LAST NIGHT -- these are from {m.group(1)}\n" if m
+            else "NO PASS LAST NIGHT -- undated highlights\n")

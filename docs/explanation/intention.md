@@ -5,6 +5,9 @@ working life, and each mechanism is described somewhere else. This page is the
 one place the purpose is stated, because a purpose repeated on every page
 dilutes and a purpose stated nowhere is lost.
 
+![Intention: problem, aim, requirement](../assets/figures/intention.svg)
+*The aim bounds what this repository claims; the three requirements are drawn from it.*
+
 ## The problem
 
 A mind holds a subjective reality far richer than language can carry. Compressing

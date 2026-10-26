@@ -18,7 +18,9 @@ from lib import roots
 STATUS = invocation.Spec(name="status", usage="status")
 REPORT = invocation.Spec(name="report", usage="report [--full] [--patch]",
                          flags=("--full", "--patch"))
-BRIEF = invocation.Spec(name="brief", usage="brief")
+BRIEF = invocation.Spec(name="brief", usage="brief [--phone|--highlights [--send]] [section]",
+                        flags=("--phone", "--highlights", "--send"),
+                        positional="section")
 DECISION = invocation.Spec(
     name="decision",
     usage="decision --kind=decision|disagreement --text='...' "
@@ -34,10 +36,10 @@ QUEUE = invocation.Spec(name="queue", usage="queue [--all] [--json]",
 JEV = invocation.Spec(name="jev", usage="jev check|probe", positional="check|probe")
 DECIDE = invocation.Spec(
     name="decide",
-    usage="decide [N] [--no] [--partial] [--kind=K --all] [--walk] [--why] "
-          "[--note='why']",
+    usage="decide [N] [--no] [--choice=land|superseded|drop|note [--by=ID]] [--partial] "
+          "[--kind=K --all] [--walk] [--why] [--note='why']",
     flags=("--no", "--partial", "--all", "--walk", "--why"),
-    options=("--kind", "--note"),
+    options=("--kind", "--note", "--choice", "--by"),
     positional="N")
 OPENCODE_SESSION = invocation.Spec(
     name="opencode-session",
@@ -110,11 +112,39 @@ def show_brief(inv) -> int:
     states and a session must be able to tell them apart.
     """
     from consolidation import brief as _brief
+    if inv.has("--highlights"):
+        text = _brief.read(inv.agents, _brief.HIGHLIGHTS)
+        if not text.strip():
+            print("no highlights yet — they are written with the brief by stage 8",
+                  file=sys.stderr)
+            return 1
+        text = _brief.stale_prefix(text, dt.date.today()) + text.rstrip()
+        if inv.has("--send"):
+            # The 06:00 timer (dev/remote R6b). A relay that is down fails the
+            # unit, so `notify@` puts it on the desktop instead of losing it.
+            from relay import client
+            try:
+                reply = client.request({"op": "notify", "session": "nightly",
+                                        "text": text}, timeout=5)
+            except Exception as exc:                          # noqa: BLE001
+                print(f"[familiar] highlights not sent: {type(exc).__name__}: {exc}",
+                      file=sys.stderr)
+                return 1
+            if not (reply or {}).get("ok", True):
+                print(f"[familiar] highlights not sent: {reply}", file=sys.stderr)
+                return 1
+            print("highlights sent")
+            return 0
+        print(text)
+        return 0
     text = _brief.read(inv.agents)
     if not text.strip():
         print("no brief yet — it is written by stage 8 of `familiar consolidation run`",
               file=sys.stderr)
         return 1
+    if inv.has("--phone"):
+        print(_brief.phone(text, inv.rest[0] if inv.rest else ""))
+        return 0
     print(text)
     return 0
 
@@ -183,9 +213,10 @@ def jev_cli(inv) -> int:
 
     The one command in this track that proves something about the ACCOUNT rather
     than about the code, and therefore the one that cannot be tested against a
-    stub and called verified. It reads the key file (the only reader besides the
-    client's own authenticate path), makes one `GET /v1/models`, and prints what
-    came back together with the resolved model and the key's mode -- so a green
+    stub and called verified. It never reads the key: the client does, and a
+    missing or loose-mode key comes back as a typed `JevError`. The command makes
+    one `GET /v1/models` and prints what came back together with the key file's
+    mode (metadata only) -- so a green
     run here is also evidence that the credentials rule of 0c is not in the way.
 
     Exit 0 only on a real answer. Every failure names its kind, so a nightly
@@ -205,12 +236,7 @@ def jev_cli(inv) -> int:
     if inv.rest == ("probe",):
         return _jev_probe()
     try:
-        key = jev.load_key()
-    except jev.JevError as exc:
-        print(f"[familiar] jev check: {exc.kind}: {exc}", file=sys.stderr)
-        return 2
-    try:
-        out = jev.models(key=key)
+        out = jev.models()
     except jev.JevError as exc:
         print(f"[familiar] jev check: {exc.kind}: {exc}", file=sys.stderr)
         return 2 if exc.fatal else 3
@@ -271,8 +297,7 @@ def _jev_probe() -> int:
             {"reachable": {"type": "noul",
                            "instructions": "Is this a connectivity probe?",
                            "criteria": {"true": "a probe",
-                                        "false": "not a probe"}}},
-            key=jev.load_key())
+                                        "false": "not a probe"}}})
     except jev.JevError as exc:
         print(f"[familiar] jev probe: {exc.kind}: {exc}", file=sys.stderr)
         return 2 if exc.fatal else 3
@@ -337,28 +362,19 @@ def show_queue(inv) -> int:
 # writer per kind (item 1g). Frontmatter edits (dangling-link, extend-leaf) are
 # NOT here -- the pass cannot repair those itself (associate.py: a dangling
 # `related:` is "a REPORT LINE, not a deletion"), so `decide` writes them.
-_DISMISS_KINDS = ("dangling-link", "dangling-supersession", "decision",
-                  "adopt", "link")
-
-
 def _one_resolution(inv, it: dict, accepted: bool, partial: bool,
-                    note: str = "") -> str:
-    """Record one resolution, through the writer that owns the kind.
+                    note: str = "", choice: str = "") -> str:
+    """Record one resolution through `consolidation.resolve`, the one writer.
 
-    Returns a short human string. Never writes frontmatter and never touches the
-    ledger directly when `dismiss` owns the kind -- `dismiss` is what knows that
-    a leaf dismissal self-clears by content hash and an opaque one time-boxes.
-    A second implementation of that rule here is exactly the drift `ledger.py`'s
-    docstring says it exists to prevent.
+    `choice` names the answer for the kinds that have their own (a decision:
+    land / superseded / drop / note); without it, `accepted` picks accept or
+    refuse. A decision without a choice is refused by `resolve.apply` rather
+    than guessed: accepting one used to record a dismissal and land nothing.
     """
-    from consolidation import ledger
-    kind, target = it["kind"], it["target"]
-    tkind = it.get("target_kind", "leaf")
-    if kind in _DISMISS_KINDS:
-        ledger.record_dismissal(inv.base, inv.agents.parent, target, kind,
-                                note, target_kind=tkind)
-        return (f"dismissed ({tkind})" if accepted or not kind else "dismissed")
-    return "recorded"
+    from consolidation import resolve
+    return resolve.apply(inv.base, inv.agents.parent, it,
+                         choice or ("accept" if accepted else "refuse"),
+                         note=note, by=inv.get("--by") or "")
 
 
 def decide(inv) -> int:
@@ -414,12 +430,15 @@ def decide(inv) -> int:
             print(f"no open items of kind {k}", file=sys.stderr)
             return 1
         n = 0
-        for it in targets:
-            _one_resolution(inv, it, accepted=not inv.has("--no"),
-                            partial=False, note=inv.get("--note"))
-            queue.resolve(inv.base, it["id"], _bare(it, not inv.has("--no")))
-            n += 1
-        verb = "refused" if inv.has("--no") else "accepted"
+        try:
+            for it in targets:
+                _one_resolution(inv, it, accepted=not inv.has("--no"), partial=False,
+                                note=inv.get("--note"), choice=inv.get("--choice"))
+                n += 1
+        except ValueError as exc:
+            print(f"[familiar] {exc}", file=sys.stderr)
+            return 1
+        verb = inv.get("--choice") or ("refused" if inv.has("--no") else "accepted")
         print(f"{verb} {n} item(s) of kind {k}")
         return 0
     if not inv.rest:
@@ -448,8 +467,12 @@ def decide(inv) -> int:
         return 0
     accepted = not inv.has("--no")
     note = inv.get("--note")
-    what = _one_resolution(inv, it, accepted, inv.has("--partial"), note)
-    queue.resolve(inv.base, it["id"], _bare(it, accepted))
+    try:
+        what = _one_resolution(inv, it, accepted, inv.has("--partial"), note,
+                               choice=inv.get("--choice"))
+    except ValueError as exc:
+        print(f"[familiar] {exc}", file=sys.stderr)
+        return 1
     print(f"{n}: {it['kind']} {it['target']} — {what}")
     if inv.has("--partial") and it.get("outliers"):
         print(f".  {len(it['outliers'])} outlier(s) left open — they are "
@@ -463,26 +486,26 @@ def UsageError_for_decide(raw):
     return invocation.UsageError(f"decide wants an item number, got {raw!r}")
 
 
-def _bare(it: dict, accepted: bool) -> dict:
-    """The resolution row. `band`/`probabilities` arrive in step 2 (1e of the
-    spec's record: a resolution carries what was decided and on what basis)."""
-    return {"action": "accept" if accepted else "refuse",
-            "ts": _now_iso(), "kind": it["kind"], "target": it["target"]}
-
-
 def _now_iso() -> str:
     return dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+#: The walk's key per answer. `s` is skip, so superseded is `p` (rePlaced).
+_KEYS = {"accept": "y", "refuse": "n", "land": "l", "superseded": "p", "drop": "d",
+         "note": "t"}
+
+
 def _walk(inv, its: list, note: str = "") -> int:
-    """The interactive pass: y / n / a / s / ? / q.
+    """The interactive pass: the item's own answers (`resolve.choices`), then
+    a / s / ? / q.
 
     Driven from a pipe as well as a terminal, because a test drives it that way
     and because the same keys are what a script would send. An unrecognised key
     re-asks rather than guessing: assuming `y` is the failure this walk exists to
-    avoid.
+    avoid. `a` (the rest of this kind) exists only for accept/refuse kinds: a
+    batch of decisions has no one answer.
     """
-    from consolidation import queue
+    from consolidation import queue, resolve
     open_ = [it for it in its if not it.get("resolution")]
     if not open_:
         print("nothing open to walk")
@@ -491,25 +514,39 @@ def _walk(inv, its: list, note: str = "") -> int:
     while i < len(open_):
         it = open_[i]
         n = its.index(it) + 1
+        opts = resolve.choices(it)
+        keys = {_KEYS[c]: c for c in opts}
+        batch = opts == resolve.DEFAULT_CHOICES
+        menu = " / ".join(f"[{_KEYS[c]}] {resolve.LABELS[c]}" for c in opts)
+        menu += (" / [a]ll of this kind" if batch else "") + " / [s]kip / [?]full / [q]uit"
+        short = " / ".join(list(keys) + (["a"] if batch else []) + ["s", "?", "q"])
         print(f"\n{n}. {it['kind']}  {it['target']}"
               + (f"  [nights: {it['nights']}]" if it.get("nights", 1) > 1 else ""))
         print(f"   {it.get('summary', '')}")
         try:
-            key = input("   [y]es / [n]o / [a]ll of this kind / [s]kip / [?]full / [q]uit > ").strip().lower()
+            key = input(f"   {menu} > ").strip().lower()
+            if key in keys:
+                choice, by, text = keys[key], "", note
+                if choice == "superseded":
+                    by = input("   superseded by (id) > ").strip()
+                elif choice == "note":
+                    text = input("   note > ").strip()
         except EOFError:
             print("\n(end of input — stopping the walk)")
             return 0
-        if key in ("y", "n"):
-            accepted = key == "y"
-            _one_resolution(inv, it, accepted, False, note)
-            queue.resolve(inv.base, it["id"], _bare(it, accepted))
-            print(f"   → {'accepted' if accepted else 'refused'}")
+        if key in keys:
+            try:
+                what = resolve.apply(inv.base, inv.agents.parent, it, choice,
+                                     note=text, by=by)
+            except ValueError as exc:
+                print(f"   {exc}")
+                continue
+            print(f"   → {what}")
             i += 1
-        elif key == "a":
+        elif key == "a" and batch:
             rest = [x for x in its if x.get("kind") == it["kind"] and not x.get("resolution")]
             for x in rest:
-                _one_resolution(inv, x, True, False, note)
-                queue.resolve(inv.base, x["id"], _bare(x, True))
+                resolve.apply(inv.base, inv.agents.parent, x, "accept", note=note)
             print(f"   → accepted {len(rest)} of kind {it['kind']}")
             return 0
         elif key == "s":
@@ -521,7 +558,7 @@ def _walk(inv, its: list, note: str = "") -> int:
             print("   (quit — nothing more resolved)")
             return 0
         else:
-            print("   y / n / a / s / ? / q")
+            print(f"   {short}")
     print("\nwalk finished")
     return 0
 
@@ -546,7 +583,7 @@ def ontology_cmd(inv) -> int:
     exits 0, because a known gap must not read as a broken build; a value nobody
     declared exits 1. `review` always exits 0 -- a stale definition is a signal.
     """
-    from knowledge import ontology
+    from knowledge import ontology, ontology_render
     table = ONTOLOGY.positional.split("|")
     cmd = inv.rest[0] if inv.rest else ""
     if inv.help or not cmd:
@@ -581,57 +618,11 @@ def ontology_cmd(inv) -> int:
         print("ontology selfcheck: registers agree")
         return 0
 
-    if cmd == "facets":
-        print(f"{'facet':<10} {'on':<28} {'domain':<52} column")
-        for name, f in ontology.FACETS.items():
-            dom = "|".join(f.domain) if f.domain else "(open, by design)"
-            if len(dom) > 50:
-                dom = dom[:47] + "..."
-            print(f"{name:<10} {','.join(f.on):<28} {dom:<52} {f.column}")
-            if f.derived_for or f.declared_for:
-                print(f"{'':<10} derived: {','.join(f.derived_for) or '-'} · "
-                      f"declared: {','.join(f.declared_for) or '-'} · "
-                      f"layer: {f.layer} · reviewed: {f.reviewed}")
-        return 0
-
-    if cmd == "subjects":
-        for s in ontology.subjects():
-            print(f"{s.id:<12} {s.name:<16} {s.leaves} "
-                  f"{'leaf' if s.leaves == 1 else 'leaves'}  "
-                  f"(reviewed {s.reviewed})")
-            print(f"{'':<12} {s.criteria}")
-        print(f"\n{len(ontology.SUBJECTS)} subjects under system/. "
-              f"`areas/` uses A-P unchanged; `projects/` is open.")
-        return 0
-
-    if cmd == "relations":
-        walk, coin = ontology.relations()
-        print(f"walkable ({len(walk)}) -- these are edges:")
-        for name, r in ontology.RELATIONS.items():
-            if r.walkable:
-                print(f"  {name:<14} {r.from_} -> {r.to:<22} "
-                      f"{r.symmetry:<34} written by {r.writer}")
-        print(f"coincidences ({len(coin)}) -- never walked, never edges:")
-        for name, r in ontology.RELATIONS.items():
-            if not r.walkable:
-                print(f"  {name:<14} {r.from_} ~ {r.to:<22} {r.symmetry}")
-        return 0
-
-    if cmd == "branches":
-        for name, b in ontology.BRANCHES.items():
-            print(f"{name + '/':<11} {b.name:<16} falsified when {b.falsified_when}")
-            print(f"{'':<11} retirement: {b.retirement}")
-        for name in ontology.LEGACY_BRANCHES:
-            print(f"{name + '/':<11} (pre-O2 layout, {ontology.LEGACY_UNTIL})")
-        return 0
-
-    if cmd == "violations":
-        for v in ontology.violations():
-            print(f"{v.n:>3}  {v.state:<17} {v.what}")
-            print(f"     → {v.recommendation}")
-        print(f"\n{len(ontology.VIOLATIONS)} entries, read from the module and "
-              f"not from SPECS.md. An undeclared breach is an error; one of "
-              f"these warns.")
+    if cmd in ontology_render.VIEWS:
+        # The register's columns are the renderer's knowledge, not this
+        # module's (dev/architecture 4a). Exit 0: these five are views.
+        for line in ontology_render.VIEWS[cmd]():
+            print(line)
         return 0
 
     if cmd == "corpus":
@@ -679,6 +670,8 @@ def ontology_cmd(inv) -> int:
         return 1 if errs else 0
 
     return 1
+
+
 
 
 def opencode_session(inv) -> int:
@@ -741,10 +734,12 @@ def hermes_session(inv) -> int:
     if not sid:
         sys.stderr.write("[familiar] hermes-session: no session_id in payload\n")
         return 0
-    bin_path = pathlib.Path(__file__).resolve().parent / "familiar-memory.py"
+    # `familiar` is the only entry point (3b): the worker is one of its routes,
+    # and calling the front door keeps the route table the one declaration.
+    bin_path = pathlib.Path(__file__).resolve().parents[1] / "familiar"
     try:
         subprocess.Popen(
-            [str(bin_path), "hermes-session-worker", f"--session={sid}"],
+            [str(bin_path), "context", "hermes-session-worker", f"--session={sid}"],
             stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL, start_new_session=True)
     except OSError:

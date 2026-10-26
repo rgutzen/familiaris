@@ -22,6 +22,11 @@ Which paths may be read, which may be written, and which belong to the user
 alone are all rules of this kind. A rule that no mechanism checks is filed as
 chalk rather than promoted by wishful reading.
 
+
+![The wards: one rules register, compiled to every surface it is enforced at](../../assets/figures/lore-boundaries.svg)
+
+*the wards: one rules register, compiled to every surface it is enforced at.*
+
 ## The design choice, and why
 
 **Enforcement is a property of the rule, and it is stated.** The distinction

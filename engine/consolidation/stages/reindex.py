@@ -145,7 +145,8 @@ def _register():
     """
     try:
         from knowledge import ontology
-        return ontology.BRANCHES, ontology.SUBJECTS
+        return (dict(zip(ontology.branch_ids(), ontology.branches())),
+                dict(zip(ontology.subject_ids(), ontology.subjects())))
     except Exception:              # noqa: BLE001 - see docstring
         return {}, {}
 
@@ -407,6 +408,16 @@ def render_command(fm: dict, bodies: dict[str, str], claude: bool) -> str:
         # The whole point: keep the SlashCommand tool from reaching it, so this
         # stays human-only in Claude Code exactly as it is in opencode.
         head.append("disable-model-invocation: true")
+
+    # 1e: a skill that DISPATCHES its work to a child declares its own command
+    # text. The default wrapper ("Read `<body>` and follow it") makes the PARENT
+    # the executor, which is the wrong model for such a skill and cannot be fixed
+    # downstream. The body is one line (this dialect has no block scalars) and it
+    # places `$ARGUMENTS` itself, so no trailing `$ARGUMENTS` is emitted.
+    custom = (fm.get("command_body") or "").strip()
+    if custom:
+        return "\n".join(["---", *head, "---", "",
+                          CMD_BANNER.format(path=fm["_path"]), "", custom, ""])
 
     out = ["---", *head, "---", "",
            CMD_BANNER.format(path=fm["_path"]), "",

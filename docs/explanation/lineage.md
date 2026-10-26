@@ -11,6 +11,9 @@ below are stated in this tree — a folder is named for one, a document names
 another — and the rest are inferences from a structure that resembles a
 published one. The Difference column says which.
 
+![Lineage: borrowed ideas, and where each stops](../assets/figures/lineage.svg)
+*Each source with the idea taken from it, where the analogy stops, and the strength of the link.*
+
 | System element | Source | The claim borrowed | Where the analogy stops | Link |
 |---|---|---|---|---|
 | the folder layout: `01_PROJECTS`, `02_AREAS`, `04_RESOURCES` | Forte, Tiago. *The PARA Method* (2023). <https://www.buildingasecondbrain.com/para> | Four buckets ordered by **actionability** rather than by topic, so filing asks how soon something is needed and never what it is about | Forte's method has four: Projects, Areas, Resources, Archives. Three of those are here, a Zettelkasten sits between Areas and Resources, and no Archives folder exists at the top level — a project's leftovers go to an Area or are deleted | named source; the correspondence is **partial** |

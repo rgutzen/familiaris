@@ -26,6 +26,8 @@ YAML; the hook reads the compiled JSON with the stdlib only.
 """
 from __future__ import annotations
 
+import re
+
 
 class YamlError(ValueError):
     pass
@@ -47,6 +49,25 @@ def _strip_comment(s: str) -> str:
             break
         out.append(ch)
     return "".join(out).rstrip()
+
+
+# FLOW COLLECTIONS ARE REJECTED, as the docstring says. They used to load as raw
+# text -- `modes: {no-read: [read]}` arrived as the string `'{no-read: [read]}'`
+# -- which is the failure this module exists to prevent: a config that quietly
+# means something other than it looks like. Found 2026-10-20 while drafting a
+# vocabulary file (dev/architecture 2d), where flow lists are exactly what
+# someone writes.
+_FLOW = re.compile(r"^(?:\[.*\]|\{.*\})$")
+
+
+def _reject_flow(v: str, n: int) -> str:
+    """A flow collection is flow only when it STARTS with `[` or `{`: a scalar
+    may contain either, and a quoted one is a scalar."""
+    if len(v) >= 2 and v[0] in "'\"":
+        return v
+    if _FLOW.match(v.strip()):
+        raise YamlError(f"line {n}: flow collections are not part of this subset: {v!r}")
+    return v
 
 
 def _unquote(v: str) -> str:
@@ -96,7 +117,7 @@ def _mapping(rows, i, indent):
             else:
                 out[key] = None
         else:
-            out[key] = _unquote(rest)
+            out[key] = _unquote(_reject_flow(rest, n))
     return out, i
 
 
@@ -113,7 +134,7 @@ def _sequence(rows, i, indent):
             item_map, i = _mapping(rows, i, keycol)
             out.append(item_map)
         else:
-            out.append(_unquote(_strip_comment(item)))
+            out.append(_unquote(_reject_flow(_strip_comment(item), n)))
             i += 1
     return out, i
 

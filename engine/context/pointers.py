@@ -293,8 +293,9 @@ def routing_targets(agents: pathlib.Path) -> set[str]:
             rel = route_token(m.group(1))
             if rel:
                 out.add(rel)
-    index = agents / "knowledge" / "INDEX.md"
-    if index.exists():
+    # Every index: the top one names the subject indexes, each subject's names its
+    # leaves (split per subject 2026-10-21, O3d). All share the `knowledge/` anchor.
+    for index in sorted((agents / "knowledge").rglob("INDEX.md")):
         for m in re.finditer(r"`([^`\n]+\.md)`", index.read_text()):
             bare = route_token(m.group(1))
             if bare:

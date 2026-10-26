@@ -4,16 +4,16 @@ summary: Why an injected claim cannot become this system's belief — five struc
 origin: authored
 authority: agent
 trust: trial
-last_verified: 2026-09-11
-verified_log: [2026-09-11]
-use_count: 1
-last_used: 2026-09-29
+last_verified: 2026-10-24
+verified_log: [2026-10-24, 2026-09-11]
+use_count: 3
+last_used: 2026-10-16
 promoted_from: []
 source: arXiv 2607.06595, arXiv 2606.24775
 supersedes:
 superseded_by: []
 contradicts: []
-related: [memory-architecture, memory-mechanisms, consolidation-cycle, prior-art-memory-systems, boundaries, journal-index]
+related: [memory-architecture, memory-mechanisms, consolidation-cycle, prior-art-memory-systems, boundaries, journal-index, publication-model]
 tags: [security, memory, poisoning, injection, provenance, trust, consolidation]
 triggers: [memory poisoning, prompt injection, indirect injection, trust promotion, provenance, unreviewed write access, curator authority, distilled_by, posture check]
 scope: ["06_SYSTEM/**"]
@@ -50,7 +50,7 @@ the brief). Each is a fact about paths and provenance, and each fails loudly.
 | 1 | Nothing machine-written is injected | An injected claim must still be *fetched* by a model that chose to | L2 removed blanket injection; the check intersects `ALWAYS_LOADED` with what pass commits have written |
 | 2 | Promotion is human-gated | `trust: trusted` is what turns provisional text into established fact | `frontmatter.set_fields` raises `PromotionRefused`; every stage goes through it |
 | 3 | The curator never edits prose unattended | The one route from a model's words to a leaf's body runs through a person applying a patch | every pass commit under `knowledge/**` must be a frontmatter change |
-| 4 | Directive paths are untouched | `user/**`, `conventions/**`, `boundaries/**`, `ROADMAP.md` are where directives live | checked against history, not against the `OFF_LIMITS` tuple that claims it |
+| 4 | The pass writes no human-owned path | `user/**`, `conventions/**`, `boundaries/**` are directive; `ROADMAP.md` is editable when a human is watching and closed to the pass, which has no one to flag an edit to | checked against history, not against the `OFF_LIMITS` tuple that claims it |
 | 5 | Machine-written journal entries are marked | Lets retrieval tell a session the text is an unreviewed distillation | `distilled_by:`; surfaced per hit by `journal_search`'s `provenance` field |
 
 Properties 1–4 make a poisoned claim inert. Property 5 makes it **survivable**

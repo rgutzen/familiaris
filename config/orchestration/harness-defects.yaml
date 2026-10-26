@@ -1,0 +1,24 @@
+# Known disagreements between a harness's own model table and the vendor, recorded so
+# `familiar orchestration models --check` passes on them and still fails on a new one.
+# A defect that no longer occurs fails the check until it is removed from here, so this
+# file cannot rot. The catalogue (models.yaml) is never edited to match a harness.
+# Entry: model (catalogue id), field (context|max_out|thinking|images), harness_says
+# (the harness's text, e.g. 200K), vendor_says (the catalogue's value), recorded (date), note.
+# The three Qwen records removed on 2026-10-13: ~/.pi/agent/models.json now declares
+# contextWindow and reasoning for both tags (the user's dotfiles), so pi agrees with
+# the vendor and the check caught the stale records, as designed.
+# The Haiku 5.5 context record removed on 2026-10-22: pi now reports 1M, as the
+# vendor does, and `models --check` flagged the record as resolved.
+pi:
+  - model: ministral-3b-2512
+    field: context
+    harness_says: 131.1K
+    vendor_says: "256000"
+    recorded: 2026-10-13
+    note: pi's mistral table says 131.1K; docs.mistral.ai/models/ministral-3-3b-25-12 says 256k
+  - model: codestral-2508
+    field: context
+    harness_says: 256K
+    vendor_says: "128000"
+    recorded: 2026-10-13
+    note: pi's mistral table says 256K; docs.mistral.ai/models/codestral-25-08 says 128k

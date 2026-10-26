@@ -118,7 +118,7 @@ def render_glossary(counters: dict | None = None) -> str:
     One row per subject: the id (which IS the folder name, R1e), the mythic
     name, the criteria verbatim, and the places the subject occupies. Nothing
     here is invented -- a name or a criterion this module could not read from
-    `ontology.SUBJECTS` would be a register failure, and `ontology selfcheck`
+    `ontology.subjects()` would be a register failure, and `ontology selfcheck`
     is where that fails, not this writer.
 
     `counters` carries `COUNTERS` from the leaf on disk; absent, a new leaf
@@ -133,7 +133,7 @@ def render_glossary(counters: dict | None = None) -> str:
     # Built through `roots`, never spelled: `root-literals` forbids engine code
     # naming a root's directory (R2a), and the register moves with the root.
     register = roots.rel(roots.ONTOLOGY / "subjects.yaml")
-    subjects = sorted(ontology.SUBJECTS.values(), key=lambda s: s.id)
+    subjects = sorted(ontology.subjects(), key=lambda s: s.id)
     rows = ["| Subject | Name | Falsified when | Occupies |",
             "|---|---|---|---|"]
     for s in subjects:
@@ -198,7 +198,7 @@ def plan(root: pathlib.Path = None) -> Plan:
 
     try:
         from knowledge import ontology
-        n = len(ontology.SUBJECTS)
+        n = len(ontology.subjects())
     except Exception as exc:                       # noqa: BLE001
         return Plan(root=root, writes=[],
                     problems=[Problem("error",

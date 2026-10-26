@@ -1,9 +1,18 @@
-"""Stage 7b -- Knowledge index. One flat, on-demand index of `knowledge/`.
+"""Stage 7b -- Knowledge index. On-demand indexes of `knowledge/`.
 
-memory/knowledge/system/knowledge/knowledge-index.md. Replaces blanket injection with ONE level of progressive
-disclosure: `CONTEXT.md` names this file, this file names every leaf,
-the agent reads the leaf it needs. Nothing about `knowledge/` is injected into
-any prompt.
+memory/knowledge/system/knowledge/knowledge-index.md. Replaces blanket injection with progressive
+disclosure: `CONTEXT.md` names `knowledge/INDEX.md`, which names every SUBJECT
+with its trigger terms; each subject's own `INDEX.md` names its leaves; the agent
+reads the leaf it needs. Nothing about `knowledge/` is injected into any prompt.
+
+SPLIT PER SUBJECT, 2026-10-21 (O3d executed, the user's decision). The flat index
+crossed `INDEX_BUDGET_TOKENS` at 39 leaves (~2,017 tok). O3d said "split per
+branch", but every leaf was in `system/`, so a branch split would have moved the
+whole table one directory down and stayed over. The facet that sorts is the
+subject. This costs the second routing level the paragraph below argues against;
+it was taken knowingly, because the alternative was a flat file over its budget
+for good, and the top level carries the leaves' own trigger terms so the first
+hop is still a vocabulary match, not a guess.
 
 WHY ONE LEVEL AND NOT TWO. Zhao, Wang & Chen 2026 (arXiv 2607.17598) measured
 disclosure depth directly: one level suffices, and a second routing level
@@ -72,6 +81,9 @@ CHARS_PER_TOKEN = 4
 # Enough to disambiguate, few enough that the terms column cannot eat the
 # budget. A leaf needing more than this is two leaves.
 MAX_TERMS = 8
+# The top index's terms per subject: drawn in turn from its leaves, so each leaf
+# is represented before any leaf gets a second term.
+MAX_GROUP_TERMS = 12
 # One line means one line. Longer summaries are reported, never silently cut,
 # because a truncated summary is the context-collapse failure ACE names.
 MAX_SUMMARY_CHARS = 110
@@ -111,7 +123,9 @@ class Plan:
     problems: list
     leaves: list
     branches: dict              # name -> blurb
-    index_chars: int = 0
+    index_chars: int = 0        # the LARGEST index file: the budget is per file
+    removes: list = dataclasses.field(default_factory=list)   # orphaned indexes
+    largest: str = "INDEX.md"
 
     @property
     def failed(self) -> bool:
@@ -128,10 +142,15 @@ class Plan:
     @property
     def drift(self) -> list:
         return [p for p, new in self.writes
-                if not p.exists() or p.read_text() != new]
+                if not p.exists() or p.read_text() != new] + \
+               [p for p in self.removes if p.exists()]
 
     def apply(self) -> list:
         changed = []
+        for path in self.removes:
+            if path.exists():
+                path.unlink()
+                changed.append(path)
         for path, new in self.writes:
             if not path.exists() or path.read_text() != new:
                 path.parent.mkdir(parents=True, exist_ok=True)
@@ -177,7 +196,7 @@ def _BRANCHES() -> dict:
     """
     try:
         from knowledge import ontology
-        return dict(ontology.BRANCHES)
+        return dict(zip(ontology.branch_ids(), ontology.branches()))
     except Exception:              # noqa: BLE001 - see docstring
         return {}
 
@@ -257,44 +276,103 @@ def load_leaves(root: pathlib.Path, problems: list) -> list:
 
 
 # ── rendering ────────────────────────────────────────────────────────────
+def group_of(rel: str) -> str:
+    """The index a leaf is listed in: `<branch>/<subject>` for a leaf in a subject
+    folder, else its branch (a leaf directly under a branch), else `.`."""
+    parts = rel.split("/")
+    if len(parts) >= 3:
+        return "/".join(parts[:2])
+    return parts[0] if len(parts) == 2 else "."
+
+
+def _subject_name(group: str, branches: dict) -> str:
+    """What a group holds: the subject's name from the register, or the branch's
+    blurb for a branch-level group. Never authored here.
+
+    `areas/<Area>/` answers from the PROFILE, because its vocabulary is A-P and
+    the subject register has never held an Area -- the `areas/` router names its
+    folders exactly as the Area they mirror, so the folder IS the label and the
+    profile is its one source (`_area_criteria`, one register along).
+    """
+    if "/" not in group:
+        return branches.get(group, "")
+    branch, folder = group.split("/", 1)
+    if branch == "areas":
+        fields = roots.PROFILE.areas.get(folder) or {}
+        return str(fields.get("description") or "")
+    try:
+        from knowledge import ontology
+        return ontology.subject(folder).name
+    except Exception:              # noqa: BLE001 - an undeclared subject is ontology's to report
+        return ""
+
+
+def _group_terms(leaves: list) -> list:
+    out, seen, depth = [], set(), 0
+    while len(out) < MAX_GROUP_TERMS and any(depth < len(lf.terms) for lf in leaves):
+        for lf in leaves:
+            if depth < len(lf.terms) and lf.terms[depth] not in seen:
+                seen.add(lf.terms[depth])
+                out.append(lf.terms[depth])
+                if len(out) == MAX_GROUP_TERMS:
+                    break
+        depth += 1
+    return out
+
+
 def render_index(leaves: list, branches: dict) -> str:
-    by_branch: dict = {}
+    """The top index: every subject, with its leaves' trigger terms."""
+    groups: dict = {}
     for leaf in leaves:
-        by_branch.setdefault(leaf.branch, []).append(leaf)
+        groups.setdefault(group_of(leaf.rel), []).append(leaf)
+    by_branch: dict = {}
+    for g in groups:
+        by_branch.setdefault(g.split("/")[0], []).append(g)
 
     out = ["# Knowledge Index", "", BANNER,
-           "<!-- READ ON DEMAND, WHOLE. This is the ONLY index between "
-           "CONTEXT.md and a leaf: -->",
-           "<!-- one level of disclosure, never two "
-           "(knowledge/system/knowledge/knowledge-index.md). -->", "",
-           "Every fact this tree holds, one line each. Paths are relative to "
-           f"`{roots.rel(roots.KNOWLEDGE)}/`.",
-           "**Read the leaf** — a row is a pointer, never the claim. Match the "
-           "task's vocabulary",
-           "against the trigger terms; a match is **explainable**. No match "
-           "anywhere means the",
-           "fact is not here — try `familiar knowledge journal search`, or say it is "
-           "unknown.", "",
-           f"{len(leaves)} leaves in {len(branches)} branches.", ""]
-
+           "<!-- READ ON DEMAND, WHOLE. The first of two levels: this file names "
+           "every subject, -->",
+           "<!-- each subject's INDEX.md names its leaves "
+           "(knowledge/system/knowledge/knowledge-index.md, O3d). -->", "",
+           "Every subject this tree holds, with the trigger terms of its leaves. "
+           f"Paths are relative to `{roots.rel(roots.KNOWLEDGE)}/`.",
+           "Match the task's vocabulary against the terms, **read that subject's "
+           "index**, then the leaf —",
+           "a row is a pointer, never the claim. No match anywhere means the fact "
+           "is not here — try",
+           "`familiar knowledge journal search`, or say it is unknown.", "",
+           f"{len(leaves)} leaves in {len(groups)} subjects, "
+           f"{len(branches)} branches.", ""]
     for name in sorted(by_branch):
         blurb = branches.get(name, "")
         out += [f"## `{name}/` — {blurb}" if blurb else f"## `{name}/`", "",
-                "| Leaf | What it holds | Trigger terms |", "|---|---|---|"]
-        for leaf in sorted(by_branch[name], key=lambda x: x.rel):
-            out.append(f"| `{leaf.rel}` | {leaf.summary} | "
-                       f"{', '.join(leaf.terms) or '—'} |")
+                "| Index | Holds | n | Trigger terms |", "|---|---|---|---|"]
+        for g in sorted(by_branch[name]):
+            members = sorted(groups[g], key=lambda x: x.rel)
+            out.append(f"| `{g}/INDEX.md` | {_subject_name(g, branches) or '—'} | "
+                       f"{len(members)} | {', '.join(_group_terms(members)) or '—'} |")
         out.append("")
-
     empty = sorted(b for b in branches if b not in by_branch)
     if empty:
         out += ["Branches with no leaves yet: "
                 + ", ".join(f"`{b}/`" for b in empty) + ".", ""]
     out += ["Branch routers (`<branch>/CONTEXT.md`) are for human and Obsidian "
-            "navigation. A model",
-            "that has read this file has already routed; descending into one is "
-            "a second",
-            "routing level and buys nothing.", ""]
+            "navigation; a model", "that has read this file needs only the "
+            "subject's index.", ""]
+    return "\n".join(out)
+
+
+def render_group_index(group: str, leaves: list, branches: dict) -> str:
+    """One subject's index: its leaves, one line each."""
+    holds = _subject_name(group, branches)
+    out = [f"# `{group}/` — {holds}" if holds else f"# `{group}/`", "", BANNER,
+           "<!-- The second level: reached from ../INDEX.md (or ../../INDEX.md). -->", "",
+           f"Paths are relative to `{roots.rel(roots.KNOWLEDGE)}/`. **Read the leaf** "
+           "— a row is a pointer, never the claim.", "",
+           "| Leaf | What it holds | Trigger terms |", "|---|---|---|"]
+    for leaf in sorted(leaves, key=lambda x: x.rel):
+        out.append(f"| `{leaf.rel}` | {leaf.summary} | {', '.join(leaf.terms) or '—'} |")
+    out.append("")
     return "\n".join(out)
 
 
@@ -319,7 +397,7 @@ def render_branch_router(name: str, leaves: list) -> str:
     disk is a fact about the tree, not about the vocabulary.
     """
     from knowledge import ontology
-    branch = ontology.BRANCHES[name]
+    branch = ontology.branch(name)
     counts: dict = {}
     for leaf in leaves:
         if leaf.branch != name:
@@ -331,10 +409,10 @@ def render_branch_router(name: str, leaves: list) -> str:
     out = [f"# `{name}/` — {branch.name}", "", BANNER,
            f"<!-- LAYER 3 · {' '.join(branch.criteria.split())} -->", "",
            f"**Looking for a fact, not a folder? Read `../INDEX.md`.** This "
-           f"router triages {name}'s subjects; the index lists every leaf. "
-           f"A model that has read the index has already routed.", "",
+           f"router triages {name}'s subjects; the index lists every subject, and "
+           f"each subject's `INDEX.md` its leaves.", "",
            "| Subject | | Falsified when | n |", "|---|---|---|---|"]
-    for sid, s in ontology.SUBJECTS.items():
+    for sid, s in zip(ontology.subject_ids(), ontology.subjects()):
         n = counts.get(sid, 0)
         crit = " ".join(s.criteria.split())
         # A subject with no leaves is named WITHOUT the trailing slash. It is
@@ -347,7 +425,7 @@ def render_branch_router(name: str, leaves: list) -> str:
         out.append(f"| {where} | {s.name} | {crit} | {n or '—'} |")
     out += ["",
             f"{sum(counts.values())} leaves in {len(counts)} of "
-            f"{len(ontology.SUBJECTS)} subjects. A subject folder appears on "
+            f"{len(ontology.subject_ids())} subjects. A subject folder appears on "
             f"its first leaf, so `—` means declared and not yet written, "
             f"never missing.", ""]
     return "\n".join(out)
@@ -387,6 +465,16 @@ def plan(root: pathlib.Path = None) -> Plan:
 
     index = render_index(leaves, branches)
     writes = [(kdir / "INDEX.md", index)]
+    groups: dict = {}
+    for leaf in leaves:
+        groups.setdefault(group_of(leaf.rel), []).append(leaf)
+    for g in sorted(groups):
+        if g != ".":
+            writes.append((kdir / g / "INDEX.md", render_group_index(g, groups[g], branches)))
+    sizes = {str(path.relative_to(kdir)): len(text) for path, text in writes}
+    largest = max(sizes, key=sizes.get)
+    wanted = {path for path, _ in writes}
+    removes = [x for x in sorted(kdir.rglob("INDEX.md")) if x not in wanted]
 
     router = kdir / "CONTEXT.md"
     try:
@@ -410,20 +498,17 @@ def plan(root: pathlib.Path = None) -> Plan:
                            render_branch_router(name, leaves)))
 
     p = Plan(root=root, writes=writes, problems=problems, leaves=leaves,
-             branches=branches, index_chars=len(index))
+             branches=branches, index_chars=sizes[largest], removes=removes,
+             largest=largest)
     if p.failed:
-        p.writes = []               # cannot render correctly: write nothing
+        p.writes, p.removes = [], []   # cannot render correctly: write nothing
     elif p.over_budget:
         problems.append(Problem(
-            "warn", f"INDEX.md is ~{p.index_tokens} tok, over the "
-                    f"{INDEX_BUDGET_TOKENS} budget — shorten summaries or split "
-                    f"a branch; it is the always-reachable file every routed "
-                    f"session pays. **The trigger: when the coded "
-                    f"{INDEX_BUDGET_TOKENS}-token ceiling is exceeded, split into "
-                    f"PER-BRANCH indexes** — no new judgement needed, because by "
-                    f"then the sorting rule is explicit (O3d). Routing down a "
-                    f"branch and pre-filtering a vector search are the same "
-                    f"operation; the branch is the facet.", kdir / "INDEX.md"))
+            "warn", f"{largest} is ~{p.index_tokens} tok, over the "
+                    f"{INDEX_BUDGET_TOKENS} budget — shorten its summaries, or split "
+                    f"the subject (the index was split per subject at O3d; the budget "
+                    f"is per file, and every routed session pays the files it opens)",
+            kdir / largest))
     return p
 
 
@@ -456,7 +541,8 @@ def main(argv=None) -> int:
     p.apply()
     print(f"knowledge index: {len(p.leaves)} leaves in "
           f"{len(p.branches)} branches")
-    print(f"  index   knowledge/INDEX.md  {p.index_chars} chars "
+    print(f"  indexes {sum(1 for w, _ in p.writes if w.name == 'INDEX.md')}; largest "
+          f"knowledge/{p.largest}  {p.index_chars} chars "
           f"(~{p.index_tokens} tok, "
           f"{'OK' if not p.over_budget else 'OVER BUDGET'}, "
           f"budget {INDEX_BUDGET_TOKENS})")
@@ -484,7 +570,8 @@ def run(ctx) -> bool:
     else:
         changed = p.apply()
         if changed:
-            ctx.act("7", ", ".join(sorted(c.name for c in changed)),
+            kdir = pathlib.Path(ctx.agents) / "knowledge"
+            ctx.act("7", ", ".join(sorted(str(c.relative_to(kdir)) for c in changed)),
                     f"regenerated the knowledge index — {len(p.leaves)} leaves, "
                     f"~{p.index_tokens} tok")
     return True

@@ -6,6 +6,10 @@ everything the system knows lives in files a harness reads. It is still a code
 change, and this page is mostly the list of files — the surfaces are yielded from
 code, so a fifth harness cannot be a configuration edit.
 
+![What a new harness touches](../assets/figures/harness-touchpoints.svg)
+
+*Five touchpoints, steps 1–5; the always-on payload is the one the task turns on.*
+
 Read the whole page before starting: three of the six steps are separate
 mechanisms, and only the first can be checked without the harness installed.
 
@@ -73,9 +77,15 @@ program, and no such program exists on this machine for a fifth harness.
 
 ## 3 · Enforcement — `engine/boundaries/guard.py`, or the advisory
 
-A harness that can refuse a tool call gets boundaries enforced: `guard.py` reads
-`config/boundaries/boundaries.json`, judges the payload, and answers in the
-asking harness's dialect. A harness without such a surface gets the advisory
+A harness that can refuse a tool call gets boundaries enforced: a judge reads
+`config/boundaries/boundaries.json` and answers in the asking harness's dialect.
+Two judges exist — `guard.py` (Python, another judge cannot be imported from a
+Python hook) and `engine/boundaries/shared/judge.mjs` (shared by the opencode
+plugin and pi-guard), and the parity corpus holds the two equal. A new JS/TS
+surface imports the shared judge and supplies only its own channel; it must not
+write a third. The words in the rules — what a mode denies, which commands write
+or push, where a tool carries a path — are `config/boundaries/vocabulary.yaml`,
+compiled into the same JSON. A harness without such a surface gets the advisory
 instead — `engine/boundaries/compile.py` yields one target per harness surface,
 which is where the hermes memory block comes from.
 

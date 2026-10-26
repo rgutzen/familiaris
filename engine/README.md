@@ -25,7 +25,7 @@ familiar skills        index
 familiar context       capture | harness | tree | route | links | l1 | all |
                      opencode-session | hermes-session | pointers
 familiar harness       jev
-familiar checks        healthcheck | selftest
+familiar checks        healthcheck | selftest | evals
 familiar structure     init | link | generate | validate | status | config |
                      project | zettel
 familiar schedule      timers
@@ -33,14 +33,19 @@ familiar backup        run | verify | prune | sync | reconcile
 familiar host          goto | capture | daily
 ```
 
-The three programs this replaced are still here as BACK-ENDS, invoked by path
-and not on `PATH`:
+**There are no Python back-ends.** Until 2026-10-20, `familiar` resolved a
+route to one of two hidden programs (`cli/familiar-memory.py`,
+`cli/familiar-context.py`) and those programs looked the verb up a second time.
+A route now names its entry function directly — its `Spec`, and the shape of the
+call, are in `familiar`'s `ROUTES` table, which is the whole declaration
+(dev/architecture §3).
+
+The two shell back-ends remain, because their verbs are shell:
 
 | Back-end | Reached as |
 |---|---|
-| `cli/familiar-memory.py` | `familiar knowledge …`, `familiar consolidation …`, `familiar skills …`, `familiar context capture` |
-| `cli/familiar-context.py` | `familiar context tree/route/links/l1/all/harness` |
-| `structure/pazras.sh` | `familiar structure …`, `familiar schedule …`, `familiar backup …` |
+| `structure/pazras.sh` | `familiar structure …`, `familiar schedule timers`, `familiar backup …`, `familiar checks healthcheck` |
+| `host/pazras-utils.sh` | `familiar host …` |
 
 ## Layout
 
@@ -56,10 +61,12 @@ engine/
 │                        links, l1, route, the MCP server, the pi capture shim
 ├── consolidation/       The act of writing: the nightly pass, ranking, the
 │                        ledger, the queue, the report, posture, stages/
-├── cli/                 The back-ends and their entry scripts
+├── cli/                 The verbs' entry scripts and selftest; no dispatch
+│                        table (a route in `familiar` names its function)
 ├── checks/              The threshold: checks.py's registry, declared_paths,
 │                        import_order, root_literals, instance_refs, push_guard,
-│                        pre-commit and pre-push (the two hooks git runs)
+│                        pre-commit and pre-push (the two hooks git runs);
+│                        evaluation.py, whether a component is worth it
 ├── boundaries/          The wards: the rules' compile and the harness guards
 ├── structure/           The bones: the config loader and the generators
 ├── schedule/            The almanac: the systemd unit generator
@@ -83,6 +90,7 @@ fails a commit that tries.
 python3 engine/checks/checks.py --list          # the one registry of checks
 python3 engine/checks/checks.py --run pre-commit
 familiar checks healthcheck                        # the weekly drift report
+familiar checks evals review                       # is each component worth it
 ```
 
 Everything under `config/` is generated from something in `engine/` or is a

@@ -1,0 +1,85 @@
+# The contract a dispatchable SPECS.md item meets (decisions 11, 16).
+#
+# CONTENT, NOT BINDING. This file says what an item carries; the code that
+# reads it is `engine/orchestration/specs.py`, and `familiar orchestration
+# specs --explain` prints it. The procedure -- when to write a SPECS.md and how
+# to fill these fields while planning -- is the `dispatch` skill, not this file.
+#
+# Loaded through `engine/lib/_miniyaml.py`: block mappings and sequences only,
+# every value a string.
+
+# An item is a top-level checkbox. A well-formed one's bold head starts with
+# its id, then ` · `:
+#   - [ ] **2a · the contract.** prose ...
+# An open checkbox without an id is refused, not skipped.
+# `[ ]` is open and must carry every required field; `[x]` is done and is
+# exempt, because a finished item's record is prose, not a plan.
+item:
+  open: "- [ ] "
+  done: "- [x] "
+  id: "optional capitals, a number, optional lower-case letters, before ` · ` in the bold head: 2a, M2b, P0"
+
+# A field is one indented line under its item: `  key: value`, two or more
+# spaces, the key at the start of the line. One line per field; the order is
+# free. A field line inside another item's text belongs to that item.
+form: indented key-value line, one per field
+
+fields:
+  touches:
+    type: paths
+    required: "yes"
+    meaning: the files or globs the item may write; overlap between two items in one wave splits the wave
+    syntax: comma-separated paths or globs, relative to the repository or starting with ~/
+  depends:
+    type: ids
+    required: "yes"
+    meaning: the item ids this item needs done first
+    syntax: comma-separated item ids of this file, or an em dash (—) for none
+  model:
+    type: model
+    required: "yes"
+    meaning: who is meant to do the item, declared at planning and audited by dispatch
+    syntax: a callable id in config/orchestration/models.yaml, or `user` for an item only the user may do
+  verify:
+    type: command
+    required: "yes"
+    meaning: the exit criterion; the item is ticked only after it ran
+    syntax: "a shell command, or `manual: <what is read>` when the exit is a reading"
+  review:
+    type: flag
+    required: "no"
+    meaning: a scheduled chain pauses after ticking this item until the user reviews it and runs `familiar schedule sessions resume` (dev/schedule 1f, decision 7)
+    syntax: yes or no; absent is no
+
+# Value of `depends:` that means "none". The hyphen-minus is accepted too,
+# because a keyboard without an em dash must not make a spec undispatchable.
+none:
+  - —
+  - "-"
+
+# The value of `model:` for work only the user may do (a push, a directive
+# file, another repository).
+user_model: user
+
+# The prefix of `verify:` when the exit is a reading rather than a command.
+manual_prefix: "manual:"
+
+# SPECS.md files written before this contract existed (2026-10-13), each with
+# why it is not dispatchable yet. The `specs-dispatchable` gate warns on these
+# and fails on every other `dev/*/SPECS.md`; a listed file that has become
+# dispatchable fails until it is removed from here, so the list only shrinks.
+# Backfilling a track's fields is that track's planning work, not this one's.
+#
+# RULED 2026-10-14 (user): do not backfill these now. A file is backfilled when
+# its own dev track is picked up again; until then the eight are the dispatch
+# mechanism's test corpus -- item 3g asserts what `dispatch` does with each, so
+# a file that changes without that test changing fails. A file that becomes
+# dispatchable still leaves this list, which is how it shrinks to nothing as the
+# tracks come round.
+legacy:
+  dev/cli/SPECS.md: pre-contract chore list; items carry no ids
+  dev/data/SPECS.md: pre-contract chore list; items carry no ids
+  dev/hermes-guard/SPECS.md: pre-contract; ids, no fields
+  dev/integrity/SPECS.md: pre-contract; ids, no fields, three items share N3
+  dev/jev/SPECS.md: pre-contract; ids, no fields
+  dev/memory/SPECS.md: pre-contract; ids, no fields, two items share M4

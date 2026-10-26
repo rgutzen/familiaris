@@ -19,6 +19,11 @@ published tree. **Tests** belong to the code they test. The **healthcheck** look
 at the machine and the tree rather than at a diff: a drifted generated file, a
 timer that never fired, a glossary nobody rebuilt.
 
+
+![The threshold: which gate runs which check, pre-commit and manual](../../assets/figures/lore-checks.svg)
+
+*the threshold: which gate runs which check, pre-commit and manual.*
+
 ## The design choice, and why
 
 **A check declares what it means, and the default is to fail.** A check that

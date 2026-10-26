@@ -178,10 +178,16 @@ def test_miniyaml_was_not_extended():
     from lib import _miniyaml
     public = {n for n in dir(_miniyaml) if not n.startswith("_")}
     funcs = {n for n, v in vars(_miniyaml).items() if inspect.isfunction(v)}
-    assert public == {"YamlError", "load", "annotations"}   # `annotations` is
-    # the `from __future__` binding, not API: it is in every module that uses it.
+    assert public == {"YamlError", "load", "annotations", "re"}   # `annotations`
+    # is the `from __future__` binding and `re` the stdlib import that
+    # `_reject_flow` needs; neither is API. The assertion's subject is that no
+    # new PUBLIC function or class appears.
+    # `_reject_flow` was added 2026-10-20. Flow collections had always been
+    # REJECTED in the docstring, but loaded as raw strings; a vocabulary file
+    # (dev/architecture 2d) is where someone writes `[a, b]`. A parser fixed to
+    # honour its own contract is not the surface widening this test guards.
     assert funcs == {"_strip_comment", "_unquote", "_lines", "_folded",
-                     "_mapping", "_sequence", "_value", "load"}
+                     "_mapping", "_sequence", "_value", "_reject_flow", "load"}
 
 
 def test_the_loader_reads_the_files_rather_than_a_copy(monkeypatch, tmp_path):
@@ -496,12 +502,21 @@ def test_an_empty_new_engine_directory_fails(tmp_path):
 # ── O4a: the ground truth ────────────────────────────────────────────────
 
 def _live_leaves() -> list:
-    """`find`'s answer over the live tree: every leaf under the knowledge root,
-    minus the two routers and the underscore files."""
+    """`find`'s answer over the live tree, minus the two routers and the
+    underscore files -- restricted to `system/`, which is the population
+    `corpus()` scores.
+
+    The restriction is not a convenience: `corpus()` excludes `areas/` and
+    `projects/` leaves on purpose (their vocabulary is A-P and a project name,
+    and the question it answers is `criteria("subject")`). While both were empty
+    this helper could walk the whole tree and agree anyway -- 2026-10-25 put the
+    first `areas/` leaf in and the two definitions parted company, which is the
+    drift the assertion exists to catch rather than to crash on.
+    """
     root = pathlib.Path(O.AGENTS) / "knowledge"
     return sorted(
         f"memory/knowledge/{p.relative_to(root).as_posix()}"
-        for p in root.rglob("*.md")
+        for p in (root / "system").rglob("*.md")
         if p.name not in ("CONTEXT.md", "INDEX.md")
         and not p.name.startswith("_"))
 
@@ -522,7 +537,7 @@ def test_the_corpus_is_the_whole_tree_and_matches_find():
     reason="the count is this instance's: the classification omits two of the "
            "leaves, so the export's corpus is smaller, and O4b's answer key "
            "was scored against the private one")
-def test_the_instance_corpus_is_the_35_leaves_of_the_live_tree():
+def test_the_instance_corpus_is_the_39_leaves_of_the_live_tree():
     """**34, not 31, since O3c/O3e (2026-10-09) and D7 (2026-10-15)**: O3c's
     generated subject glossary landed under `system/publication/` (the branch's
     first leaf), O3e's `file-naming.md` joined `system/structure/`, and D7 gave
@@ -531,8 +546,25 @@ def test_the_instance_corpus_is_the_35_leaves_of_the_live_tree():
     LIVE tree, and the live tree grew.
 
     **35 since P6 (2026-10-20)**: the publication track's durable claims moved
-    into `system/publication/publication-model.md` as the track retired."""
-    assert len(_live_leaves()) == 35
+    into `system/publication/publication-model.md` as the track retired.
+
+    **39 since the merge with `plan/orchestration` (2026-10-20)**: schedule 9b's
+    one-shot leaf and the Loom's three orchestration leaves joined.
+
+    **40 since 2026-10-21**: `system/harness/agent-profiles.md`, billing profiles.
+    **41 the same day**: `system/harness/phone-relay.md` (dev/remote R4).
+    **42 on 2026-10-24**: `system/harness/herdr-cli.md` -- the terminal workspace
+    manager's CLI surfaces and the three traps they set. Its stem is `herdr-cli`
+    because `herdr` already names the track `dev/herdr/`, and a stem is one
+    document.
+    **43 on 2026-10-25**: `system/checks/component-evaluation.md` -- the
+    evaluation layer (is a component worth it). Its stem is not `evaluation`
+    for the same reason: the track is `dev/evaluation/`.
+    **44 the same day**: `system/harness/voice-local.md`, the two local speech
+    services and the `say` client (dev/voice-out). Its stem is `voice-local`
+    because `voice` already names `config/practice/conventions/voice.md`, the
+    house style for prose, and a stem is one document."""
+    assert len(_live_leaves()) == 44
 
 
 def test_every_leaf_in_the_corpus_carries_a_ratified_subject():
@@ -561,12 +593,36 @@ def test_the_corpus_is_the_distribution_o2b_ratified():
     untouched -- asserted rather than assumed, because a move that silently
     joins a new subject would otherwise pass. O4b's score is unaffected: it was
     run and recorded against the 31 (SPECS O4b, `o4b-run{1,2,3}.json`), and its
-    state carries titles and headings, not these leaves. **Amended by P6
-    (2026-10-20): `publication: 2`** -- the retired track's model leaf."""
+    state carries titles and headings, not these leaves.
+
+    **Amended by orchestration 1c (2026-10-14): `harness: 7, orchestration: 1`.**
+    `orchestrators.md` moved to the Loom's folder, where its subject files it
+    (R1e). O4b's key still labels it `harness`, as it was when O4b ran.
+
+    **Amended by schedule 9b (2026-10-15): `schedule: 2`.** The one-shot
+    session mechanism's leaf, `system/schedule/scheduled-sessions.md`, joins the
+    recurring timers' leaf in the Almanac's folder.
+
+    **Amended by the orchestration documentation (2026-10-15):
+    `orchestration: 4`.** `the-loom.md`, `orchestration-eval.md` and
+    `delegation-and-asks.md` join `orchestrators.md` in the Loom's folder.
+
+    **Amended by P6 (2026-10-20): `publication: 2`** -- the retired track's
+    model leaf. **And by the merge (2026-10-20): `harness: 8`** -- D7's
+    `codex.md` joins the seven left after `orchestrators.md` moved.
+
+    **Amended 2026-10-21: `harness: 9`** -- `agent-profiles.md` (billing profiles);
+    **`harness: 10`** -- `phone-relay.md` (dev/remote R4).
+    **Amended 2026-10-24: `harness: 11`** -- `herdr-cli.md` (the herdr track's
+    traps, where a future session looks for them).
+    **Amended 2026-10-25: `checks: 2`** -- `component-evaluation.md` joins
+    `healthcheck.md` in the Threshold's folder (dev/evaluation decision 2).
+    **And `harness: 12` the same day** -- `voice-local.md` (dev/voice-out: two
+    local speech services and the `say` client)."""
     import collections
     assert collections.Counter(s for _, s in O.corpus()) == {
-        "harness": 9, "consolidation": 6, "knowledge": 5, "context": 2, "skills": 2,
-        "structure": 3, "boundaries": 1, "checks": 1, "schedule": 1,
+        "harness": 12, "orchestration": 4, "consolidation": 6, "knowledge": 5, "context": 2, "skills": 2,
+        "structure": 3, "boundaries": 1, "checks": 2, "schedule": 2,
         "backup": 1, "host": 1, "practice": 1, "publication": 2,
     }
 
@@ -589,6 +645,31 @@ def test_the_corpus_excludes_branches_with_another_vocabulary(tmp_path):
 def test_the_live_system_branch_holds_only_declared_subjects():
     """O2d's exit half. Every directory O2b created is in the register."""
     assert [f.line() for f in O.subject_dir_findings()] == []
+
+
+def test_an_areas_leaf_is_checked_against_the_area_vocabulary(tmp_path):
+    """The same check as `system/`, with A-P as its vocabulary. Until
+    2026-10-25 it compared every `areas/` leaf against the SUBJECTS register,
+    which no leaf under that branch can satisfy -- so the first real one warned
+    forever, in a message that promised A-P and could never see one.
+
+    The Area folders are read from `config/profile.yaml` through `roots.PROFILE`,
+    the same single source `_area_criteria` uses, so a profile edit moves both.
+    """
+    mem = tmp_path / "memory"
+    good = mem / "knowledge/areas/B_Tech"
+    good.mkdir(parents=True)
+    (good / "sync.md").write_text("---\ntitle: x\n---\n# x\n")
+    projects = tmp_path / "projects"
+    subjects = [f for f in O.branch_findings(mem, projects) if f.code == "subject"]
+    assert [f.line() for f in subjects] == []
+
+    bad = mem / "knowledge/areas/nonsense"
+    bad.mkdir()
+    (bad / "y.md").write_text("---\ntitle: y\n---\n# y\n")
+    subjects = [f for f in O.branch_findings(mem, projects) if f.code == "subject"]
+    assert len(subjects) == 1
+    assert "no Area" in subjects[0].detail and "B_Tech" in subjects[0].detail
 
 
 def test_an_empty_undeclared_subject_directory_is_an_error(tmp_path):
@@ -742,6 +823,27 @@ def test_a_new_naming_violation_is_an_error_not_a_warning(tmp_path):
     assert "Title Case File.md" in undeclared[0].where
 
 
+def test_an_ignored_scratch_file_is_not_a_naming_target(tmp_path):
+    """`dev/figures/logs/` is where a figure job writes, and `.gitignore` says it
+    is machine state rather than the repository's shape. Feeding it to the
+    naming rules failed every commit on filenames nobody chose.
+
+    The file is never `git add`ed, so removing the ignore rule also pins
+    `--others`: a plain `git ls-files` would hide it too, and a leaf a session
+    just wrote must still be checked."""
+    import subprocess
+    subprocess.run(("git", "init", "-q", str(tmp_path)), check=True)
+    log = tmp_path / "dev/figures/logs/F8-launch1.log"
+    log.parent.mkdir(parents=True)
+    log.write_text("x\n")
+    ignore = tmp_path / ".gitignore"
+    ignore.write_text("logs/\n")
+    assert O.naming_findings(tmp_path) == []
+    ignore.write_text("")
+    got = [f for f in O.naming_findings(tmp_path) if f.code == "naming:3"]
+    assert [f.where for f in got] == ["dev/figures/logs/F8-launch1.log"]
+
+
 # ── O1k: the violations register ───────────────────────────────────────────
 
 def test_every_violation_has_a_state_from_the_declared_vocabulary():
@@ -830,6 +932,20 @@ def test_an_undeclared_facet_value_fails(clean):
     O.reset()
     errors = [f for f in O.structural_findings(clean) if f.level == "error"]
     assert any("trust: bogus" in f.detail for f in errors)
+
+
+def test_a_journal_entry_may_declare_a_registered_subject(clean):
+    """2026-10-21: the check tested the KEY (`"subject" not in SUBJECTS`) instead of
+    the value, so the first journal entry to declare `subject: consolidation` -- a
+    registered subject -- failed the gate. No file had carried the field before."""
+    _leaf(clean, "journal/2026/10/2026-10-21_triage.md", subject="consolidation")
+    O.reset()
+    assert [f for f in O.structural_findings(clean)
+            if f.code.startswith(("subject", "facet:subject"))] == []
+    _leaf(clean, "journal/2026/10/2026-10-21_other.md", subject="nonsense")
+    O.reset()
+    errors = [f for f in O.structural_findings(clean) if f.level == "error"]
+    assert any("subject: nonsense" in f.detail for f in errors)
 
 
 def test_a_declared_facet_value_warns_with_its_register_entry(clean):

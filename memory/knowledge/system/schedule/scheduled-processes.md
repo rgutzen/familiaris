@@ -4,14 +4,14 @@ summary: Anything unattended — timers, what runs when, what it may write
 origin: authored
 authority: agent
 trust: trial
-last_verified: 2026-09-01
-verified_log: [2026-09-01]
-use_count: 6
-last_used: 2026-10-02
+last_verified: 2026-10-25
+verified_log: [2026-10-25, 2026-09-01]
+use_count: 8
+last_used: 2026-10-20
 promoted_from: []           # built 2026-09-01, ROADMAP.md cross-cutting item
 source:
 supersedes:
-related: [consolidation-cycle, healthcheck, journal-index]
+related: [consolidation-cycle, healthcheck, journal-index, scheduled-sessions]
 tags: [systemd, scheduling, timers, generated-artifacts]
 scope: ["06_SYSTEM/engine/structure/**", "dotfiles/shared/systemd/**"]
 area: [B]
@@ -87,6 +87,14 @@ routers fixed for `skills/CONTEXT.md`. Same governing rule, same fix shape.
      touched. A removed file does not unload a running unit — systemd keeps a
      failed stub that `list-timers` still shows — so disable the old timer
      first, or `systemctl --user reset-failed <old>.timer` after.
+     **A new pair needs a restow before systemd sees it.** `bootstrap.sh`
+     stows with `--no-folding`, so `~/.config/systemd/user` holds one symlink
+     per file, and `enable` on an unlinked unit fails with "Unit … does not
+     exist" (2026-10-25, `familiar-evals`). `bash ~/02_AREAS/B_Tech/dotfiles/bootstrap.sh`
+     restows, reloads the manager and runs `enable --now` for every table row;
+     the apply names each `NEW` pair and prints that line.
+     **The apply copies every staged pair**, so it also ships any other
+     session's staged change that has not been applied yet: run `--check` first.
      **This is the one write in the whole mechanism that touches the
      user's own stow package**, and it requires the second `--yes` flag on
      top of `--apply-dotfiles` for exactly that reason: an agent should never

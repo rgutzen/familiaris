@@ -20,6 +20,11 @@ resource shelf. The layout is configuration — one master file the tree is buil
 from and the documentation is generated from, so the drawn tree and the described
 tree cannot drift.
 
+![The tree: the buckets ordered by actionability, the Zettelkasten permanent, 06_SYSTEM holding the system](../../assets/figures/pazras-tree.svg)
+
+*The tree this page describes. `pazras-tree` is shared with STRUCTURE.md, which
+owns it.*
+
 Naming is part of the structure, not a style preference: a structural file means
 something by its name (`CONTEXT.md` routes, `INDEX.md` discloses, `README.md` is
 the human entry), and a content file is named so that it identifies itself read

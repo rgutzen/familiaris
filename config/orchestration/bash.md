@@ -1,7 +1,8 @@
 ---
 name: bash
 description: Mechanical command-execution worker on the fast local 4B. Given exact commands, runs them and reports only verified stdout. Use for formatting, transforms, arithmetic, and single-shot tasks the caller can phrase precisely; NOT for open-ended file exploration or summarising search results.
-model: ollama/qwen3:4b-instruct-2507-q4_K_M
+model: qwen3:4b-instruct-2507-q4_K_M
+class: batch
 tools: bash
 sessionPreference: ephemeral
 sessionHint: Use ephemeral calls — this worker is fast and cheap and carries no memory worth retaining.

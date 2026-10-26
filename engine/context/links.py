@@ -324,7 +324,8 @@ STRICT_SUFFIX = ".md"      # only markdown names are examined at all
 # `memory/brief.py`'s stable report path (its NAME constant) -- mirrored here by
 # name because the two packages share no parent and cannot import each other;
 # tests/test_links.py asserts the mirror still matches the source, the same way
-# posture.py checks its ALWAYS_LOADED against pazras.py's.
+# `consolidation/posture.py` checks its ALWAYS_LOADED against
+# `context/navigation.py`'s.
 GENERATED_OUTPUTS = ("BRIEF.md",)
 
 # Prose that RECORDS a removal is not a stale claim; it is the tree being

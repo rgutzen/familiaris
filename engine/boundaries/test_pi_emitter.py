@@ -82,7 +82,9 @@ for pat in bc.PUSH_PATTERNS:
 # ── model-axis rules must NOT land in config.json (the Pi guard's job) ───────
 
 check("personal docs NOT in path", "Personal-Documents" not in json.dumps(perm))
-check("ssh NOT in path", "/.ssh" not in json.dumps(perm))
+# The path maps only: `no-host-escape` bash globs name `~/.ssh` as a bind source.
+path_maps = json.dumps({k: v for k, v in perm.items() if k.startswith("path")})
+check("ssh NOT in path", "/.ssh" not in path_maps)
 check("loredb NOT in path", "loredb" not in json.dumps(perm))
 check("credentials NOT in path", ".hermes/.env" not in json.dumps(perm))
 
@@ -97,6 +99,18 @@ all_rules = cfg["rules"]
 agnostic = {r["mode"] for r in all_rules if r["models"] == "all"}
 axised = {r["mode"] for r in all_rules if r["models"] != "all"}
 check("no mode appears in both", not (agnostic & axised))
+
+# rtk rewrites `git push x` to `rtk git push x` before the gate runs, so every
+# push/rewrite ask needs its rtk twin, or it falls through to `*: allow`.
+for pat in bc.PUSH_PATTERNS:
+    check(f"rtk twin asks: {pat}", perm["bash"].get("rtk " + pat) == perm["bash"].get(pat) == "ask")
+
+# 8d: the chain link is named (that is what gives it authority), in the source's
+# order, at the top level where pi-permission-system reads it.
+check("authorizerChain names familiar-delegations",
+      doc.get("authorizerChain") == list(cfg["authorizer_chain"])
+      and "familiar-delegations" in doc.get("authorizerChain", []),
+      needs="this machine's deny-list")
 
 # ── a template is not an input ───────────────────────────────────────────────
 # `rules.example.yaml` travels (the deny-list does not), so this runs in both

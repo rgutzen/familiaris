@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 960 440" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="pazras-interact-title pazras-interact-desc" id="pazras-interact-root">
+        <title id="pazras-interact-title">Two files drive every script</title>
+        <desc id="pazras-interact-desc">Architecture diagram: profile.yaml and pazras-master-config.sh, the two driving files, are both read by pazras-config-loader.sh, which every script sources; the scripts act on the seven top-level categories.</desc>
+        <defs>
+      <style>#pazras-interact-root { --color-paper:   #f5f5f5;
+      --color-ink:     #2d3142;
+      --color-muted:   #4f5d75;
+      --color-accent:  #bf4520;
+      --font-sans:     'Geist', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace; }
+      #pazras-interact-root { font-family: var(--font-sans); color: var(--color-ink); }
+      #pazras-interact-root .diagram-container { width: 100%; overflow-x: auto; }
+      @media print {
+#pazras-interact-root .diagram-container { overflow-x: visible; }
+}</style>
+          <pattern id="pazras-interact-pazras-interact-dots" width="22" height="22" patternUnits="userSpaceOnUse">
+            <circle cx="1" cy="1" r="0.9" fill="#2d3142" fill-opacity="0.10"/>
+          </pattern>
+          <marker id="pazras-interact-pazras-interact-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+        </defs>
+
+        <rect width="100%" height="100%" fill="#f5f5f5"/>
+        <rect width="100%" height="100%" fill="url(#pazras-interact-pazras-interact-dots)" opacity="0.55"/>
+        <rect x="40" y="72" width="240" height="260" rx="8" fill="#2d3142" stroke="#2d3142" stroke-width="0.8" fill-opacity="0.02" stroke-opacity="0.10"/>
+        <rect x="56" y="76" width="152" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="60" y="86" fill="#4f5d75" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start" letter-spacing="0.14em">THE TWO DRIVING FILES</text>
+        <path d="M260,144 H292 Q300,144 300,152 V184 Q300,192 308,192 H320" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#pazras-interact-pazras-interact-arrow)"/>
+        <path d="M260,268 H292 Q300,268 300,260 V228 Q300,220 308,220 H320" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#pazras-interact-pazras-interact-arrow)"/>
+        <path d="M496,206 H536" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#pazras-interact-pazras-interact-arrow)"/>
+        <path d="M680,206 H720" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#pazras-interact-pazras-interact-arrow)"/>
+        <rect x="60" y="112" width="200" height="64" rx="6" fill="#bf4520" stroke="#bf4520" fill-opacity="0.08"/>
+        <text x="74" y="138" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start">profile.yaml</text>
+        <text x="74" y="158" fill="#4f5d75" font-size="8.5" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start">install facts · the Areas</text>
+        <rect x="60" y="236" width="200" height="64" rx="6" fill="#bf4520" stroke="#bf4520" fill-opacity="0.08"/>
+        <text x="74" y="262" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start">pazras-master-config.sh</text>
+        <text x="74" y="282" fill="#4f5d75" font-size="8.5" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start">categories · Zettel · backups</text>
+        <rect x="320" y="174" width="176" height="64" rx="6" fill="#ffffff" stroke="#2d3142"/>
+        <text x="334" y="200" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start">pazras-config-loader.sh</text>
+        <text x="334" y="220" fill="#4f5d75" font-size="8.5" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start">sourced by every script</text>
+        <rect x="536" y="174" width="144" height="64" rx="6" fill="#ffffff" stroke="#2d3142"/>
+        <text x="550" y="200" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="start">Scripts</text>
+        <text x="550" y="220" fill="#4f5d75" font-size="8.5" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start">engine/ · via familiar</text>
+        <rect x="720" y="108" width="200" height="196" rx="6" fill="#ffffff" stroke="#2d3142"/>
+        <text x="734" y="134" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="start">The categories</text>
+        <text x="734" y="162" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start">00_INBOX</text>
+        <text x="734" y="181" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start">01_PROJECTS</text>
+        <text x="734" y="200" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start">02_AREAS</text>
+        <text x="734" y="219" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start">03_ZETTEL</text>
+        <text x="734" y="238" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start">04_RESOURCES</text>
+        <text x="734" y="257" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start">05_ARCHIVES</text>
+        <text x="734" y="276" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start">06_SYSTEM</text>
+                <line x1="40" y1="364" x2="920" y2="364" stroke="#2d3142" stroke-width="0.8" stroke-opacity="0.10"/>
+        <text x="40" y="380" fill="#4f5d75" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start" letter-spacing="0.18em">LEGEND</text>
+        <rect x="40" y="398" width="24" height="12" rx="2" fill="#bf4520" stroke="#bf4520" fill-opacity="0.08"/>
+        <text x="72" y="407" fill="#4f5d75" font-size="8.5" font-family="'Geist', system-ui, sans-serif" text-anchor="start">The two files that drive everything</text>
+        <rect x="344" y="398" width="24" height="12" rx="2" fill="#ffffff" stroke="#2d3142"/>
+        <text x="376" y="407" fill="#4f5d75" font-size="8.5" font-family="'Geist', system-ui, sans-serif" text-anchor="start">A file, script or folder</text>
+        <line x1="512" y1="404" x2="536" y2="404" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#pazras-interact-pazras-interact-arrow)"/>
+        <text x="544" y="407" fill="#4f5d75" font-size="8.5" font-family="'Geist', system-ui, sans-serif" text-anchor="start">Feeds into</text>
+      </svg>

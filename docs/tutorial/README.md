@@ -8,6 +8,10 @@ came back — colours stripped, nothing elided except where a line says so.
 The walk is one loop through the system, because the loop is the thing worth
 learning: a thought is captured, filed, left alone, and checked.
 
+![The initiation: six steps, one evening](../assets/figures/initiation.svg)
+
+*Six steps in order; the `familiar` command each runs and what it touches. The check, step 6, is the focal step.*
+
 ## What it costs, and what it touches
 
 Nothing outside a scratch directory. Two environment variables move the roots,

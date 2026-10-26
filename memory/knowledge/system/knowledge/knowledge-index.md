@@ -1,13 +1,13 @@
 ---
 title: Knowledge index — one level of progressive disclosure
-summary: The L2 disclosure index over this tree: one level, budgeted, generated
+summary: The disclosure indexes over this tree: subjects, then leaves; budgeted per file, generated
 origin: authored
 authority: agent
 trust: trial
-last_verified: 2026-09-11
-verified_log: [2026-09-11]
-use_count: 6
-last_used: 2026-10-09
+last_verified: 2026-10-21
+verified_log: [2026-10-21, 2026-09-11]
+use_count: 12
+last_used: 2026-10-21
 promoted_from: []
 source:                     # built 2026-09-11, ROADMAP Track L item L2 (track retired)
 supersedes: []
@@ -19,11 +19,13 @@ area: [B]
 stability: evolving
 ---
 
-# Knowledge index — one level of progressive disclosure
+# Knowledge index — progressive disclosure, subjects then leaves
 
-`knowledge/INDEX.md` is the single index between `CONTEXT.md` and any
-knowledge leaf: every leaf, one line each, plus its trigger terms. It is read
-on demand and injected nowhere. It is a **derived artifact** — edit the leaf,
+`knowledge/INDEX.md` is the entry between `CONTEXT.md` and any knowledge leaf:
+every SUBJECT, with its leaves' trigger terms. Each subject's own
+`knowledge/<branch>/<subject>/INDEX.md` lists its leaves, one line each, with
+their terms. Both are read on demand and injected nowhere. (One flat index until
+2026-10-21; see O3d below.) It is a **derived artifact** — edit the leaf,
 not the index. The scoring rules that decide which leaves survive are
 [[memory-ranking]]; what belongs in this tree at all is `knowledge-vs-skills.md`.
 
@@ -38,6 +40,7 @@ writes nothing; `pazras-healthcheck` runs it that way.
 |---|---|---|
 | What it holds | `summary:` | `title:` → H1 → filename |
 | Trigger terms | `triggers:` | `tags:`, capped at 8 |
+| A subject's terms (top index) | its leaves' terms, one from each in turn | capped at 12 |
 | Branch heading | the branch router's own `LAYER n · …` comment | none |
 
 Nothing in the index is authored by the generator. A generated summary would be
@@ -50,12 +53,17 @@ branch; the generator still writes the file (a stale index is worse than an
 oversized one) and returns 1. Measured 2026-09-11: 27 leaves, 4,039 chars,
 ~1,010 tok.
 
-**Over budget, split per branch (O3d).** The index stays flat and sectioned
-by branch until `INDEX_BUDGET_TOKENS = 2000` is exceeded. Then it splits into
-one index per branch, with no new judgement needed, because the branch sections
-already sort it. The trigger is a warning, not a build: `knowledge_index.plan()`
-names the split, and the healthcheck's ontology section reads the same exit
-code.
+**Over budget, split (O3d) -- executed 2026-10-21, per SUBJECT.** The rule
+said: stay flat until `INDEX_BUDGET_TOKENS = 2000` is exceeded, then split per
+branch. It was exceeded at 39 leaves (~2,017 tok), and **every leaf was in
+`system/`**, so a branch split would have moved the whole table one directory
+down and stayed over. The user chose the split per subject. Measured after it:
+the top index 3,140 chars (~785 tok), 14 subject indexes, the largest
+(`consolidation`) 1,576 chars. The budget is now **per file**; the warning names
+the largest. The cost is a second routing level, which the generator's own
+docstring cites evidence against (one level suffices); the top level keeps the
+first hop a vocabulary match by carrying each subject's leaf terms. A subject
+whose leaves are gone loses its index on the next rebuild.
 
 **The ~12 rule is measured per router, and it warns rather than split** (the
 measurement applied 2026-10-13; the verdict below stands). The unit is the

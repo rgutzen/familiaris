@@ -62,7 +62,10 @@ def _pattern() -> re.Pattern:
     # A root name as a path segment: followed by `/`, or ending the string
     # (`"~/06_SYSTEM/memory"`). Not preceded by a word character, so
     # `subagents/` and `~/.pi/agent/agents/`'s neighbours are not read as roots.
-    return re.compile(rf"(?<![\w.-])(?:{names})/|(?:^|(?<=/))(?:{names})$")
+    # The data root's default is spelled once too (`roots.DATA_DEFAULT`); a
+    # second spelling is how the context CLI came to ignore the override.
+    data = re.escape(roots.DATA_DEFAULT.removeprefix("~/"))
+    return re.compile(rf"(?<![\w.-])(?:{names})/|(?:^|(?<=/))(?:{names})$|{data}")
 
 
 MARK = re.compile(r"#\s*not-a-root:\s*\S")

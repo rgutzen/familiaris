@@ -10,7 +10,7 @@ last_used: 2026-10-11
 promoted_from: []
 source:
 supersedes:
-related: [claude-code, opencode, memory-architecture, boundaries, context-budget, mcp-servers, pi]
+related: [claude-code, opencode, memory-architecture, boundaries, context-budget, mcp-servers, pi, codex]
 tags: [hermes, signal, gateway, cron]
 scope: []
 area: [B]

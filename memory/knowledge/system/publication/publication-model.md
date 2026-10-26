@@ -4,9 +4,9 @@ summary: What is public, what stays private and by which mechanism; the republis
 origin: authored
 authority: agent
 trust: trial
-last_verified: 2026-10-20
-use_count: 0
-last_used:
+last_verified: 2026-10-26
+use_count: 1
+last_used: 2026-10-20
 promoted_from:
 source: the publication track (Track P, retired at P6; in git history)
 supersedes:
@@ -15,7 +15,7 @@ tags: [publication, publish, republish, export, leak-scan, push-guard, familiari
 scope: ["06_SYSTEM/**"]
 area: [B]
 stability: stable
-verified_log: [2026-10-20]
+verified_log: [2026-10-21, 2026-10-20]
 ---
 
 # Publication model
@@ -87,9 +87,27 @@ and checks pass in the export. Otherwise the export gate stays red and
 `publish.py` refuses to write. The pattern is `instance_only` on a check, or
 `roots.instance_here()` on one assertion. Measured 2026-10-19: merging the
 orchestration track made the export gate red on six checks for this reason.
+Measured again 2026-10-26: the 163 commits after the first publish made it red
+on eight, about 70 tests, among them a real portability bug (the tier checks read
+the master config without the `.example.sh` fallback the bash loader has) and
+two hand-written files under the omitted `config/schedule/`.
+
+`publish.py` copies working-tree bytes, not a commit. Run it from a clean
+worktree at the commit being published whenever the main checkout holds
+uncommitted work, or that work travels.
 
 ## Decisions that bind
 
+- **BSL 1.1 with a personal-use grant, each version converting to AGPL-3.0
+  four years after its publication**, with commercial and field-exclusive
+  licences beside it (`dec-74619058`, 2026-10-26). It replaced AGPL-3.0 plus a commercial
+  licence (`dec-78916300`, 2026-10-19), which could not make a field-exclusive
+  licence enforceable: under the AGPL anyone may build on familiaris by
+  publishing their fork. The releases up to 2026-10-20 stay AGPL-3.0, because
+  a licence already granted cannot be withdrawn. `LICENSE` holds the BSL with
+  its parameters, `NOTICE` the terms in plain words, and the contributor
+  agreement in `CONTRIBUTING.md` (v1.1) the rights that make all three
+  licences possible.
 - One public repository, the whole system, umbrella first (`dec-73517266`).
 - Private canonical, publish into a clone (`dec-66370526`).
 - One generated commit per publish; no personal history travels.

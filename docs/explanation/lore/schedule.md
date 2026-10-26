@@ -20,6 +20,11 @@ case, and it is the same problem the [Vigil](consolidation.md) solves one level
 down: a process nobody is watching may only write what a rule published in
 advance permits.
 
+
+![The almanac: one day's scheduled units, fires and sources](../../assets/figures/lore-schedule.svg)
+
+*the almanac: one day's scheduled units, fires and sources.*
+
 ## The design choice, and why
 
 **Names functional, descriptions mythic.** Renaming a unit would break the one

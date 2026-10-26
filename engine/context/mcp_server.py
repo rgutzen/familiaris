@@ -51,7 +51,7 @@ from mcp.server.mcpserver import MCPServer  # noqa: E402
 # caught by `test_mcp_server`, which builds the fixture from `brief.NAME`.
 BRIEF = "journal/reports/BRIEF.md"
 
-BASE_DIR = os.environ.get("PAZRAS_DATA_DIR", os.path.expanduser("~/.local/share/pazras"))
+BASE_DIR = str(roots.data_root())
 AGENTS_DIR = os.environ.get("PAZRAS_MEMORY_DIR", str(roots.INSTALL / roots.MEMORY_REL))
 REPO_ROOT = os.path.realpath(str(pathlib.Path(AGENTS_DIR).resolve().parent))
 

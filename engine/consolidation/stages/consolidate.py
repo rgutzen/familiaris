@@ -586,7 +586,9 @@ def _surface_decisions(ctx, dismissed) -> None:
     A dismissal only pauses the nagging for `OPAQUE_TTL_DAYS`: if the decision
     still has not landed durably by the time the window lapses, it resurfaces
     -- the same nagging this function exists to guarantee, just deferred, never
-    silenced permanently.
+    silenced permanently. The one exception is the user's own answer that the
+    decision should NOT land: Drop or Superseded in the review (dev/remote R6c)
+    writes a `retired` row, and a retired decision is never raised again.
     """
     log = ledger.read(ctx.base, ledger.DECISIONS)
     rows = log.rows
@@ -613,8 +615,9 @@ def _surface_decisions(ctx, dismissed) -> None:
             if r["id"] in txt:
                 landed.add(r["id"])
     skipped_d = 0
+    retired = ledger.retired(ctx.base)
     for r in rows:
-        if r["id"] in landed:
+        if r["id"] in landed or r["id"] in retired:
             continue
         if dismissed.covers(ctx.repo, r["id"], r["kind"], target_kind="opaque"):
             skipped_d += 1

@@ -1,0 +1,452 @@
+#!/usr/bin/env python3
+"""pi-agent -- delegate a task to a specialised local model, at O(1) prompt cost.
+
+WHY NOT AN EXTENSION. `@mjakl/pi-subagent` put 9,044 bytes (~1,918 tokens) into
+EVERY parent session -- a 4.9KB tool schema plus a 4.2KB roster -- whether or not
+anything delegated, and measured 0 calls in 20 sessions. Worse, it spawns the
+child with `--append-system-prompt`, so the child inherits `~/.pi/agent/SYSTEM.md`
+(the always-on payload) and the roster it cannot act on: 15,758 bytes before the
+task. This script spawns the same child with `--system-prompt`, which REPLACES
+that prompt, plus `-nc` to drop project context files. Measured floor for a
+bash-only worker: 1,001 bytes. Read-only explorer: 3,425.
+
+THE ROSTER IS ROUTED, NOT INJECTED -- the same rule as skills. The parent learns
+one line ("delegate with `pi-agent`; `pi-agent --list` for the roster"), so the
+roster costs nothing until it is wanted and adding the twentieth specialist costs
+the parent exactly as much as the second: nothing.
+
+WHY THE CHILD KEEPS EXTENSIONS. `-ne` would be simpler, but it also drops
+`@gotgenes/pi-permission-system` -- a bash-capable child with no boundary
+enforcement is the wrong trade. Extensions cost 0 prompt bytes (measured), so
+they stay. (An environment flag once kept the lore extension out of the child;
+lore left the setup, and the flag went with it, 2026-10-20.)
+
+THE CHILD STARTS THROUGH `harness/pi_call` (pi.md §Starting a pi process), which owns its
+stdin -- never inherited: `pi -p` reads a non-TTY stdin to EOF, and a caller's
+open pipe (a pi extension's spawn hands over a socket) never closes; the
+bound-tool children of 4e hung there for the whole 900 s.
+
+DELEGATION IS ONLY WORTH IT WHEN THE CHILD DISCARDS MORE THAN IT RETURNS. The
+parent pays the returned summary; the child pays its own ~1-3.5KB floor plus what
+it reads. Recon over many files wins; a single mechanical command does not -- the
+parent already has `bash`.
+
+THE ROLES NAME CATALOGUE IDS, NEVER A PI PROVIDER (decision 25). The account decides
+the provider, so `model:` holds an id from `models.yaml` and `orchestration.profiles`
+resolves it under the active profile (`PI_PROFILE`, unset = private) to the
+`<provider>/<id>` pi wants. A model the profile cannot serve exits 3 with the reason:
+a silent fallback to another model would change what the caller's findings are worth.
+The child inherits the parent's whole environment, and with it `PI_PROFILE` and the
+Claude account (`CLAUDE_CONFIG_DIR`), so it bills where the parent bills.
+
+IT NAMES ITS PARENT (12a). The delegation log's `used` is judged from what the
+parent did afterwards, so the log needs the parent's session log. `--parent-session
+<path>` says it; otherwise the `PI_SESSION_FILE` / `PI_SESSION_ID` pi puts in the
+environment of every `bash` tool call does, which is how a plain
+`pi-agent explore "..."` gets a parent with nobody passing anything. The stderr
+mark stays for a call that has neither.
+"""
+from __future__ import annotations
+
+import argparse
+import os
+import pathlib
+import sys
+import time
+import uuid
+
+# `lib/roots` says where the definitions are (R2a): the engine is generic
+# code, and R3b moved the definitions out of the vault; the subject move of
+# 2026-10-12 put them under `config/orchestration/`.
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+from lib import roots  # noqa: E402
+from harness import pi_call  # noqa: E402
+from orchestration import profiles  # noqa: E402
+
+DEFAULT_DIR = pathlib.Path(os.environ.get("PI_AGENT_DIR", roots.SUBAGENTS))
+SESSION_DIR = pathlib.Path.home() / ".pi/agent/sessions/pi-agent"
+# uuid5 in a fixed namespace: the same handle always resolves to the same child
+# session, without a lookup table that could drift from the sessions on disk.
+NS = uuid.UUID("6ba7b812-9dad-11d1-80b4-00c04fd430c8")
+
+
+class Agent:
+    """One `<name>.md`: YAML-ish frontmatter, then the system prompt body.
+
+    Six keys are read: `name`, `description`, `model`, `tools`, `class` and
+    `effort`. `class` is the task class (`selection.yaml`) this role's work belongs
+    to, and it is what a swap reads when the role's own model is unavailable --
+    or on every call, when `model: class` (14g);
+    `effort` is pi's thinking level (`off|minimal|low|medium|high|xhigh|max`) and
+    is passed as `--thinking`. The file format is the one `@mjakl/pi-subagent`
+    used, so definitions written for it still work. Unknown keys are ignored rather than rejected -- `sessionHint`
+    and friends are prose for a roster this script does not print in full.
+    """
+
+    def __init__(self, path: pathlib.Path):
+        text = path.read_text(encoding="utf-8")
+        if not text.startswith("---"):
+            raise ValueError(f"{path}: no frontmatter")
+        _, front, body = text.split("---", 2)
+        meta: dict[str, str] = {}
+        key = None
+        for line in front.splitlines():
+            if line.strip() and not line.startswith((" ", "\t")) and ":" in line:
+                key, _, val = line.partition(":")
+                meta[key.strip()] = val.strip()
+            elif key and line.strip():                 # folded continuation line
+                meta[key] += " " + line.strip()
+        self.path = path
+        self.name = meta.get("name") or path.stem
+        self.description = meta.get("description", "")
+        self.model = meta.get("model") or ""
+        self.tools = [t.strip() for t in meta.get("tools", "").split(",") if t.strip()]
+        self.task_class = meta.get("class") or ""
+        self.effort = meta.get("effort") or ""
+        self.body = body.strip() + "\n"
+
+
+def load_all() -> list[Agent]:
+    if not DEFAULT_DIR.is_dir():
+        return []
+    out = []
+    for p in sorted(DEFAULT_DIR.glob("*.md")):
+        try:
+            out.append(Agent(p))
+        except ValueError as exc:                      # a broken file is named,
+            print(f"pi-agent: skipping {exc}", file=sys.stderr)   # never dropped
+    return out
+
+
+class Unavailable(Exception):
+    def __init__(self, model: str, profile: str, reason: str):
+        super().__init__(reason)
+        self.model, self.profile, self.reason = model, profile, reason
+
+
+def pi_model(chosen: str) -> tuple[str, str]:
+    """(`<provider>/<id>` for pi, the line that says how it was chosen).
+
+    A `/` marks an explicit pi provider/model (`--model ollama/foo`), passed through
+    unchanged as the escape hatch for a model the catalogue does not list. Anything
+    else is a catalogue id. `profiles.ProfileError` (unknown id, undeclared profile)
+    propagates for the caller to map to exit 2; unavailability raises `Unavailable`.
+    """
+    if "/" in chosen:
+        return chosen, f"{chosen} (explicit pi model, not resolved)"
+    profile = profiles.active()
+    res = profiles.resolve(chosen, profile)
+    if not res.available:
+        raise Unavailable(chosen, profile, res.reason)
+    return f"{res.provider}/{res.model}", f"{chosen} -> {res.provider}/{res.model} (profile {profile})"
+
+
+def describe_model(model: str) -> str:
+    if not model:
+        return "(parent default)"
+    if model == "class":
+        return "class (the class tier decides per call, 14g)"
+    try:
+        return pi_model(model)[1]
+    except Unavailable as exc:
+        return f"{model} UNAVAILABLE: {exc.reason}"
+    except profiles.ProfileError as exc:
+        return f"{model} UNRESOLVABLE: {exc}"
+
+
+def class_route(agent: Agent, *, explore: bool = False,
+                record: bool = False) -> tuple[list, str, dict]:
+    """([(id, effort)] best first, why, the rules) for the role's class tier.
+
+    With `route_live: yes` (dispatch.yaml) this is 14g's router -- expected cost
+    per verified result, Thompson exploration when `explore` -- and otherwise the
+    14c price order. Empty when the role names no class or the tier offers
+    nothing available."""
+    if not agent.task_class:
+        return [], "no `class:` in the frontmatter", {}
+    try:
+        from orchestration import models as _models, selection as _selection
+        cat = _models.load()
+        caps = _models.load_capabilities()
+        sel = _selection.with_needs(_selection.load(), caps)
+        rules = _selection._rules(probe=True)
+        tier, idx, why = _selection.pick(sel, agent.task_class)
+        if _selection.live(rules):
+            ids, note, _choice = _selection.route(cat, caps, tier, rules,
+                                                  explore=explore, record=record)
+        else:
+            ids, note = _selection.cheapest(cat, caps, tier, rules)
+    except Exception as exc:                              # a broken policy is named, not hidden
+        return [], f"the class tiers could not be read: {exc}", {}
+    if not ids:
+        return [], f"{agent.task_class} tier {idx + 1} names nothing available{note}", rules
+    return ([(m, _selection.effort_of(tier, m)) for m in ids],
+            f"{agent.task_class} tier {idx + 1} ({why}{note})", rules)
+
+
+def class_pick(agent: Agent) -> tuple[str, str]:
+    """(the class tier's pick for this role, why). '' when the role names no class
+    or the class's tiers offer nothing available. THE ROLE FILE IS THE
+    DECLARATION AND STILL WINS (ruled 2026-10-14): this is what runs when the
+    declaration cannot be served -- a role bound to a Claude model does not fail
+    when the window closes, it degrades to the class's own pick and says so. A role
+    that declares `model: class` asks for this pick on every call (14g)."""
+    got, why, _rules = class_route(agent)
+    return (got[0][0], why) if got else ("", why)
+
+
+def effort_for(agent: Agent, override: str | None) -> tuple[str, str]:
+    """(the level to pass, the reason it is refused). An explicit `--effort` wins
+    over the role's own, as `--model` does."""
+    level = (override or agent.effort or "").strip()
+    if not level:
+        return "", ""
+    from orchestration import models as _models
+    why = _models.effort_reason(_models.load(), agent.model, level)
+    return ("", why) if why else (level, "")
+
+
+def cmd_list(agents: list[Agent], verbose: bool) -> int:
+    if not agents:
+        print(f"pi-agent: no definitions in {DEFAULT_DIR}", file=sys.stderr)
+        return 1
+    for a in agents:
+        first = a.description.split(". ")[0].rstrip(".")
+        print(f"{a.name:12} {first if not verbose else a.description}")
+        if verbose:
+            print(f"{'':12} model={describe_model(a.model)} tools={','.join(a.tools) or 'all'}")
+            pick, why = class_pick(a)
+            print(f"{'':12} effort={a.effort or '(pi default)'} class={a.task_class or '-'}"
+                  f" class_pick={pick or '-'}{f' ({why})' if pick else ''}")
+    return 0
+
+
+CLASS = "class"     # `model: class` -- the role's class tier decides per call (14g)
+
+
+def run(agent: Agent, task: str, cwd: str, timeout: float | None,
+        model: str | None, session: str | None, effort: str | None = None,
+        parent: str | None = None, log: bool = True) -> int:
+    if not model and agent.model == CLASS:
+        return run_routed(agent, task, cwd, timeout, session, effort, parent, log)
+    chosen = model or agent.model
+    resolved = None
+    if chosen:                       # before any file is written or process spawned
+        try:
+            resolved = pi_model(chosen)[0]
+        except Unavailable as exc:
+            if model:                # an explicit override fails loudly: the caller
+                print(f"pi-agent: {agent.name}: {exc.model} unavailable in profile "   # chose it
+                      f"{exc.profile}: {exc.reason}", file=sys.stderr)
+                return 3
+            fallback, why = class_pick(agent)
+            if not fallback:
+                print(f"pi-agent: {agent.name}: {exc.model} unavailable in profile "
+                      f"{exc.profile}: {exc.reason}; no class fallback ({why})",
+                      file=sys.stderr)
+                return 3
+            try:
+                resolved = pi_model(fallback)[0]
+            except (Unavailable, profiles.ProfileError) as inner:
+                print(f"pi-agent: {agent.name}: {exc.model} unavailable in profile "
+                      f"{exc.profile}: {exc.reason}; the class fallback {fallback} is "
+                      f"unavailable too: {inner}", file=sys.stderr)
+                return 3
+            print(f"pi-agent: {agent.name}: {exc.model} unavailable in profile "
+                  f"{exc.profile}: {exc.reason}; running the class fallback "
+                  f"{fallback} ({why})", file=sys.stderr)
+        except profiles.ProfileError as exc:
+            print(f"pi-agent: {agent.name}: {exc}", file=sys.stderr)
+            return 2
+    level, bad = effort_for(agent, effort)
+    if bad:                          # before any process is spawned, like the model
+        print(f"pi-agent: {agent.name}: effort: {bad}", file=sys.stderr)
+        return 2
+    # Every child keeps its log (5c): what it read and what it cost are the
+    # delegation log's data, and a `--no-session` child left nothing to count. A
+    # caller without a handle gets a one-off one.
+    session = session or f"auto-{int(time.time())}-{os.getpid()}"
+    # `--system-prompt` REPLACES SYSTEM.md -- the whole point; `bare` is `-nc -ns`:
+    # no AGENTS.md/CLAUDE.md discovery, no skills index. Output is inherited:
+    # the parent reads the child's answer from this process's stdout.
+    return spawn(agent, task, cwd, timeout, resolved, level, session, parent, log)[0]
+
+
+def run_routed(agent: Agent, task: str, cwd: str, timeout: float | None,
+               session: str | None, effort: str | None, parent: str | None,
+               log: bool) -> int:
+    """`model: class`: the router's pick, and -- for a class with a free verifier
+    (dispatch.yaml `cascade:`, `read=ref+quote`) -- a CASCADE: the child's answer
+    is checked, and a failed check runs the next option once (two steps at most).
+    The answer that passed, or the last one, is what the parent reads.
+
+    ONE DELEGATION LINE PER CALL (found 2026-10-22, the first live cascade): the
+    line is written for the step whose answer reaches the parent only. A step the
+    check rejected was never the parent's to use, so a line for it would enter
+    5d's uptake as `used: false`. Each CHECK is evidence instead: one row in
+    `<PAZRAS_DATA_DIR>/cascade.jsonl` (model, effort, class, ok), which the
+    posterior (14f) and 6d count -- a free verdict the router would otherwise
+    discard. A child that exited non-zero is no reading of the model, as a 12c
+    child that never ran is not, and writes no row."""
+    got, why, rules = class_route(agent, explore=True, record=True)
+    if not got:
+        print(f"pi-agent: {agent.name}: `model: class` and {why}", file=sys.stderr)
+        return 3
+    contract = (rules.get("cascade") or {}).get(agent.task_class, "")
+    steps = got[:2] if contract else got[:1]
+    session = session or f"auto-{int(time.time())}-{os.getpid()}"
+    code, out, last_sid = 3, "", None
+    for n, (mid, level) in enumerate(steps, 1):
+        try:
+            resolved = pi_model(mid)[0]
+        except (Unavailable, profiles.ProfileError) as exc:
+            print(f"pi-agent: {agent.name}: routed {mid} unavailable: {exc}", file=sys.stderr)
+            continue
+        level = (effort or level or "").strip()
+        bad = ""
+        if level:
+            from orchestration import models as _models
+            bad = _models.effort_reason(_models.load(), mid, level)
+        if bad:
+            print(f"pi-agent: {agent.name}: effort: {bad}", file=sys.stderr)
+            return 2
+        print(f"pi-agent: {agent.name}: routed to {mid} at {level or 'the default level'} "
+              f"(step {n} of {len(steps)}; {why})", file=sys.stderr)
+        handle = f"{session}:{n}" if n > 1 else session
+        code, out = spawn(agent, task, cwd, timeout, resolved, level, handle, parent, log,
+                          capture=bool(contract), defer=bool(contract))
+        if not contract:
+            return code
+        last_sid = str(uuid.uuid5(NS, f"{agent.name}:{handle}"))
+        from orchestration import bindings as _bindings
+        verdict = _bindings.verify(contract, out, pathlib.Path(cwd))
+        if code == 0 and log:
+            cascade_row(mid, level, agent.task_class, verdict.ok, contract)
+        if code == 0 and verdict.ok:
+            break
+        print(f"pi-agent: {agent.name}: {mid}'s answer failed `{contract}` "
+              f"({verdict.summary})" + ("; trying the next option" if n < len(steps) else ""),
+              file=sys.stderr)
+    if last_sid:
+        record(agent.name, last_sid, code, parent, log)
+    sys.stdout.write(out)
+    sys.stdout.flush()
+    return code
+
+
+CASCADE_LOG = "cascade.jsonl"
+
+
+def cascade_row(model: str, effort: str, klass: str, ok: bool, contract: str) -> None:
+    """One check's verdict, for the posterior. Never fails the delegation."""
+    import datetime
+    import json
+    try:
+        path = profiles.data_dir() / CASCADE_LOG
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps({
+                "ts": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"),
+                "model": model, "effort": effort, "class": klass, "ok": bool(ok),
+                "contract": contract}) + "\n")
+    except OSError as exc:
+        print(f"pi-agent: cascade row not written: {exc}", file=sys.stderr)
+
+
+def spawn(agent: Agent, task: str, cwd: str, timeout: float | None, resolved: str | None,
+          level: str, session: str, parent: str | None, log: bool,
+          capture: bool = False, defer: bool = False) -> tuple:
+    """One child, logged: (exit code, its answer when `capture`, else ''). With
+    `defer` the delegation line is the caller's to write (the cascade)."""
+    import subprocess
+    prompt = SESSION_DIR / f"prompt-{agent.name}-{os.getpid()}.md"
+    prompt.parent.mkdir(parents=True, exist_ok=True)
+    prompt.write_text(agent.body, encoding="utf-8")
+    sid = str(uuid.uuid5(NS, f"{agent.name}:{session}"))
+    code = None
+    try:
+        r = pi_call.run(task, approve=False, session=pi_call.Session(SESSION_DIR, sid),
+                        system_prompt=prompt, bare=True, tools=agent.tools or None,
+                        model=resolved or None, thinking=level or None,
+                        env_extra={"PI_OFFLINE": "1"}, cwd=cwd, timeout=timeout,
+                        stdout=subprocess.PIPE if capture else None, stderr=None)
+        code = r.returncode
+        if r.timed_out:
+            print(f"pi-agent: {agent.name} exceeded {timeout}s", file=sys.stderr)
+        return code, (pi_call.decolour(r.stdout) if capture else "")
+    finally:
+        prompt.unlink(missing_ok=True)
+        if not defer:
+            record(agent.name, sid, code, parent, log)
+
+
+def record(role: str, sid: str, code, parent: str | None = None,
+           write: bool = True) -> None:
+    """One line in the delegation log (5c), and the join key on stderr, which the
+    parent's transcript keeps inside the tool result that ran this. A log that
+    cannot be written never fails the delegation.
+
+    `write=False` is `--no-log`: the child still runs and still prints its mark,
+    and no line is written. The reader calibration (12c) uses it -- a run made to
+    MEASURE the reader was not caused by a trigger and was not used or ignored by
+    a parent, so a line for it would enter 5d's uptake denominator as noise."""
+    logs = sorted(SESSION_DIR.glob(f"*_{sid}.jsonl"))
+    if not logs:
+        return
+    if not write:
+        print(f"pi-agent: delegation role={role} session={logs[-1]} (not logged)",
+              file=sys.stderr)
+        return
+    try:
+        from orchestration import log as delegations
+        delegations.append(delegations.line_for(
+            logs[-1], role, profile=profiles.active(), exit_code=code,
+            parent=delegations.resolve_parent(parent)))
+    except Exception as exc:  # noqa: BLE001 -- the child's answer is already out
+        print(f"pi-agent: delegation log not written: {exc}", file=sys.stderr)
+    print(f"pi-agent: delegation role={role} session={logs[-1]}", file=sys.stderr)
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(
+        prog="pi-agent", description="Delegate one task to a specialised local model.")
+    ap.add_argument("agent", nargs="?", help="agent name (see --list)")
+    ap.add_argument("task", nargs="?", help="the task, sent verbatim")
+    ap.add_argument("--list", "-l", action="store_true", help="print the roster")
+    ap.add_argument("--verbose", "-v", action="store_true", help="full roster detail")
+    ap.add_argument("--cwd", default=os.getcwd())
+    ap.add_argument("--timeout", type=float, default=900.0)
+    ap.add_argument("--model", help="override the agent's model: a catalogue id (resolved under "
+                    "the active profile) or, if it contains '/', an explicit pi "
+                    "provider/model passed through unchanged (escape hatch)")
+    ap.add_argument("--session", help="durable handle; omit for a fresh child (its log is "
+                                      "kept either way, for the delegation log)")
+    ap.add_argument("--no-log", action="store_true",
+                    help="do not write a delegation line: a run that is a MEASUREMENT of "
+                         "the reader (12c) is not a delegation the trigger caused, and "
+                         "counting it would corrupt 5d's uptake denominator")
+    ap.add_argument("--parent-session", metavar="PATH",
+                    help="the parent session's log, written into the delegation line as "
+                         "`parent`; default from PI_SESSION_FILE / PI_SESSION_ID, which pi "
+                         "sets for the bash tool")
+    ap.add_argument("--effort", help="override the role's thinking level "
+                    "(off|minimal|low|medium|high|xhigh|max)")
+    args = ap.parse_args()
+
+    agents = load_all()
+    if args.list or not args.agent:
+        return cmd_list(agents, args.verbose)
+    match = next((a for a in agents if a.name == args.agent), None)
+    if match is None:
+        print(f"pi-agent: no agent '{args.agent}' in {DEFAULT_DIR}; "
+              f"known: {', '.join(a.name for a in agents) or '(none)'}", file=sys.stderr)
+        return 2
+    if not args.task:
+        print("pi-agent: a task is required", file=sys.stderr)
+        return 2
+    return run(match, args.task, args.cwd, args.timeout, args.model, args.session,
+               args.effort, args.parent_session, not args.no_log)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

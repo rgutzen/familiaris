@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 960 520" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="lore-host-title lore-host-desc" id="lore-host-root">
+        <title id="lore-host-title">the Hearth — this machine and its OS</title>
+        <desc id="lore-host-desc">Layer stack from the layout that is the same on any machine, through the harnesses and this machine's OS, up to the host traps — the leaf that had nowhere to go and is kept out of the export.</desc>
+        <defs>
+      <style>#lore-host-root { --color-paper:   #f5f5f5;
+      --color-ink:     #2d3142;
+      --color-muted:   #4f5d75;
+      --color-accent:  #bf4520;
+      --font-sans:     'Geist', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace; }
+      #lore-host-root { font-family: var(--font-sans); color: var(--color-ink); }
+      #lore-host-root .diagram-container { width: 100%; overflow-x: auto; }
+      @media print {
+#lore-host-root .diagram-container { overflow-x: visible; }
+}</style>
+          <marker id="lore-host-lore-host-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+        </defs>
+
+        <rect width="100%" height="100%" fill="#f5f5f5"/>
+
+        <!-- Direction indicator, left margin, outside the stack -->
+        <text x="90" y="84" fill="#4f5d75" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.18em">PARTICULAR</text>
+        <path d="M90 416 V96" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#lore-host-lore-host-arrow)"/>
+        <text x="90" y="436" fill="#4f5d75" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.18em">GENERAL</text>
+
+        <!-- 04 · the leaf: focal -->
+        <rect x="140" y="88" width="780" height="72" rx="6" fill="#bf4520" stroke="#bf4520" stroke-width="1.2" fill-opacity="0.08"/>
+        <text x="156" y="120" fill="#bf4520" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start" letter-spacing="0.18em">04</text>
+        <text x="236" y="122" fill="#2d3142" font-size="14" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="start">Traps, not a manual</text>
+        <text x="236" y="144" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start">memory/knowledge/system/host/ · the symptom and its cause</text>
+        <text x="900" y="122" fill="#bf4520" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end" letter-spacing="0.12em">WITHHELD FROM THE EXPORT</text>
+
+        <!-- 03 · the subject -->
+        <rect x="140" y="176" width="780" height="72" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <text x="156" y="208" fill="#4f5d75" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start" letter-spacing="0.18em">03</text>
+        <text x="236" y="210" fill="#2d3142" font-size="14" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="start">This machine and its OS</text>
+        <text x="236" y="232" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start">engine/host · the subject, not the software placed on it</text>
+        <text x="900" y="210" fill="#4f5d75" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end" letter-spacing="0.12em">FALSIFIED BY AN OS CHANGE</text>
+
+        <!-- 02 · the guises -->
+        <rect x="140" y="264" width="780" height="72" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <text x="156" y="296" fill="#4f5d75" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start" letter-spacing="0.18em">02</text>
+        <text x="236" y="298" fill="#2d3142" font-size="14" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="start">The harnesses — the Guises</text>
+        <text x="236" y="320" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start">a tool installed on the machine</text>
+        <text x="900" y="298" fill="#4f5d75" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end" letter-spacing="0.12em">FALSIFIED BY A TOOL CHANGE</text>
+
+        <!-- 01 · structure -->
+        <rect x="140" y="352" width="780" height="72" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <text x="156" y="384" fill="#4f5d75" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start" letter-spacing="0.18em">01</text>
+        <text x="236" y="386" fill="#2d3142" font-size="14" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="start">Structure — the layout</text>
+        <text x="236" y="408" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start">the same on any machine</text>
+        <text x="900" y="386" fill="#4f5d75" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end" letter-spacing="0.12em">NOT A HOST FACT</text>
+
+        <!-- Legend, outside the diagram area -->
+        <line x1="40" y1="460" x2="920" y2="460" stroke="#2d3142" stroke-width="0.8" stroke-opacity="0.10"/>
+        <text x="40" y="476" fill="#4f5d75" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start" letter-spacing="0.18em">LEGEND</text>
+        <rect x="40" y="486" width="24" height="12" rx="2" fill="#bf4520" stroke="#bf4520" fill-opacity="0.08"/>
+        <text x="72" y="495" fill="#4f5d75" font-size="8.5" font-family="'Geist', system-ui, sans-serif" text-anchor="start">The leaf that had nowhere to go — why the subject exists</text>
+        <rect x="464" y="486" width="24" height="12" rx="2" fill="#ffffff" stroke="#2d3142"/>
+        <text x="496" y="495" fill="#4f5d75" font-size="8.5" font-family="'Geist', system-ui, sans-serif" text-anchor="start">Falsified elsewhere — a fact of another layer</text>
+      </svg>

@@ -85,6 +85,25 @@ def test_a_renamed_pair_is_reported_and_removed(units):
     assert again.returncode == 0, again.stdout + again.stderr
 
 
+def test_a_new_pair_is_named_and_the_restow_comes_before_enable(units):
+    """bootstrap.sh stows with --no-folding, so a new unit file is invisible to
+    systemd until a restow links it. The 2026-10-25 case: the hint said
+    `daemon-reload && enable` and `enable` failed with "does not exist".
+    bootstrap.sh's timer section then enables every table row itself."""
+    d, staging = units
+    new = sorted(p.stem for p in d.glob("*.timer"))[0]
+    for ext in ("timer", "service"):
+        (d / f"{new}.{ext}").unlink()
+    got = _run(d, staging, "--apply-dotfiles", "--yes")
+    assert got.returncode == 0, got.stderr
+    out = got.stdout
+    assert f"NEW      {new}." in out
+    assert "bootstrap.sh" in out          # restow + reload + enable, in one step
+    again = _run(d, staging, "--apply-dotfiles", "--yes")
+    assert "NEW " not in again.stdout and "bootstrap.sh" not in again.stdout
+    assert "daemon-reload" in again.stdout
+
+
 def test_a_stale_pair_is_reported_even_when_a_current_one_is_missing(units):
     """`--check` reports both kinds at once: a rename in progress leaves a
     missing new pair AND a stale old one, and fixing one must not hide the
@@ -98,3 +117,52 @@ def test_a_stale_pair_is_reported_even_when_a_current_one_is_missing(units):
     got = _run(d, staging, "--check")
     assert got.returncode == 3
     assert "STALE" in got.stdout and "MISSING" in got.stdout
+
+
+def test_the_claude_window_timer_is_a_tick_not_an_interval(units):
+    """The rolling Claude window (2026-10-14), reworked 2026-10-25. A monotonic
+    `OnUnitActiveSec=5h 2m` drifted off the real window boundary (11 of 24 intervals
+    off in the journal: CLOCK_MONOTONIC stops in suspend, a reboot re-arms
+    `OnActiveSec`, any extra start re-phases it), so the timer is a five-minute tick
+    and `ping` decides from the window state. No `Persistent` (a tick missed in sleep
+    is the next tick) and no random delay (the two minutes after a window end are the
+    point); no monotonic directive may come back."""
+    d, _staging = units
+    timer = (d / "claude-window.timer").read_text()
+    assert "OnCalendar=*:0/5" in timer and "AccuracySec=1s" in timer
+    assert "OnActiveSec" not in timer and "OnUnitActiveSec" not in timer
+    assert "Persistent" not in timer and "RandomizedDelaySec" not in timer
+    service = (d / "claude-window.service").read_text()
+    assert "ExecStart=%h/06_SYSTEM/engine/familiar orchestration ping" in service
+
+
+def test_an_interval_timer_still_renders_both_monotonic_lines(tmp_path):
+    """`on_active` is the interval form, and BOTH lines are the point: systemd counts
+    `OnUnitActiveSec` from the unit's last activation, which it does not have before
+    the first run, so `OnActiveSec` must supply that first trigger (measured
+    2026-10-14). No timer declares `on_active` since 2026-10-25 -- the window keeper
+    ticks instead -- so this pins the capability the generator keeps for one that
+    does, and `sessions.render_units` points a reader here for the pairing."""
+    out = tmp_path / "u"
+    got = subprocess.run(["bash", str(SCRIPT), "--render-entry",
+                          "interval;on_active=5h 2m;exec=echo hi", "--out", str(out)],
+                         capture_output=True, text=True, check=False)
+    assert got.returncode == 0, got.stderr
+    timer = (out / "interval.timer").read_text()
+    assert "OnActiveSec=5h 2m" in timer and "OnUnitActiveSec=5h 2m" in timer
+    assert "OnCalendar" not in timer, "a unit declares one form or the other"
+
+
+def test_the_dispatcher_ticks_every_five_minutes_to_the_second(units):
+    """dev/schedule 1d: ONE timer replaces a unit pair per scheduled session. Five
+    minutes is the precision the user accepted (decision 10); `AccuracySec=1s`
+    because systemd's default minute of slack would make it six; no `Persistent`
+    (a tick missed while the machine slept is simply the next tick), no random
+    delay (the dispatcher's own decision is the point)."""
+    d, _staging = units
+    timer = (d / "familiar-dispatch.timer").read_text()
+    assert "OnCalendar=*:0/5" in timer and "AccuracySec=1s" in timer
+    assert "Persistent" not in timer and "RandomizedDelaySec" not in timer
+    service = (d / "familiar-dispatch.service").read_text()
+    assert "ExecStart=%h/06_SYSTEM/engine/familiar schedule sessions tick" in service
+    assert "/usr/share/omarchy/bin" in service, "the budget probe lives there"

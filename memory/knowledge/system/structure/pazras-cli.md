@@ -6,8 +6,8 @@ authority: agent
 trust: trusted
 last_verified: 2026-09-01
 verified_log: [2026-09-01]
-use_count: 1
-last_used: 2026-09-11
+use_count: 9
+last_used: 2026-10-20
 promoted_from: []
 source:
 supersedes:
@@ -91,6 +91,55 @@ lookup, so `pi` ran `cd` and the failure read as "pi doesn't work" rather than
 grep `pazras-aliases.sh` for a same-name alias first; the harness name wins. The
 legacy alias was renamed `pi`→`p0` (user-approved); a running shell keeps the
 old alias until it re-sources the rc files.
+
+## `familiar structure init` has no `--help`
+
+Observed 2026-10-20: `familiar structure init --help` ignores the flag and
+runs a full init. Init writes a `_README.md` into any Area that lacks one,
+under exactly that name. An Area whose guide is named `README.md` (as
+`L_Career` was) gets a second, generated guide. Read the source
+(`engine/structure/pazras.sh`) instead of asking for help.
+
+## `familiar` has no back-ends: a route names its function
+
+Until 2026-10-20 `familiar` resolved `(subject, verb)` to one of two hidden
+programs (`cli/familiar-memory.py`, `cli/familiar-context.py`), and those
+programs looked the verb up a *second* time. Adding a verb meant editing two or
+three tables, and a test existed to hold them in agreement.
+
+- **One table.** `ROUTES` in `engine/familiar` names each verb's
+  `module:function`, the `Spec` that parses its flags, and the shape of the call
+  (`inv`, `argv`, `argv2`). The shapes record how a function takes its
+  arguments; none of them parses a flag.
+- **The undeclared-flag rule lives once**, in `lib/invocation`, and runs in
+  `familiar`. `--harness`/`--event` on `capture` are declared like every other
+  verb's, so `capture --bogus=1` exits 1.
+- **The context verbs are `context/cli.py`**, not a hyphenated script: a
+  `familiar-context.py` cannot be imported by name.
+- **The two shell back-ends remain** (`structure/pazras.sh`,
+  `host/pazras-utils.sh`), because their verbs are shell.
+- **Cost.** Importing `lib.invocation` adds 2.7 ms on top of `lib.roots`. The
+  hook path measured 60.9 ms through the front door against 62.6 ms through the
+  old back-end: it got faster, not slower.
+
+## The ontology answers questions; its registers are not an interface
+
+`knowledge/ontology.py` holds the class registers. A caller asks
+`subjects()`, `branches()`, `facets()`, `relations()`, `subject(id)`,
+`branch(name)`, `is_subject`, `is_branch`, `places(…)`, `all_places()`,
+`violations()` -- never `ontology.SUBJECTS[...]`.
+
+- **Why.** Eight modules used to index the dicts, so a renamed register field
+  was an eight-file edit, and two modules (`boundaries/_boundaries.py`,
+  `checks/publish_audit.py`) parsed the same YAML a second time.
+- **The one escape hatch** is `entity_register()`, which the boundaries compile
+  uses to derive one `ask` rule per entity kind marked `directive: true`.
+- **Rendering lives in `knowledge/ontology_render.py`**, beside the registers and
+  away from the 1,600-line module: it is the only part that knows a register's
+  columns.
+- **Import cost is real.** `knowledge.ontology` costs +19.3 ms to import and the
+  boundary guard runs on every tool call, so `_boundaries.py` imports it *inside*
+  `directive_rules()`, which only the compile calls.
 
 ## Verification
 

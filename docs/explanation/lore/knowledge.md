@@ -25,6 +25,11 @@ what lets a later reader decide whether to act on it.
 the glossary. `config/knowledge` holds the vocabulary those readers resolve
 against.
 
+
+![The grimoire: the routing table narrows to the one subject, then the one leaf](../../assets/figures/lore-knowledge.svg)
+
+*the grimoire: the routing table narrows to the one subject, then the one leaf.*
+
 ## The design choice, and why
 
 **One level of disclosure, and it is generated.** `memory/knowledge/INDEX.md` is

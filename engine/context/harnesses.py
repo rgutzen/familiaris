@@ -61,6 +61,7 @@ import threading
 import time
 
 from context import blocks
+from harness import pi_call
 from context.recorder import Recorder
 
 ALL = ("claude", "opencode", "codex", "pi", "hermes")
@@ -316,8 +317,11 @@ def run_pi(rec: Recorder, cwd: str) -> Result:
         return Result("pi", "failed", "-", cwd,
                       note="no openai-completions/responses provider to redirect")
     models_path.write_text(json.dumps(models))
-    env = dict(os.environ, PI_CODING_AGENT_DIR=str(home), PI_OFFLINE="1")
-    arrived, err = _run(["pi", "-p", "hi", "--no-approve", "--no-session"],
+    # argv and env from `harness/pi_call`, so the flags match every other pi call;
+    # the spawn stays `_run`'s, which every harness shares and which stops the child
+    # once the stub has seen a request rather than waiting for it to finish.
+    env = pi_call.env_for({"PI_CODING_AGENT_DIR": str(home), "PI_OFFLINE": "1"})
+    arrived, err = _run(pi_call.argv("hi", approve=False, session=None),
                         cwd, env, rec, first=90.0, settle=10.0)
     shutil.rmtree(home, ignore_errors=True)
     return _finish("pi", "pi -p, PI_CODING_AGENT_DIR copy", cwd, rec, arrived, err)

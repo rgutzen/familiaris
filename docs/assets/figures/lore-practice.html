@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lore: Practice</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:   #f5f5f5;   /* white-smoke */
+      --color-ink:     #2d3142;   /* jet-black */
+      --color-muted:   #4f5d75;   /* blue-slate */
+      --color-accent:  #bf4520;   /* burnt-tangerine */
+      --font-sans:     'Geist', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', 'Noto Serif', 'Noto Serif KR', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+    }
+
+    .frame { max-width: 1200px; width: 100%; }
+    .diagram-container { width: 100%; overflow-x: auto; }
+
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      color: var(--color-ink);
+      margin-bottom: 1.5rem;
+    }
+
+    svg { width: 100%; min-width: 960px; display: block; }
+    @media print {
+      .diagram-container { overflow-x: visible; }
+      svg { min-width: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Nested Containment · Practice</p>
+    <h1>Practice: User, Conventions, and Harness</h1>
+
+    <div class="diagram-container">
+      <svg viewBox="0 0 960 600" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="lore-practice-title lore-practice-desc">
+        <title id="lore-practice-title">Practice nested containment: User, Conventions, Harness</title>
+        <desc id="lore-practice-desc">A nested diagram showing three levels: the User at the outermost level, Conventions in the middle, and Harness at the innermost level, representing how practice organizes workflow discipline.</desc>
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+          <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#bf4520"/></marker>
+          <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/></marker>
+        </defs>
+
+        <rect width="100%" height="100%" fill="#f5f5f5"/>
+
+        <!-- Nested Containment Structure -->
+        <!-- Level 1: User (outermost) -->
+        <rect x="240" y="120" width="480" height="360" rx="8" fill="rgba(45, 49, 66, 0.015)" stroke="rgba(45, 49, 66, 0.30)" stroke-width="1"/>
+        <!-- User container fill -->
+        <rect x="264" y="144" width="432" height="312" rx="8" fill="rgba(45, 49, 66, 0.025)" stroke="rgba(45, 49, 66, 0.35)" stroke-width="1"/>
+        <!-- User mask for eyebrow -->
+        <rect x="264" y="144" width="120" height="16" rx="2" fill="#f5f5f5"/>
+        <text x="324" y="156" fill="#4f5d75" font-size="7" font-family="var(--font-mono)" text-anchor="middle" letter-spacing="0.14em">USER</text>
+        <!-- User node name -->
+        <text x="480" y="280" fill="#2d3142" font-size="12" font-weight="600" font-family="var(--font-sans)" text-anchor="middle">User</text>
+        <!-- User sublabel -->
+        <text x="480" y="300" fill="#4f5d75" font-size="9" font-family="var(--font-mono)" text-anchor="middle">the person the system serves</text>
+
+        <!-- Level 2: Conventions (middle) - ACCENT FOCAL -->
+        <rect x="288" y="168" width="384" height="264" rx="8" fill="rgba(191, 69, 32, 0.08)" stroke="rgba(191, 69, 32, 0.45)" stroke-width="1"/>
+        <!-- Conventions mask for eyebrow -->
+        <rect x="288" y="168" width="120" height="16" rx="2" fill="#f5f5f5"/>
+        <text x="348" y="180" fill="#4f5d75" font-size="7" font-family="var(--font-mono)" text-anchor="middle" letter-spacing="0.14em">CONVENTIONS</text>
+        <!-- Conventions node name -->
+        <text x="480" y="240" fill="#2d3142" font-size="12" font-weight="600" font-family="var(--font-sans)" text-anchor="middle">Conventions</text>
+        <!-- Conventions sublabel -->
+        <text x="480" y="260" fill="#4f5d75" font-size="9" font-family="var(--font-mono)" text-anchor="middle">rules for the system and writing into it</text>
+
+        <!-- Level 3: Harness (innermost) -->
+        <rect x="312" y="192" width="336" height="216" rx="8" fill="rgba(79, 93, 117, 0.04)" stroke="rgba(79, 93, 117, 0.30)" stroke-width="1"/>
+        <!-- Harness mask for eyebrow -->
+        <rect x="312" y="192" width="120" height="16" rx="2" fill="#f5f5f5"/>
+        <text x="372" y="204" fill="#4f5d75" font-size="7" font-family="var(--font-mono)" text-anchor="middle" letter-spacing="0.14em">HARNESS</text>
+        <!-- Harness node name -->
+        <text x="480" y="220" fill="#2d3142" font-size="12" font-weight="600" font-family="var(--font-sans)" text-anchor="middle">Harness</text>
+        <!-- Harness sublabel -->
+        <text x="480" y="240" fill="#4f5d75" font-size="9" font-family="var(--font-mono)" text-anchor="middle">skills implementing the practice</text>
+
+        <!-- Legend -->
+        <line x1="30" y1="520" x2="930" y2="520" stroke="rgba(45, 49, 66, 0.10)" stroke-width="0.8"/>
+        <text x="30" y="540" fill="#4f5d75" font-size="8" font-family="var(--font-mono)" letter-spacing="0.14em">LEGEND</text>
+        <rect x="30" y="550" width="28" height="12" rx="2" fill="rgba(45, 49, 66, 0.015)" stroke="rgba(45, 49, 66, 0.30)" stroke-width="1"/>
+        <text x="44" y="560" fill="#4f5d75" font-size="8" font-family="var(--font-mono)" text-anchor="middle" letter-spacing="0.06em">USER</text>
+        <rect x="120" y="550" width="28" height="12" rx="2" fill="rgba(191, 69, 32, 0.08)" stroke="rgba(191, 69, 32, 0.45)" stroke-width="1"/>
+        <text x="134" y="560" fill="#4f5d75" font-size="8" font-family="var(--font-mono)" text-anchor="middle" letter-spacing="0.06em">CONVENTIONS</text>
+        <rect x="210" y="550" width="28" height="12" rx="2" fill="rgba(79, 93, 117, 0.04)" stroke="rgba(79, 93, 117, 0.30)" stroke-width="1"/>
+        <text x="224" y="560" fill="#4f5d75" font-size="8" font-family="var(--font-mono)" text-anchor="middle" letter-spacing="0.06em">HARNESS</text>
+      </svg>
+    </div>
+  </div>
+</body>
+</html>

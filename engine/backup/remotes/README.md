@@ -8,8 +8,9 @@ remotes/
   README.md      this
   select.sh      loads the selected adapter, refuses an incomplete one
   example.sh     the template — a working adapter that reaches nothing
-  <name>.sh      yours: copy the template, replace the client
 ```
+
+Yours goes in `config/backup/remotes/<name>.sh` (see "Writing one").
 
 Select one in `config/profile.yaml`:
 
@@ -49,14 +50,18 @@ first `backup sync` rather than at 04:30 in a timer nobody reads.
 | `remote_name` | print one word. It goes into log lines and unit descriptions. |
 | `remote_root` | print the base remote path everything else is joined to. |
 | `remote_available` | exit 0 if the client is usable **here**. Print why not. |
-| `remote_upload LOCAL DIR` | upload `LOCAL` into the remote folder `DIR`, keeping its name |
+| `remote_upload LOCAL DIR [CONFLICT]` | upload `LOCAL` into the remote folder `DIR`, keeping its name; `CONFLICT` is `skip` (default) or `replace` |
 | `remote_delete PATH` | remove one remote path |
 
 `remote_upload`'s meaning, exactly, because a mirror is only useful if re-running
 it is safe:
 
 - `LOCAL` is a file or a directory; it keeps its name inside `DIR`.
-- merge into an existing folder, **skip** a file that is already there.
+- merge into an existing folder. A file that is already there is **skipped**
+  by default, which is right for restic: its objects are immutable, so an
+  existing name is already the right content. The browsable mirror passes
+  `replace`, because its files are edited and a skipped edit leaves the access
+  copy stale.
 - **never delete.** Uploads are monotonic, which is what makes `backup sync` a
   command you can run twice with no thought. Reconciliation is the separate,
   gated operation that removes what a local `prune` dropped.
@@ -70,9 +75,15 @@ rather than unlinking is a better adapter.
 
 ## Writing one
 
+Write it under `config/backup/remotes/`, not here. `select.sh` looks there
+first, and the publication classification omits `config/backup/`, so the file
+that names your provider and account stays on this machine. A copy under
+`engine/` would be exported as public.
+
 ```console
-$ cp engine/backup/remotes/example.sh engine/backup/remotes/mine.sh
-$ $EDITOR engine/backup/remotes/mine.sh
+$ mkdir -p config/backup/remotes
+$ cp engine/backup/remotes/example.sh config/backup/remotes/mine.sh
+$ $EDITOR config/backup/remotes/mine.sh
 $ $EDITOR config/profile.yaml          # storage.remote: mine
 $ familiar backup sync                 # the log names the adapter it used
 ```

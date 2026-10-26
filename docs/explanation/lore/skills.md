@@ -20,6 +20,11 @@ alone. Adoption — a skill arriving from outside — is a separate path with it
 test, because the interesting failure is not a skill that does not work but one
 that works and came from somewhere.
 
+
+![The apothecary: the router points to the bundle, the bundle to the drawer](../../assets/figures/lore-skills.svg)
+
+*the apothecary: the router points to the bundle, the bundle to the drawer.*
+
 ## The design choice, and why
 
 **Zero-install, and the contrast is with its predecessor.** The alternative

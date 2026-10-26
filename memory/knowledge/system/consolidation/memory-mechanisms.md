@@ -5,12 +5,12 @@ origin: authored
 authority: human
 trust: trusted
 last_verified: 2026-08-30
-use_count: 13
-last_used: 2026-10-11
+use_count: 14
+last_used: 2026-10-15
 promoted_from: []  # originated 2026-08-28; no journal entry for that session
 source:
 supersedes:
-related: [memory-architecture, skill-routing, skill-adoption, consolidation-cycle, memory-ranking, boundaries, claude-code, user-vs-conventions, context-budget, memory-poisoning-posture, pointer-following, agent-prompt-dream-memory-consolidation, rtk]
+related: [memory-architecture, skill-routing, skill-adoption, consolidation-cycle, memory-ranking, boundaries, claude-code, user-vs-conventions, context-budget, memory-poisoning-posture, pointer-following, agent-prompt-dream-memory-consolidation, rtk, codex]
 tags: [hooks, automation, enforcement, consolidation]
 scope: ["06_SYSTEM/**"]
 area: [B]

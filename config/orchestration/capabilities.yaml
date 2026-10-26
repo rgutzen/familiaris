@@ -1,0 +1,200 @@
+# Capabilities, and the benchmarks that measure them (decision 21).
+#
+# CONTENT, NOT BINDING: `engine/orchestration/models.py` reads it, and
+# `familiar orchestration models --explain <id>` prints the result.
+#
+# HOW A SCORE IS MADE. Per benchmark, a model's percentile among the catalogue
+# entries (callable and candidates) that have a score on it: the share of the
+# other scored models it beats, ties counting half. A capability is the mean
+# of the model's percentiles over that capability's benchmarks, printed with
+# the count that went into it. A benchmark only one model reports ranks
+# nothing and is left out of the mean, which the count shows. No benchmark,
+# no score: *unknown*, never zero. There is no single quality number; a task
+# class lists its capabilities side by side.
+#
+# THE TWO BIASES, shown rather than hidden (PLAN.md §The catalogue):
+#   coverage -- small models are sparsely benchmarked, so their counts are low;
+#   quantisation -- public scores are full precision, a `quantised:` entry's
+#   scores are an upper bound, and `--explain` says so.
+#
+# NAMES. Vendors spell one benchmark several ways. `names:` lists the exact
+# strings in models.yaml that count as this benchmark. A score taken under a
+# different setting ("at Max effort", "with tools") is a different benchmark,
+# so it is listed under its own key or not at all, never merged.
+#
+# ONE KEY IS ONE HARNESS. Two organisations running the same benchmark are two
+# benchmarks: Artificial Analysis runs a uniform harness over every model it
+# covers (13 of the 14 here), a vendor runs its own. Their numbers for one
+# model disagree (Claude Opus 5.5 Terminal-Bench 4.0: 59.6 AA, 66.4 vendor), so
+# the two never share a key (the `(AA)` suffix names the runner) and where both
+# exist they score a capability as two keys, never one, and `n` counts both.
+# That buys coverage -- AA publishes no τ²-Bench for the Claude models, the
+# vendors publish no LiveCodeBench -- at the cost that a capability's mean
+# averages keys of different population sizes, so read `n` before the number.
+
+benchmarks:
+  # Artificial Analysis, uniform harness, fetched 2026-10-13
+  # (https://artificialanalysis.ai/models/<slug>); grade A -- a controlled,
+  # independent run, the strongest form here. One row per benchmark as AA
+  # names it; its values are fractions of 1 in the page's data.
+  terminal-bench-4-aa:
+    names:
+      - Terminal-Bench 4.0 (AA)
+    measures: agentic tasks in a terminal
+  hle-aa:
+    names:
+      - Humanity's Last Exam (AA)
+    measures: expert-level questions, closed book
+  scicode-aa:
+    names:
+      - SciCode (AA)
+    measures: scientific coding problems
+  livecodebench-aa:
+    names:
+      - LiveCodeBench (AA)
+    measures: competitive-programming problems, contamination-controlled by date
+  frontiercode-aa:
+    names:
+      - FrontierCode (AA)
+    measures: code generation on hard, recent problems
+  critpt:
+    names:
+      - CritPt
+    measures: physics research reasoning
+  aa-lcr:
+    names:
+      - AA-LCR
+    measures: long-context retrieval and reasoning over a large corpus
+  mlcr-aa:
+    names:
+      - MLCR-AA
+    measures: medical long-context reasoning, hallucination-gated
+  ifbench-aa:
+    names:
+      - IFBench (AA)
+    measures: instruction following under many constraints
+  gpqa-diamond-aa:
+    names:
+      - GPQA Diamond (AA)
+    measures: graduate-level science questions
+  tau2-aa:
+    names:
+      - τ²-Bench (AA)
+    measures: tool use in a simulated business conversation
+  # vendor-run
+  terminal-bench-4:
+    names:
+      - Terminal-Bench 4.0
+      - Terminal-Bench 4
+    measures: agentic tasks in a terminal
+  frontiercode-1.1:
+    names:
+      - FrontierCode v1.1 (Main)
+      - FrontierCode 1.1 (Main)
+    measures: code generation on hard, recent problems, default effort
+  cursorbench-4:
+    names:
+      - CursorBench 4.0
+    measures: edits inside an IDE agent
+  swe-bench-verified:
+    names:
+      - SWE-bench Verified
+    measures: repository issues resolved, judged by the repo's tests
+  deepswe-1.1:
+    names:
+      - DeepSWE v1.1
+    measures: long-horizon software engineering tasks
+  swe-atlas-qna:
+    names:
+      - SWE-Atlas-QnA
+    measures: answering questions about a codebase
+  automationbench:
+    names:
+      - AutomationBench (run and reported by Zapier)
+      - AutomationBench
+    measures: multi-step tool use across business applications
+  osworld-2.1:
+    names:
+      - OSWorld 2.1 (offline subset, partial credit)
+    measures: computer use through a desktop
+  hle-no-tools:
+    names:
+      - Humanity's Last Exam, no tools
+    measures: expert-level questions, closed book
+  hle-tools:
+    names:
+      - Humanity's Last Exam, with tools
+    measures: expert-level questions, with search and code
+  mrcr:
+    names:
+      - MRCR
+    measures: retrieval of several needles across a long context
+  cybench:
+    names:
+      - Cybench (40 security-competition exercises)
+    measures: security capture-the-flag exercises
+
+capabilities:
+  coding:
+    benchmarks:
+      - livecodebench-aa
+      - scicode-aa
+      - frontiercode-aa
+      - swe-bench-verified
+      - frontiercode-1.1
+      - deepswe-1.1
+      - cursorbench-4
+  terminal:
+    benchmarks:
+      - terminal-bench-4-aa
+      - terminal-bench-4
+  code-reading:
+    benchmarks:
+      - swe-atlas-qna
+  tool-use:
+    benchmarks:
+      - tau2-aa
+      - ifbench-aa
+  reasoning:
+    benchmarks:
+      - hle-aa
+      - critpt
+      - gpqa-diamond-aa
+  long-context:
+    benchmarks:
+      - aa-lcr
+      - mlcr-aa
+  security:
+    benchmarks:
+      - cybench
+  # Named so a task class can ask for them; no benchmark in the catalogue
+  # measures them yet, so every model is *unknown* here until one is added.
+  writing:
+    benchmarks:
+  classification:
+    benchmarks:
+
+# Dispatch's task classes (PLAN.md §Dispatch), each onto the capabilities it
+# needs. One vocabulary for the probes (3c) and the catalogue.
+task_classes:
+  edit:
+    capabilities:
+      - coding
+      - terminal
+  read:
+    capabilities:
+      - code-reading
+      - long-context
+      - tool-use
+  test:
+    capabilities:
+      - terminal
+      - coding
+  docs:
+    capabilities:
+      - writing
+      - reasoning
+  batch:
+    capabilities:
+      - classification
+      - tool-use

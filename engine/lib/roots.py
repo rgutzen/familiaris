@@ -83,11 +83,29 @@ MASTER_CONFIG = CONFIG / "structure" / "pazras-master-config.sh"
 PARA_READMES = CONFIG / "structure" / "READMEs"
 UNITS_STAGING = CONFIG / "schedule"
 BOUNDARIES_JSON = CONFIG / "boundaries" / "boundaries.json"
+RELAY_CONFIG = CONFIG / "relay" / "relay.yaml"
 BACKUP_EXCLUDES = CONFIG / "backup" / "backup-excludes.txt"
 MIRROR_EXCLUDES = CONFIG / "backup" / "mirror-excludes.txt"
 
 
 VAULT_ENV = "PAZRAS_MEMORY_DIR"
+
+# The DATA root: what the hooks and the pass write that is not tracked -- the
+# capture logs, transcripts, the append-only records of the Loom and the Almanac.
+# Outside the repository, so it is not one of the four roots above, but it is
+# spelled once for the same reason they are: the context CLI spelled it
+# without the override and would have ignored a test's or a relocated machine's
+# `PAZRAS_DATA_DIR` the day one of its verbs read it.
+DATA_ENV = "PAZRAS_DATA_DIR"
+DATA_DEFAULT = "~/.local/share/pazras"
+
+
+def data_root(env=None) -> pathlib.Path:
+    """The data root: `$PAZRAS_DATA_DIR`, else `~/.local/share/pazras`. An empty
+    variable counts as unset. `env` is a mapping, so a caller holding a child's
+    environment asks about that one rather than this process's."""
+    env = os.environ if env is None else env
+    return pathlib.Path(env.get(DATA_ENV) or DATA_DEFAULT).expanduser()
 
 
 def vault_root(env: str = VAULT_ENV) -> pathlib.Path:

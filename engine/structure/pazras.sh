@@ -99,8 +99,14 @@ log_message() {
 link_system() {
     local target="$LOCAL_BIN/familiar"
     local source="$PAZRAS_ENGINE/familiar"
+    local want
 
     mkdir -p "$LOCAL_BIN"
+    # The dotfiles package owns this link (shared/bin/.local/bin/familiar): stowing
+    # `bin` makes ~/.local/bin/familiar -> the package's link -> here. So a link that
+    # already RESOLVES to the engine is left alone, whoever made it — rewriting it is
+    # what broke stow (an absolute link made stow abort the whole shared tier with
+    # "existing target is not owned by stow"). Resolution decides, never link text.
     if [[ -L "$target" && "$(readlink -f "$target")" == "$(readlink -f "$source")" ]]; then
         echo -e "${GREEN}✅ $target already links to $source${NC}"
         return 0
@@ -112,8 +118,11 @@ link_system() {
         return 1
     fi
 
-    ln -sfn "$source" "$target"
-    echo -e "${GREEN}✅ Linked $target -> $source${NC}"
+    # No dotfiles stowed here, so install the link this command owns. Relative, so
+    # the text stays valid when the whole home directory moves.
+    want="$(realpath --relative-to="$(dirname "$target")" "$source")"
+    ln -sfn "$want" "$target"
+    echo -e "${GREEN}✅ Linked $target -> $want${NC}"
 }
 
 # =============================================================================

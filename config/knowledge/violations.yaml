@@ -192,7 +192,7 @@ violations:
       `system/` held 33 leaves measured against the tree's own ~12 rule
       (knowledge/CONTEXT.md §Splitting), which was the wrong unit: the rule asks
       how many rows ONE ROUTER must triage, and `system/CONTEXT.md` lists
-      thirteen subjects while the subject routers below it list the leaves.
+      fourteen subjects while the subject routers below it list the leaves.
       APPLIED 2026-10-13 -- `branch_findings` groups by the router's own
       directory, so `system/` is measured per subject and the largest holds 8.
       The same reading measures `areas/<A>/`, which the branch-level count left

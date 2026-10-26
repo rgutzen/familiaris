@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The gates run before an event, and fail closed</title>
+  <!-- 06-system: font source is system; no font link is ever emitted. -->
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:   #f5f5f5;
+      --color-ink:     #2d3142;
+      --color-muted:   #4f5d75;
+      --color-accent:  #bf4520;
+      --font-sans:     'Geist', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace;
+    }
+    body { font-family: var(--font-sans); background: var(--color-paper); color: var(--color-ink); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 3rem 2rem; }
+    .frame { max-width: 1200px; width: 100%; min-width: 0; }
+    .diagram-container { width: 100%; overflow-x: auto; }
+    .eyebrow { font-family: var(--font-mono); font-size: 0.66rem; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--color-muted); margin-bottom: 0.5rem; }
+    h1 { font-family: var(--font-serif); font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem); font-weight: 400; letter-spacing: -0.02em; line-height: 1.15; color: var(--color-ink); margin-bottom: 1.5rem; }
+    svg { width: 100%; min-width: 960px; display: block; }
+    @media print { .diagram-container { overflow-x: visible; } svg { min-width: 0; } }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Checks &middot; flowchart</p>
+    <h1>The gates run before an event, and fail closed</h1>
+    <div class="diagram-container">
+      <svg viewBox="0 0 960 744" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="lore-checks-title lore-checks-desc">
+        <title id="lore-checks-title">The gates: before an event, fail closed</title>
+        <desc id="lore-checks-desc">Flowchart of the gates: a commit or a publish routes to the gate that runs its named checks, and a check that cannot run is skipped only if it declared so in code — otherwise it fails and the failure stops the entry rather than annotating it.</desc>
+        <defs>
+          <pattern id="lore-checks-dots" width="22" height="22" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="0.9" fill="rgba(45,49,66,0.10)"/></pattern>
+          <marker id="lore-checks-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+          <marker id="lore-checks-arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#bf4520"/></marker>
+          <marker id="lore-checks-arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/></marker>
+        </defs>
+        <rect width="100%" height="100%" fill="#f5f5f5"/>
+        <rect width="100%" height="100%" fill="url(#lore-checks-dots)" opacity="0.55"/>
+
+        <!-- connectors, drawn before the nodes -->
+        <line x1="480" y1="96" x2="480" y2="128" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#lore-checks-arrow)"/>
+        <path d="M380 160 H253 Q245 160 245 168 V240" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#lore-checks-arrow)"/>
+        <path d="M580 160 H717 Q725 160 725 168 V240" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#lore-checks-arrow)"/>
+        <path d="M245 304 V344 Q245 352 253 352 H476" fill="none" stroke="#4f5d75" stroke-width="1.2"/>
+        <path d="M725 304 V344 Q725 352 717 352 H484" fill="none" stroke="#4f5d75" stroke-width="1.2"/>
+        <line x1="480" y1="352" x2="480" y2="384" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#lore-checks-arrow)"/>
+        <line x1="480" y1="448" x2="480" y2="480" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#lore-checks-arrow)"/>
+        <path d="M580 512 H717 Q725 512 725 520 V592" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#lore-checks-arrow)"/>
+        <line x1="480" y1="544" x2="480" y2="592" stroke="#bf4520" stroke-width="1.2" marker-end="url(#lore-checks-arrow-accent)"/>
+
+        <!-- the merge point where the two gates rejoin -->
+        <circle cx="480" cy="352" r="4" fill="#2d3142"/>
+
+        <!-- decision-branch labels: mask sits 8px clear of its connector -->
+        <rect x="283" y="140" width="60" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="313" y="149" fill="#4f5d75" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">A COMMIT</text>
+        <rect x="617" y="140" width="60" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="647" y="149" fill="#4f5d75" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">A PUBLISH</text>
+        <rect x="628" y="492" width="40" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="648" y="501" fill="#4f5d75" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">YES</text>
+        <rect x="490" y="560" width="32" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="506" y="569" fill="#4f5d75" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">NO</text>
+
+        <!-- start: before an event -->
+        <rect x="340" y="48" width="280" height="48" rx="24" fill="#f5f5f5"/>
+        <rect x="340" y="48" width="280" height="48" rx="24" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <text x="480" y="77" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">a commit or a publish</text>
+
+        <!-- decision: which event? -->
+        <path d="M480 128 L580 160 L480 192 L380 160 Z" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <text x="480" y="164" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">which event?</text>
+
+        <!-- the pre-commit gate -->
+        <rect x="120" y="240" width="230" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="120" y="240" width="230" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="128" y="246" width="44" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+        <text x="150" y="255" fill="rgba(45,49,66,0.8)" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">GATE</text>
+        <text x="235" y="274" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">the pre-commit gate</text>
+        <text x="235" y="290" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">runs before a commit</text>
+
+        <!-- the export gate -->
+        <rect x="610" y="240" width="230" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="610" y="240" width="230" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="618" y="246" width="44" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+        <text x="640" y="255" fill="rgba(45,49,66,0.8)" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">GATE</text>
+        <text x="725" y="274" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">the export set</text>
+        <text x="725" y="290" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">narrower &mdash; the published tree</text>
+
+        <!-- each named check runs -->
+        <rect x="350" y="384" width="260" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="350" y="384" width="260" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="358" y="390" width="40" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+        <text x="378" y="399" fill="rgba(45,49,66,0.8)" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">CHECK</text>
+        <text x="480" y="418" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">each named check runs</text>
+        <text x="480" y="434" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">a check declares what it means</text>
+
+        <!-- decision: declared it cannot run? -->
+        <path d="M480 480 L580 512 L480 544 L380 512 Z" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <text x="480" y="516" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">cannot run here?</text>
+
+        <!-- YES: skipped, counted -->
+        <rect x="610" y="592" width="230" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="610" y="592" width="230" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="618" y="598" width="40" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+        <text x="638" y="607" fill="rgba(45,49,66,0.8)" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">SKIP</text>
+        <text x="725" y="626" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">skipped, and counted</text>
+        <text x="725" y="642" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">on the summary line it sits on</text>
+
+        <!-- NO: the fail-closed rule — the accent, from §The design choice -->
+        <rect x="350" y="592" width="260" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="350" y="592" width="260" height="64" rx="6" fill="rgba(191,69,32,0.08)" stroke="#bf4520" stroke-width="1"/>
+        <rect x="358" y="598" width="76" height="12" rx="2" fill="transparent" stroke="rgba(191,69,32,0.50)" stroke-width="0.8"/>
+        <text x="396" y="607" fill="rgba(45,49,66,0.8)" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">FAIL-CLOSED</text>
+        <text x="480" y="626" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">a failure stops the entry</text>
+        <text x="480" y="642" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">fails where its subject is missing</text>
+
+        <!-- the caveat the page keeps, as words beside the figure -->
+        <text x="480" y="692" fill="#4f5d75" font-size="14" font-family="'Instrument Serif', serif" font-style="italic" text-anchor="middle">a rule that matches nothing is a failure too &mdash; a stale exemption cannot outlive its reason</text>
+
+        <!-- legend -->
+        <line x1="40" y1="708" x2="920" y2="708" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+        <text x="40" y="728" fill="#4f5d75" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start" letter-spacing="0.18em">LEGEND</text>
+        <rect x="104" y="720" width="24" height="12" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <text x="136" y="730" fill="#4f5d75" font-size="8.5" font-family="'Geist', system-ui, sans-serif" text-anchor="start">An event</text>
+        <rect x="216" y="720" width="24" height="12" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <text x="248" y="730" fill="#4f5d75" font-size="8.5" font-family="'Geist', system-ui, sans-serif" text-anchor="start">A gate, a check or an outcome</text>
+        <path d="M468 726 L480 720 L492 726 L480 732 Z" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <text x="500" y="730" fill="#4f5d75" font-size="8.5" font-family="'Geist', system-ui, sans-serif" text-anchor="start">A decision</text>
+        <rect x="592" y="720" width="24" height="12" rx="6" fill="rgba(191,69,32,0.08)" stroke="#bf4520" stroke-width="1"/>
+        <text x="624" y="730" fill="#4f5d75" font-size="8.5" font-family="'Geist', system-ui, sans-serif" text-anchor="start">The fail-closed rule</text>
+      </svg>
+    </div>
+  </div>
+</body>
+</html>

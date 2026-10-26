@@ -21,6 +21,11 @@ result, and refuses to write if the tree it is about to publish is not sound.
 A scanner then looks for the things that must not leave — a real name, a real
 path, an instance string — and every hit must be declared, with a count.
 
+
+![The sign: the private tree crosses the gates into the generated public repository](../../assets/figures/lore-publication.svg)
+
+*the sign: the private tree crosses the gates into the generated public repository.*
+
 ## The design choice, and why
 
 **Publication is a property of a path, declared once.** The alternative — a

@@ -5,15 +5,15 @@ origin: authored
 authority: agent
 trust: trusted
 last_verified: 2026-08-31
-use_count: 5
-last_used: 2026-09-11
+use_count: 10
+last_used: 2026-10-20
 promoted_from: []
 source:
 supersedes:
 related: [obsidian-vault, memory-architecture, pazras-cli, file-naming]
 tags: [familiar, para, structure, config, areas]
 scope: []                   # the tree is everywhere; this applies anywhere
-area: []                    # spans all Areas A-P by definition
+area: []                    # spans all Areas A-Q by definition
 stability: stable
 verified_log: [2026-08-31]
 ---
@@ -65,14 +65,14 @@ memory domain **D1** and is off limits to agents — no read, no write, declared
 in `../../../../config/boundaries/read-write.yaml` and enforced by the guards compiled from it. See
 [[memory-architecture]] and [[boundaries]].
 
-## The 16 Areas — and three that do not conform
+## The 17 Areas — and the entries that do not conform
 
-`areas:` in `config/profile.yaml` declares 16, coded `A`–`P` (the master
+`areas:` in `config/profile.yaml` declares 17, coded `A`–`Q` (the master
 config's `AREAS` table until P1; the loader still builds `AREAS` from the
 profile, in the old field order):
 `A_Science` `B_Tech` `C_Writing` `D_Art` `E_Connection` `F_Community`
 `G_Embodiment` `H_Health` `I_Mindfulness` `J_Culture` `K_Cuisine` `L_Career`
-`M_Academia` `N_Finance` `O_Travel` `P_Home`. All 16 exist on disk.
+`M_Academia` `N_Finance` `O_Travel` `P_Home` `Q_Ventures`. All 17 exist on disk.
 
 These Area codes are what `area:` in leaf frontmatter refers to, and one axis
 of the spatial retrieval prior in [[memory-ranking]].
@@ -95,7 +95,7 @@ Resolved 2026-08-31. Three non-Area entries were found in `02_AREAS/` on
   would misfile it.
 
 > An entry directly under a PARA directory is well-formed if it matches that
-> directory's naming rule (`[A-P]_*` for `02_AREAS/`) **or** begins with `_`.
+> directory's naming rule (`[A-Q]_*` for `02_AREAS/`) **or** begins with `_`.
 > The `_` prefix marks cross-cutting or structural content that the directory
 > holds but does not categorise, and sorts it to the top.
 
@@ -106,6 +106,22 @@ convention expressing what it is — it governs why the Areas exist.
 
 **Proposed, not enforced:** `familiar structure validate` currently accepts anything
 under `02_AREAS/`. Teaching it this rule would turn a convention into a check.
+
+### `Q_Ventures` — added 2026-10-20
+
+The 17th Area: one folder per venture. A venture folder holds the
+**company's** property only. The user's personal stake in a venture
+(contracts, equity, compensation) stays in `L_Career/<Venture>/`. The split
+follows ownership: a confidentiality clause binds the company part, and the
+personal part outlasts the role. A finished venture moves to
+`05_ARCHIVES/Areas/`; the Area stays. Each venture's `AGENTS.md` carries its
+own rules; never name a venture in a leaf that travels to the public tree.
+
+What may cross into `memory/` is the **method, not the property**: knowledge of
+how the user works on a venture may be written there; customer data and
+intellectual property never are (user, 2026-10-21). The venture folder is also
+that venture's own institutional knowledge base — the one colleagues eventually
+share — so a claim about its work lands there first.
 
 ### Stale symlinks from the migration
 
@@ -152,7 +168,7 @@ above. Standardising the other two is a one-line change nobody has made;
 ```bash
 familiar structure validate
 ls -l ~/.local/bin/familiar                             # must be a symlink into 06_SYSTEM/engine
-ls ~/02_AREAS/ | grep -vE '^[A-P]_|^_'                  # expect: nothing
+ls ~/02_AREAS/ | grep -vE '^[A-Q]_|^_'                  # expect: nothing
 find ~/0[1-5]_* -xtype l                                # broken symlinks from the migration
 for d in 00_INBOX 01_PROJECTS 02_AREAS 04_RESOURCES 05_ARCHIVES; do
   ls -la ~/"$d" | grep -i readme; done                  # symlink, file, or absent?

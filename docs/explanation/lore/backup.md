@@ -18,6 +18,11 @@ that is kept below the working floor. The system's storage rule decides what
 belongs here: something is worth keeping if it **cannot be re-acquired**, so the
 question a larder answers is not "is this big" but "could this be got again".
 
+
+![The larder: restic repositories over the tree, and the restore path that is the point of it](../../assets/figures/lore-backup.svg)
+
+*the larder: restic repositories over the tree, and the restore path that is the point of it.*
+
 ## The design choice, and why
 
 **A backup nobody restored is a hypothesis.** The valuable artefact is the

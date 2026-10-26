@@ -1,0 +1,33 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# DIRECTIVE. Agents propose, never edit.
+#
+# Container boundaries. Added 2026-10-22, after an agent ran a systemd test
+# container with `--privileged`: the container saw the host's /dev/tty1, its
+# getty hung the console up, and the user's desktop session died twice.
+#
+# What counts as reaching the host is vocabulary (`vocabulary.yaml`,
+# `shell.host_escape`); this file only says that it asks.
+#
+# Rationale and honest limits: [[boundaries]]
+# ─────────────────────────────────────────────────────────────────────────────
+version: 1
+
+defaults:
+  models: all
+  decision: ask
+
+rules:
+
+  - path: /
+    mode: no-host-escape
+    models: all
+    decision: ask
+    reason: >
+      A container given every device, the host's namespaces, a root-equivalent
+      capability, or a bind of the host's files is not isolated from this
+      laptop. One with --privileged killed the desktop session on 2026-10-22.
+    instead: >
+      drop the flag; add only the narrow capability the test needs
+      (e.g. --cap-add NET_ADMIN), bind only a project subdirectory, or test
+      in a VM
+    see: config/boundaries/containers.yaml

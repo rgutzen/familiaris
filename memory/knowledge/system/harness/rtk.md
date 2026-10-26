@@ -5,8 +5,8 @@ origin: authored
 authority: agent
 trust: trial
 last_verified: 2026-09-30
-use_count: 2
-last_used: 2026-10-11
+use_count: 3
+last_used: 2026-10-15
 promoted_from: []
 source: https://github.com/rtk-dev/rtk
 supersedes:

@@ -25,43 +25,66 @@ def _front():
 P = _front()
 
 
-def _backend_verbs() -> dict:
-    """What each back-end actually dispatches, read from its source."""
-    mem = (ENGINE / "cli/familiar-memory.py").read_text()
-    ctx = (ENGINE / "cli/familiar-context.py").read_text()
+def _shell_verbs() -> dict:
+    """What each surviving shell back-end dispatches, read from its source.
+
+    The two Python back-ends are gone (dev/architecture 3b): a route names the
+    entry function itself, so there is no second table here to hold in
+    agreement with `ROUTES`."""
     sysb = (ENGINE / "structure/pazras.sh").read_text()
     utils = (ENGINE / "host/pazras-utils.sh").read_text()
     main_case = sysb[sysb.index("# MAIN COMMAND HANDLER"):]
     return {
-        "familiar-memory": set(re.findall(r'if cmd == "([\w-]+)"', mem)),
-        "familiar-context": set(re.findall(r'"([\w-]+)": \(cmd_', ctx)),
-        "pazras": set(re.findall(r'^    "([\w-]+)"\)', main_case, re.M)),
-        "pazras-utils": set(re.findall(r'^    "([\w-]+)"\|', utils, re.M)),
+        "structure/pazras.sh": set(re.findall(r'^    "([\w-]+)"\)', main_case, re.M)),
+        "host/pazras-utils.sh": set(re.findall(r'^    "([\w-]+)"\|', utils, re.M)),
     }
 
 
-VERBS = _backend_verbs()
-# Back-end verbs deliberately without a route, each with its reason.
-UNROUTED = {
-    ("familiar-memory", "help"): "the back-end's own usage; `familiar` prints the table",
-}
+VERBS = _shell_verbs()
 
 
-def test_every_route_lands_on_a_verb_its_backend_dispatches():
+def test_every_exec_route_lands_on_a_verb_the_script_dispatches():
     for subject, verbs in P.ROUTES.items():
-        for verb, (backend, prefix, text) in verbs.items():
-            assert backend in P.BACKENDS, (subject, verb)
-            assert prefix[0] in VERBS[backend], (subject, verb, prefix)
+        for verb, route in verbs.items():
+            kind, target, prefix, _, text = route
+            assert kind in ("py", "exec"), (subject, verb)
             assert text, (subject, verb)
+            if kind != "exec":
+                assert target.count(":") == 1, (subject, verb, target)
+                continue
+            if target not in VERBS:
+                # A direct script, not one dispatched by a shell back-end.
+                assert prefix == [], (subject, verb, prefix)
+                assert (ENGINE / target).is_file(), (subject, verb, target)
+                continue
+            assert prefix[0] in VERBS[target], (subject, verb, prefix)
 
 
-def test_every_backend_verb_is_reachable():
-    """Complete, not just correct: a back-end verb no route reaches is a
-    command the one command line silently dropped."""
-    routed = {(b, pre[0]) for vs in P.ROUTES.values() for b, pre, _ in vs.values()}
-    for backend, verbs in VERBS.items():
+def test_every_shell_verb_is_reachable():
+    """Complete, not just correct: a script verb no route reaches is a command
+    the one command line silently dropped."""
+    routed = {(r[1], r[2][0]) for vs in P.ROUTES.values() for r in vs.values()
+              if r[0] == "exec" and r[2]}          # a direct script has no prefix
+    for script, verbs in VERBS.items():
         for v in verbs:
-            assert (backend, v) in routed or (backend, v) in UNROUTED, (backend, v)
+            assert (script, v) in routed, (script, v)
+
+
+def test_every_python_route_names_a_callable():
+    """The route table is the only declaration, so every target must resolve.
+    `import` only here, not in `familiar`'s own import path."""
+    sys.path.insert(0, str(ENGINE))
+    for subject, verbs in P.ROUTES.items():
+        for verb, route in verbs.items():
+            if route[0] != "py":
+                continue
+            module, _, func = route[1].partition(":")
+            if not route[2]:                 # the function parses its own flags
+                assert callable(getattr(__import__(module, fromlist=["x"]), func)),                     (subject, verb)
+                continue
+            mod = __import__(module, fromlist=["x"])
+            assert callable(getattr(mod, func)), (subject, verb, route[1])
+            assert hasattr(mod, route[2]), (subject, verb, route[2])
 
 
 def test_the_subjects_are_the_engines_and_the_registers():
@@ -84,6 +107,22 @@ def test_a_route_reaches_its_backend():
     r = subprocess.run([sys.executable, str(FRONT), "consolidation", "queue", "--help"],
                        capture_output=True, text=True)
     assert r.returncode == 0 and "queue" in (r.stdout + r.stderr)
+
+
+@pytest.mark.parametrize("subject, verb, argv, code", [
+    # A verb whose back-end once had its OWN sub-parsers lost the verb to the front
+    # door and answered argparse's usage instead (relay, 2026-10-20): the route's
+    # entry function gets only the words after the verb.
+    ("relay", "status", ["--check"], 3),
+    ("relay", "pause", [], 2),
+    ("schedule", "sessions", ["list"], 0),
+])
+def test_a_verb_with_its_own_flags_reaches_its_entry(subject, verb, argv, code, tmp_path):
+    r = subprocess.run([sys.executable, str(FRONT), subject, verb, *argv],
+                       capture_output=True, text=True,
+                       env={**os.environ, "PAZRAS_DATA_DIR": str(tmp_path / "data"),
+                            "FAMILIAR_RELAY_SOCK": str(tmp_path / "no.sock")})
+    assert r.returncode == code, (r.stdout, r.stderr)
 
 
 def test_the_front_door_imports_nothing_before_routing():
@@ -109,7 +148,7 @@ def test_the_read_only_context_verbs_run_end_to_end(argv, tmp_path):
     vault = tmp_path / "vault"
     vault.mkdir()
     (vault / "CONTEXT.md").write_text("# Vault\n")
-    env = {**os.environ, "PAZRAS_AGENTS_DIR": str(vault)}
+    env = {**os.environ, "PAZRAS_MEMORY_DIR": str(vault)}   # what `familiar` reads
     r = subprocess.run([sys.executable, str(FRONT)] + argv, cwd=tmp_path,
                        capture_output=True, text=True, env=env)
     assert r.returncode == 0, r.stderr

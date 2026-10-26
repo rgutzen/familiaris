@@ -5,8 +5,8 @@ origin: authored
 authority: human
 trust: trusted
 last_verified: 2026-09-02
-use_count: 11
-last_used: 2026-09-29
+use_count: 17
+last_used: 2026-10-15
 promoted_from: []  # originated 2026-08-28; no journal entry for that session
 source:
 supersedes:

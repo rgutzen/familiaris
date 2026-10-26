@@ -5,12 +5,12 @@ origin: derived             # promoted from a .lore.md store (D2->D3); see repor
 authority: agent
 trust: trusted
 last_verified: 2026-08-29
-use_count: 5
-last_used: 2026-09-11
+use_count: 10
+last_used: 2026-10-15
 promoted_from: []
 source:
 supersedes:
-related: [hermes, opencode, memory-mechanisms, skill-routing, boundaries, context-budget, mcp-servers, pi, rtk]
+related: [hermes, opencode, memory-mechanisms, skill-routing, boundaries, context-budget, mcp-servers, pi, rtk, codex, agent-profiles]
 tags: [claude, cli, acp, hooks]
 scope: []
 area: [B]

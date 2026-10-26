@@ -41,12 +41,9 @@ every other copy is derived and may be overwritten from it.
 decides it — the `05_ARCHIVES-EXTERNAL/` prefix — not a per-directory lookup
 table. A rule you can see in the path cannot be forgotten.
 
-```
-~/00_INBOX  01_PROJECTS  02_AREAS  03_ZETTEL  04_RESOURCES  06_SYSTEM   ← working-machine authority
-~/05_ARCHIVES/                              ← staging only (§5), flushed on attach
-~/05_ARCHIVES-EXTERNAL/                     ← mountpoint · archive-disk authority
-      ├── Projects/   Areas/   Resources/
-```
+![Which copy is authoritative](docs/assets/figures/authority.svg)
+
+*Two tiers own their content; the staging tier and the repositories hold copies. `05_ARCHIVES-EXTERNAL/` is a mountpoint holding `Projects/`, `Areas/` and `Resources/`.*
 
 **Everything under `05_ARCHIVES-EXTERNAL/` is de facto archived.** Content on a
 disk you do not carry is inactive whatever it is called — access friction *is*
@@ -69,10 +66,9 @@ Off-site storage is the smallest tier, so the deciding question is **not** size:
 
 > **Can I re-acquire this from the internet?**
 
-| Answer | Examples | Copies |
-|---|---|---|
-| **Yes** | courses, books, papers, software, ISOs, videos | archive disk + rotation disk (2 copies) |
-| **No** | personal photos, scans, own outputs, correspondence, notes | + off-site store (3 copies) |
+![Does this file go off-site?](docs/assets/figures/reacquire.svg)
+
+*A re-acquirable file keeps two copies; anything else gains a third in the off-site store.*
 
 **Apply 3-2-1 per tier, not globally.** Three copies of re-downloadable media
 would spend the off-site budget protecting the least valuable thing you own.
@@ -82,6 +78,10 @@ would spend the off-site budget protecting the least valuable thing you own.
 ## 4. Backup layer
 
 ### Repositories
+
+![Three places hold the backups](docs/assets/figures/backup-model.svg)
+
+*The off-site store is the only place that holds all four repositories. The rotation disk, a plain mirror, is not drawn.*
 
 restic repos live **outside** the PAZRAS tree (the profile's
 `storage.restic_root`), so no repo ever backs itself up. The master config
@@ -144,17 +144,9 @@ other.
 
 ### Usage
 
-```
-capture ─► 00_INBOX ─┬─► 01_PROJECTS ─┐
-                     ├─► 02_AREAS     │  complete / go inactive
-                     ├─► 03_ZETTEL    │
-                     └─► 04_RESOURCES ┘
-                                      ▼
-                            ~/05_ARCHIVES         ← LOCAL STAGING (small, transient)
-                                      │  flush on disk attach
-                                      ▼
-                05_ARCHIVES-EXTERNAL/{Projects,Areas,Resources}  ← ARCHIVE DISK (authoritative)
-```
+![Where a file moves, and the one move that costs data](docs/assets/figures/para-flow.svg)
+
+*Only the flush crosses a repository; `~/05_ARCHIVES` is small and transient, `05_ARCHIVES-EXTERNAL/{Projects,Areas,Resources}` is authoritative.*
 
 Movement *within* a repo is **free**: content is addressed by hash, so a move
 rewrites tree metadata only. The one boundary that costs data is the flush to

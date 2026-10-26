@@ -1,0 +1,20 @@
+# familiar relay -- the one Telegram poller and the socket sessions ask through.
+# Staged by dev/remote R1a; installing it is the user's step (R1d):
+#   cp config/relay/familiar-relay.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload && systemctl --user enable --now familiar-relay.service
+
+[Unit]
+Description=familiar relay -- the phone channel for agent sessions (Telegram)
+Documentation=file:%h/06_SYSTEM/dev/remote/PLAN.md
+OnFailure=notify@%n.service
+
+[Service]
+Type=simple
+Environment=PATH=%h/bin:%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=%h/06_SYSTEM/engine/familiar relay serve
+Restart=always
+RestartSec=10
+Nice=10
+
+[Install]
+WantedBy=default.target

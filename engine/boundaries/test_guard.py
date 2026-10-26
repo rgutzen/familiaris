@@ -242,9 +242,44 @@ def derivation_checks():
     return out
 
 
+# ── the vocabulary (dev/architecture 2d): what the words in a rule mean ──────
+# The rules say WHICH paths and a `mode:`; the vocabulary says what a mode
+# DENIES, which commands write or push, and where each harness's tools carry a
+# path. It is edited as YAML by a human and compiled into boundaries.json, which
+# is what the judges read.
+
+def vocabulary_checks():
+    import _boundaries as B
+    out = []
+    vocab = B.vocabulary()
+    compiled = B.load()
+    out.append(("the compiled file carries the vocabulary",
+                compiled.get("vocabulary") == vocab,
+                "run engine/boundaries/compile.py"))
+    out.append(("every mode a rule uses is the vocabulary's",
+                {r["mode"] for r in compiled["rules"]} <= set(vocab["modes"]),
+                "a rule names a mode the vocabulary does not define"))
+    out.append(("every rule's `denies` is derived, not written",
+                all(r["denies"] == vocab["modes"][r["mode"]] for r in compiled["rules"]),
+                "a rule's denies drifted from its mode"))
+    raw = json.loads(B.JSON_TARGET.read_text())
+    out.append(("the vocabulary in the file is JSON data",
+                raw["vocabulary"]["modes"] == vocab["modes"]
+                and isinstance(raw["vocabulary"]["shell"]["writes"], list),
+                "a set or tuple reached the compiled file"))
+    out.append(("the vocabulary names every judge's tool map",
+                {"claude-code", "opencode", "pi", "hermes"} <= set(vocab["tools"]),
+                "a harness a judge enforces is missing from the vocabulary"))
+    return out
+
+
 for label, ok, why in derivation_checks():
     fail += not ok
     print(f"{'ok  ' if ok else 'FAIL'}  {label:<32} {'' if ok else why}")
+
+for label, ok, why in vocabulary_checks():
+    fail += not ok
+    print(f"{'ok  ' if ok else 'FAIL'}  {label:<44} {'' if ok else why}")
 
 for label, payload, expect in CASES:
     got = call(payload)
@@ -260,10 +295,130 @@ for label, payload, expect in HERMES_CASES:
     print(f"{'ok  ' if ok else 'FAIL'}  {label:<26} "
           f"expect={expect:<5} got={got}")
 
+# ── the vocabulary refuses what it cannot mean ──────────────────────────────
+# A vocabulary is configuration, so a mistake in it must be a REFUSED COMPILE,
+# never a judge that silently enforces less. `_miniyaml` returns every scalar as
+# text, which is exactly how a typo would slip through unnoticed.
+
+def vocabulary_refusals():
+    import _boundaries as B
+    import tempfile
+    from lib import _miniyaml
+    base = {"version": "1", "modes": {"no-write": ["write"]},
+            "shell": {"writes": ["rm"], "writes_with_flag": {"sed": ["-i"]},
+                      "push": {"git": {"subcommands": ["push"]}},
+                      "git_writes": {"git": {"subcommands": ["clean"]}},
+                      "host_escape": {"engines": ["docker"], "subcommands": ["run"],
+                                      "flags": ["--privileged"],
+                                      "flag_values": {"--pid": ["host"]},
+                                      "mount_flags": ["-v"], "whole": ["~"],
+                                      "beneath": ["/dev"]}},
+            "tools": {"claude-code": {"shell": {"Bash": "command"},
+                                      "paths": {"Read": {"fields": ["file_path"],
+                                                         "ops": ["read"]}}}}}
+    cases = [
+        ("a mode denying an operation nobody implements",
+         # `delete` used to stand here as the unimplemented word; it is a real
+         # operation since item 8i, so the fixture names one that still is not.
+         lambda c: c["modes"].__setitem__("no-append", ["append"])),
+        ("a rule naming an undefined mode",
+         lambda c: c["modes"].pop("no-write")),
+        ("a push section with no verbs",
+         lambda c: c["shell"].__setitem__("push", {"git": {}})),
+        ("a tool declaring no path field",
+         lambda c: c["tools"]["claude-code"]["paths"].__setitem__(
+             "Read", {"fields": [], "ops": ["read"]})),
+        ("a tool op nobody implements",
+         lambda c: c["tools"]["claude-code"]["paths"]["Read"].__setitem__(
+             "ops", ["execute"])),
+        ("a stray key in a git rule",
+         lambda c: c["shell"]["push"]["git"].__setitem__("subcmd", ["push"])),
+        ("a host_escape section with no flags",
+         lambda c: c["shell"]["host_escape"].pop("flags")),
+    ]
+    out = []
+    for label, mutate in cases:
+        import copy
+        cfg = copy.deepcopy(base)
+        mutate(cfg)
+        with tempfile.NamedTemporaryFile("w", suffix=".yaml", delete=False) as fh:
+            fh.write(_dump(cfg))
+            path = fh.name
+        try:
+            B._check_vocabulary(_miniyaml.load(open(path).read()), "test.yaml")
+            refused = False
+        except SystemExit:
+            refused = True
+        finally:
+            os.unlink(path)
+        out.append((label, refused, "the compile accepted it"))
+    return out
+
+
+def _dump(obj, ind=0):
+    """A minimal block-form writer: the subset `_miniyaml` reads."""
+    pad = "  " * ind
+    lines = []
+    for k, v in obj.items():
+        if isinstance(v, dict):
+            lines.append(f"{pad}{k}:")
+            lines += _dump(v, ind + 1).splitlines()
+        elif isinstance(v, list):
+            lines.append(f"{pad}{k}:")
+            lines += [f"{pad}  - {x}" for x in v]
+        else:
+            lines.append(f"{pad}{k}: {v}")
+    return "\n".join(lines) + "\n"
+
+
+for label, ok, why in vocabulary_refusals():
+    fail += not ok
+    print(f"{'ok  ' if ok else 'FAIL'}  refuses {label:<40} {'' if ok else why}")
+
+# ── the parity corpus (boundaries.md §Parity corpus) ─────────────────────────
+# One fixture, run by every judge: this one, the opencode plugin and pi-guard.
+# A case whose `expected_fail` names `guard` must still FAIL here; one that starts
+# passing is reported, so the entry is removed rather than left to lie.
+
+PARITY = os.path.join(HERE, "fixtures", "parity.json")
+PARITY_TOOLS = {"read": ("Read", {"path": "file_path"}),
+                "write": ("Write", {"path": "file_path"}),
+                "edit": ("Edit", {"path": "file_path"}),
+                "glob": ("Glob", {"pattern": "pattern"}),
+                "grep": ("Grep", {"pattern": "pattern", "path": "path"})}
+
+
+def expand(value: str) -> str:
+    vault_name = "03_" + "ZETTEL"
+    return (value.replace("{VAULT_NAME}", vault_name)
+                 .replace("{VAULT}", HOME + "/" + vault_name)
+                 .replace("{CWD}", CWD).replace("{HOME}", HOME))
+
+
+def parity_payload(case: dict) -> dict:
+    args = {k: expand(v) for k, v in case["args"].items()}
+    if case["tool"] == "bash":
+        return bash(args["command"], case["model"])
+    tool, fields = PARITY_TOOLS[case["tool"]]
+    return P(tool, {fields[k]: v for k, v in args.items()}, case["model"])
+
+
+with open(PARITY) as fh:
+    PARITY_CASES = json.load(fh)["cases"]
+for case in PARITY_CASES:
+    got = call(parity_payload(case))
+    known = (case.get("expected_fail") or {}).get("guard")
+    ok = (got != case["expect"]) if known else (got == case["expect"])
+    fail += not ok
+    tag = "xfail" if known and ok else ("ok  " if ok else "FAIL")
+    print(f"{tag}  parity: {case['label']:<26} expect={case['expect']:<5} got={got}"
+          + (f"  (known: {known})" if known else ""))
+
 for t in (LOCAL_T, REMOTE_T):
     os.unlink(t)
 
 print()
-print("FAILURES:", fail, f"/ {len(CASES) + len(HERMES_CASES) + 5} checks "
-      f"({len(CASES)} guard cases, {len(HERMES_CASES)} hermes cases, 5 derivation checks)")
+print("FAILURES:", fail, f"/ {len(CASES) + len(HERMES_CASES) + len(PARITY_CASES) + 17} checks "
+      f"({len(CASES)} guard cases, {len(HERMES_CASES)} hermes cases, "
+      f"{len(PARITY_CASES)} parity cases, 5 derivation + 5 vocabulary + 7 refusal checks)")
 sys.exit(1 if fail else 0)

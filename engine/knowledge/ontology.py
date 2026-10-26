@@ -520,6 +520,50 @@ def subjects() -> tuple:
     return tuple(SUBJECTS.values())
 
 
+def subject(subject_id: str):
+    """One subject by id, or None. The register itself is implementation: a
+    caller that wants a record asks for it, and one that wants to know whether
+    an id exists asks `is_subject` (dev/architecture 4a)."""
+    return SUBJECTS.get(subject_id)
+
+
+def is_subject(subject_id: str) -> bool:
+    return subject_id in SUBJECTS
+
+
+def is_branch(branch_id: str) -> bool:
+    return branch_id in BRANCHES
+
+
+def entity_register() -> list:
+    """`(id, Entity)` pairs, in declaration order.
+
+    A narrow escape hatch, and the only one: `boundaries/compile.py` derives one
+    `ask` rule per kind marked `directive: true`, and the id it declares is the
+    dict key, not a field of the record. Everything else asks a question
+    (`subjects()`, `places()`, ...).
+    """
+    return list(ENTITIES.items())
+
+
+def facet_ids() -> tuple:
+    """The facet names, in declaration order -- `zip(facet_ids(), facets())`."""
+    return tuple(FACETS)
+
+
+def relation_rows() -> tuple:
+    """`(id, Relation)` in declaration order. A rendering needs the id the
+    register declared, and a dataclass field would be a second copy of it."""
+    return tuple(RELATIONS.items())
+
+
+def subject_ids() -> tuple:
+    """The subject ids, in declaration order -- so `zip(subject_ids(),
+    subjects())` pairs each id with its record, and a caller that needs a
+    mapping builds one instead of taking the register."""
+    return tuple(SUBJECTS)
+
+
 def facets() -> tuple:
     """The ten, in declaration order."""
     return tuple(FACETS.values())
@@ -541,6 +585,15 @@ def branches() -> tuple:
     return tuple(BRANCHES.values())
 
 
+def branch(branch_id: str):
+    """One branch by id, or None."""
+    return BRANCHES.get(branch_id)
+
+
+def branch_ids() -> tuple:
+    return tuple(BRANCHES)
+
+
 def places(subject_id: str) -> tuple:
     """The directories a subject OCCUPIES, or () for an unknown id.
 
@@ -553,6 +606,16 @@ def places(subject_id: str) -> tuple:
     """
     s = SUBJECTS.get(subject_id)
     return s.places if s else ()
+
+
+def all_places() -> tuple:
+    """Every directory the register files: each subject's `places:` followed by
+    the `unmapped:` ids, in declaration order. One answer to "what does the
+    register claim about the tree", so a caller does not re-read the YAML for
+    the other half (`checks/publish_audit.py` did)."""
+    out = [p for s in subjects() for p in s.places]
+    out += [u.id for u in UNMAPPED.values()]
+    return tuple(out)
 
 
 def naming() -> tuple:
@@ -1074,7 +1137,7 @@ def facet_findings(agents=None) -> list:
                             f"`{name}: {value}` is outside "
                             f"{'|'.join(facet.domain)} and no violation "
                             f"declares it"))
-                elif name == "subject" and name not in SUBJECTS:
+                elif name == "subject" and value not in SUBJECTS:
                     out.append(Finding(
                         "error", "subject", rel,
                         f"`subject: {value}` is not one of the registered subjects"))
@@ -1128,11 +1191,24 @@ def branch_findings(agents=None, projects=None) -> list:
                     f"`projects/{name}` names a project whose directory "
                     f"({projects / name}) no longer exists -- at project end a "
                     "leaf promotes to `areas/` or is deleted with the project"))
-        if branch in ("system", "areas") and subject_of(etype, rel, fm) is None:
+        if branch == "system" and subject_of(etype, rel, fm) is None:
             out.append(Finding(
                 "warn", "subject", rel,
-                f"under `{branch}/` but names no subject "
-                f"({'|'.join(SUBJECTS)} for system/, A-P for areas/)"))
+                f"under `system/` but names no subject "
+                f"({'|'.join(SUBJECTS)})"))
+        # An `areas/` leaf is filed by its AREA, not by a subject (the branch's
+        # own router: folders are named exactly as the Area they mirror). So the
+        # check is the same one with the right vocabulary -- until 2026-10-25 it
+        # compared an areas leaf against the SUBJECTS register, which no areas
+        # leaf can ever satisfy, and said so in a message that promised A-P.
+        if branch == "areas":
+            inner = rel.split("areas/", 1)[1] if "areas/" in rel else ""
+            area = inner.split("/")[0]
+            if area not in roots.PROFILE.areas:
+                out.append(Finding(
+                    "warn", "subject", rel,
+                    f"under `areas/` but names no Area "
+                    f"({'|'.join(sorted(roots.PROFILE.areas))})"))
     if legacy:
         total = sum(legacy.values())
         out.append(Finding(
@@ -1205,17 +1281,57 @@ def _naming_targets(repo: pathlib.Path):
     (`.obsidian`) and `_`-prefixed names are non-members by rule 2 and are not
     governed. Recorded as a decision because it is one -- markdown under
     `engine/` is code, not a document.
+
+    What git cannot see is not governed either: in a checkout the population is
+    `git ls-files --cached --others --exclude-standard`, the answer
+    `_tracked_or_empty` and `roots.tracked` already use, in one call for both
+    bases. An ignored scratch directory (`dev/figures/logs/`) is machine state,
+    not shape. `--others` keeps an untracked NEW leaf in scope, so only IGNORED
+    paths are dropped. Directories are derived from that visible file set: a
+    directory holding only ignored files is not a target, while the directory a
+    visible file sits in is. A generated tree has no `.git`, so there the walk is
+    the population, as in `roots.tracked`.
     """
-    for base in (M, roots.DEV_REL):
-        root = repo / base
-        if not root.is_dir():
-            continue
-        for p in sorted(root.rglob("*")):
-            rel = p.relative_to(repo).as_posix()
-            if any(part.startswith(".") or part == "__pycache__"
-                   for part in p.relative_to(repo).parts):
+    bases = [b for b in (M, roots.DEV_REL) if (repo / b).is_dir()]
+    if not bases:
+        return
+    files = None
+    if (repo / ".git").exists():
+        try:
+            listed = subprocess.run(
+                ("git", "ls-files", "--cached", "--others",
+                 "--exclude-standard", "-z", "--", *bases),
+                cwd=repo, capture_output=True, text=True, timeout=30)
+        except (OSError, subprocess.SubprocessError):
+            listed = None
+        if listed is not None and listed.returncode == 0:
+            files = sorted(rel for rel in listed.stdout.split("\0") if rel)
+    if files is None:
+        for base in bases:
+            root = repo / base
+            for p in sorted(root.rglob("*")):
+                rel = p.relative_to(repo).as_posix()
+                if any(part.startswith(".") or part == "__pycache__"
+                       for part in p.relative_to(repo).parts):
+                    continue
+                yield p, rel
+        return
+    for base in bases:
+        prefix = base + "/"
+        skip = base.count("/") + 1
+        targets = set()
+        for rel in files:
+            if not rel.startswith(prefix):
                 continue
-            yield p, rel
+            parts = rel.split("/")
+            if any(part.startswith(".") or part == "__pycache__"
+                   for part in parts):
+                continue
+            targets.add(rel)
+            for i in range(skip + 1, len(parts)):
+                targets.add("/".join(parts[:i]))
+        for rel in sorted(targets):
+            yield repo / rel, rel
 
 
 _STRUCTURAL = re.compile(r"^[A-Z][A-Z0-9]*(-[A-Z0-9]+)*$")
@@ -1260,7 +1376,18 @@ def naming_findings(repo=None) -> list:
         if p.is_dir():
             # A `_`-prefixed directory is a container of non-members (rule 2);
             # its own name is outside rule 7.
-            if not p.name.startswith("_") and not _CONTENT.match(p.name):
+            if p.name.startswith("_"):
+                continue
+            # Rule 7's own exception, IMPLEMENTED rather than only promised:
+            # `areas/A_Science/` mirrors `~/02_AREAS/` exactly, "a mirror is
+            # never reformatted". The exemption is the directory's purpose, so
+            # the check cannot ask the tree to lowercase a name the profile
+            # chose -- until 2026-10-25 it did, and the first real `areas/` leaf
+            # failed the gate that had already excused it in prose.
+            parts = rel.split("/")
+            if parts[:3] == [M, "knowledge", "areas"] and len(parts) == 4:
+                continue
+            if not _CONTENT.match(p.name):
                 note("naming:7", rel,
                      "directories are lowercase-hyphenated (rule 7)", 7)
             continue

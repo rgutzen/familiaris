@@ -23,6 +23,11 @@ Ranking is where time enters the system. A compartment carries a half-life — 1
 days for recency — so that what has not been reached for in a long time falls in
 the order retrieval returns things, without being deleted for it.
 
+
+![The vigil: the nightly loop from the day's capture back into the next session's context](../../assets/figures/lore-consolidation.svg)
+
+*the vigil: the nightly loop from the day's capture back into the next session's context.*
+
 ## The design choice, and why
 
 **A pass that runs unwatched may write only what its invariants declare.** Each

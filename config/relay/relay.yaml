@@ -1,0 +1,138 @@
+# The declared half of `familiar relay` (dev/remote, R1a).
+#
+# WHAT IS HERE. The relay's settings. Its runtime state (the paired owner, the
+# open asks, the audit log) is under $PAZRAS_DATA_DIR/relay/ and is not
+# versioned; the bot token is a credential in `token_file`, which no agent may
+# read (config/boundaries/read-write.yaml).
+#
+# Loaded through `engine/lib/_miniyaml.py`: block mappings only, every value a
+# string.
+
+defaults:
+  token_file: ~/.config/pazras/relay.env
+  # Seconds one getUpdates call may hold the connection open (Telegram's long poll).
+  poll_timeout: "50"
+  # Characters of an ask's title in the message; `More` sends the rest on demand.
+  max_text: "3500"
+  # After an answer the message is cut to `[session] rule . answer . time`, so the
+  # chat history keeps no command lines (Telegram bot chats are not end-to-end
+  # encrypted). "false" keeps the full ask with the answer appended.
+  redact_after_answer: "true"
+  # Rules whose approval will need a PIN typed on the phone. Decision 2 says start
+  # without, so the KEY IS ABSENT (an empty flow list is not expressible: `_miniyaml`
+  # refuses flow collections since architecture eefbe0b). The upgrade writes it here.
+  # Seconds without terminal input after which an interactive pi session counts the
+  # user as away and sends its asks and turn ends to the phone (familiar-remote).
+  # A locked screen (hyprlock) or `/away` from the phone counts at once.
+  away_after: "600"
+
+# The bot's commands beyond the built-ins (/status /help /away /back /pause
+# /resume), dev/remote R5a. Each runs a FIXED argv; the words after the command
+# must match `arg` whole and replace `{args}` as separate argv elements (never a
+# shell). Output is redacted and cut like an ask; every run is audited. A program
+# path without a leading / is relative to the repository. `confirm: "true"` asks
+# Yes/No first. The proposal and the risk tiers: dev/remote/2026-10-21-commands.md.
+commands:
+  status:
+    help: the scheduler at a glance (below the relay's own asks)
+    run:
+      - engine/familiar
+      - schedule
+      - sessions
+      - phone
+      - status
+  jobs:
+    help: one line per job that can still run
+    run:
+      - engine/familiar
+      - schedule
+      - sessions
+      - phone
+      - jobs
+  job:
+    help: one job, its last run, its commits and report
+    usage: <name>
+    arg: "[a-z0-9][a-z0-9-]{0,60}"
+    run:
+      - engine/familiar
+      - schedule
+      - sessions
+      - phone
+      - job
+      - "{args}"
+  budget:
+    help: the five-hour and weekly windows, and whether they hold jobs
+    run:
+      - engine/familiar
+      - schedule
+      - sessions
+      - phone
+      - budget
+  brief:
+    help: "the nightly brief: headings, or one section"
+    usage: "[changed|open|failed|scheduled]"
+    arg: "(changed|open|failed|scheduled)?"
+    run:
+      - engine/familiar
+      - consolidation
+      - brief
+      - --phone
+      - "{args}"
+  highlights:
+    help: the nightly pass in ~20 lines (also sent at 06:00)
+    run:
+      - engine/familiar
+      - consolidation
+      - brief
+      - --highlights
+  review:
+    help: decide the open items one by one, with buttons or a reply
+    run:
+      - engine/familiar
+      - consolidation
+      - review
+      - --remote
+      - --detach
+  todos:
+    help: the tracks' checklists, and what waits on you
+    usage: "[track]"
+    arg: "([a-z0-9][a-z0-9-]{0,40})?"
+    run:
+      - engine/familiar
+      - orchestration
+      - todos
+      - "{args}"
+  approve:
+    help: let a paused chain go on
+    usage: <job>
+    arg: "[a-z0-9][a-z0-9-]{0,60}"
+    tier: control
+    run:
+      - engine/familiar
+      - schedule
+      - sessions
+      - resume
+      - "{args}"
+  hold:
+    help: hold a job (default 2h)
+    usage: "<job> [delay]"
+    arg: "[a-z0-9][a-z0-9-]{0,60}( [0-9]{1,3}[mhd])?"
+    tier: control
+    run:
+      - engine/familiar
+      - schedule
+      - sessions
+      - hold
+      - "{args}"
+  cancel:
+    help: cancel a job (asks Yes/No first)
+    usage: <job>
+    arg: "[a-z0-9][a-z0-9-]{0,60}"
+    tier: control
+    confirm: "true"
+    run:
+      - engine/familiar
+      - schedule
+      - sessions
+      - cancel
+      - "{args}"

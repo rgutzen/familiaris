@@ -1,0 +1,402 @@
+# The boundaries vocabulary: what the WORDS in a rule mean.
+#
+# The rules (git.yaml, read-write.yaml) say WHICH paths are protected and how
+# (`mode:`). This file says what a `mode:` denies, which shell commands count as
+# a write or a push, and which field of each harness's tools holds a path. It is
+# compiled into boundaries.json by boundaries/compile.py; no judge reads it
+# directly.
+#
+# Editable by a human: lists of words, not patterns. How a command line is READ
+# -- tokenising, heredocs, redirects -- is mechanism and stays in the judges
+# (dev/architecture 2c, dec-70271376).
+# MEAN: which operations a mode denies, which shell commands count as a write or
+# a push, and which field of each harness's tools holds a path. Until now each
+# of these was hard-coded, in up to four places (guard.py, the opencode plugin,
+# pi-guard, compile.py).
+#
+# What it is NOT. How a command line is read -- tokenising and quotes, heredoc
+# stripping, redirect detection -- is mechanism and stays code (dec-70271376).
+#
+# Every value below is today's behaviour, copied unchanged. A refactor carries
+# no behaviour change; additions are listed at the end as questions.
+# Block form only: the boundaries parser (lib/_miniyaml) reads no `[a, b]`.
+
+# ── modes: which operations a rule's `mode:` denies ─────────────────────────
+# from _boundaries.py MODES
+modes:
+  no-read-write:
+    - read
+    - write
+  no-read:
+    - read
+  no-write:
+    - write
+  no-push:
+    - push
+  no-host-escape:
+    - escape
+  # 2026-10-24 (item 8i). A DELETE is not a write: `cp`, `tee`, `mkdir`,
+  # `chmod` produce; `rm`, `mv`, `shred`, `truncate` destroy what the user
+  # already has, and losing it cannot be undone by reading the diff. The
+  # path-scoped `no-write` rules cannot cover this: they fire only where a
+  # protected path is named, and `rm dotfiles` in the home directory named
+  # none. 29 commands in six weeks were destroyed or moved with no ask.
+  no-delete:
+    - delete
+
+# ── shell: which commands are a write, which are a push ─────────────────────
+# `writes`: a command word that changes a filesystem path. A `no-write` rule
+# denies a command that starts one of these and names the path. Reading stays
+# allowed, or `restic check` would be refused. Identical today in all three
+# judges (guard.py MUTATORS, index.js, pi-guard).
+# `writes_with_flag`: a command that writes only with a flag, i.e. in-place
+# editing (guard.py command_writes: `sed ... -i`).
+# `push`: what `no-push` covers -- publishing and rewriting history; committing
+# and branching are free. Matched against the RAW command string, so a quoted
+# mention also asks (dec-28038961). From GIT_WRITE (guard.py, index.js) and
+# compile.py PUSH_PATTERNS.
+shell:
+  writes:
+    - rm
+    - rmdir
+    - mv
+    - cp
+    - dd
+    - truncate
+    - shred
+    - tee
+    - chmod
+    - chown
+    - chgrp
+    - ln
+    - mkdir
+    - touch
+    - install
+    - unlink
+    - rsync
+    - mkfs
+    - sponge
+  # A command that writes only with a flag: `perl -i` and `find -delete` join
+  # `sed -i` (2026-10-20, user).
+  # FLAG MATCHING. A long flag (`--x`) matches a whole token, so `--delete` is
+  # not `-delete` and `git checkout --detach` is not `--`. A short flag (`-x`)
+  # matches a token that STARTS with it, so `sed -i.bak` and `perl -pi` count.
+  writes_with_flag:
+    sed:
+      - -i
+    perl:
+      - -i
+      - -pi
+    find:
+      - -delete
+  # Commands that destroy a path. Separate from `writes` above: this list is
+  # what a `no-delete` rule reads, and `mv` is here because a move out of the
+  # tree is as final as a delete (`mv ~/02_AREAS/X ~/02_AREAS/Y`, 2026-10-24).
+  deletes:
+    - rm
+    - rmdir
+    - unlink
+    - shred
+    - truncate
+    - mv
+  # Where destroying is routine: agent scratch, caches, build output. Matched
+  # against the OPERAND, resolved against the command's cwd. A glob entry may
+  # name a directory that recurses (`*/__pycache__`). Everything else asks --
+  # `/tmp` cleanups included is the choice NOT made here: those are the honest
+  # 20 of the 29, and five a week is a prompt the user answers in a tap.
+  # A delete counts when it is the COMMAND WORD of a run, after these wrappers
+  # and `VAR=value` prefixes: `sudo rm x` yes, `restic rm x` no (that deletes a
+  # repository snapshot, and the path rules own it).
+  delete_wrappers:
+    - sudo
+    - doas
+    - env
+    - time
+    - nohup
+    - command
+    - exec
+    - xargs
+    - timeout
+    - stdbuf
+    - setsid
+    - nice
+  # A shell built command hides its text in an argument, so a delete word inside
+  # one is not visible as a command word. Fails closed rather than guessing.
+  delete_shells:
+    - bash
+    - sh
+    - zsh
+    - eval
+  delete_safe:
+    - /tmp
+    - /var/tmp
+    - /dev/shm
+    - "*/__pycache__"
+    - "*/node_modules"
+    - "*/target/debug"
+  # What `no-push` covers: publishing and rewriting history. Committing and
+  # branching are free. Matched against the RAW command string, so a quoted
+  # mention also asks (dec-28038961). From GIT_WRITE (guard.py, index.js) and
+  # compile.py PUSH_PATTERNS. `reset` is here for `--hard` alone (2026-10-20,
+  # user): a soft reset keeps the working tree, a hard one discards it.
+  push:
+    git:
+      subcommands:
+        - push
+        - rebase
+        - filter-branch
+        - filter-repo
+      with_flag:
+        commit:
+          - --amend
+        reset:
+          - --hard
+  # Git commands that WRITE the working tree without being a push (2026-10-20,
+  # user). A `no-write` rule denies them when the command names the path; under
+  # `no-push` they pass, because committing is free.
+  git_writes:
+    git:
+      subcommands:
+        - clean
+      with_flag:
+        checkout:
+          - --
+  # A container launch that reaches through to the host: every device, the
+  # host's namespaces, root-equivalent capabilities, or a bind of the host's
+  # files. Read only inside a `<engine> ... <subcommand>` command.
+  host_escape:
+    engines:
+      - docker
+      - podman
+      - nerdctl
+    subcommands:
+      - run
+      - create
+      - exec
+    # Asks on sight, with or without a value.
+    flags:
+      - --privileged
+      - --device
+      - --device-cgroup-rule
+    # Asks only with one of these values (`--flag=v` or `--flag v`; case and a
+    # leading `CAP_` are ignored).
+    flag_values:
+      --pid:
+        - host
+      --ipc:
+        - host
+      --uts:
+        - host
+      --userns:
+        - host
+      --cgroupns:
+        - host
+      --network:
+        - host
+      --net:
+        - host
+      --cap-add:
+        - ALL
+        - SYS_ADMIN
+        - SYS_MODULE
+        - SYS_RAWIO
+        - SYS_PTRACE
+        - SYS_BOOT
+        - DAC_READ_SEARCH
+      --security-opt:
+        - seccomp=unconfined
+        - apparmor=unconfined
+        - label=disable
+        - systempaths=unconfined
+    # The flags that bind a host path into the container.
+    mount_flags:
+      - -v
+      - --volume
+      - --mount
+    # A bind of one of these, or of any directory above it: all your files.
+    whole:
+      - ~
+    # A bind of one of these, or of anything beneath it.
+    beneath:
+      - /dev
+      - /sys
+      - /proc
+      - /boot
+      - /etc
+      - /root
+      - /var/lib/docker
+      - /run/docker.sock
+      - /var/run/docker.sock
+      - /run/podman
+      - ~/.ssh
+      - ~/.gnupg
+# ── tools: where each harness's tools carry a path ──────────────────────────
+# `fields` are tried in order. `ops` are the operations a call performs. A tool
+# not listed is not path-checked (MCP tools, for one -- see boundaries.md
+# §honest limits). `shell` maps the tool whose input is a command line to that
+# input's field. Sources: guard.py PATH_FIELDS (claude-code), opencode-plugin
+# TOOLS, pi-guard TOOLS, guard.py HERMES_TOOLS (hermes, translated into
+# claude-code's tools; its V4A patch headers and `search_files target=files`
+# -> Glob stay mechanism).
+tools:
+  claude-code:
+    shell:
+      Bash: command
+    paths:
+      Read:
+        fields:
+          - file_path
+        ops:
+          - read
+      Glob:
+        fields:
+          - pattern
+          - path
+        ops:
+          - read
+      Grep:
+        fields:
+          - path
+          - glob
+        ops:
+          - read
+      Write:
+        fields:
+          - file_path
+        ops:
+          - write
+      Edit:
+        fields:
+          - file_path
+        ops:
+          - read
+          - write
+      NotebookEdit:
+        fields:
+          - notebook_path
+          - file_path
+        ops:
+          - read
+          - write
+  opencode:
+    shell:
+      bash: command
+    paths:
+      read:
+        fields:
+          - filePath
+          - path
+        ops:
+          - read
+      list:
+        fields:
+          - path
+        ops:
+          - read
+      glob:
+        fields:
+          - pattern
+          - path
+        ops:
+          - read
+      grep:
+        fields:
+          - path
+          - include
+        ops:
+          - read
+      write:
+        fields:
+          - filePath
+          - path
+        ops:
+          - write
+      edit:
+        fields:
+          - filePath
+          - path
+        ops:
+          - read
+          - write
+      patch:
+        fields:
+          - filePath
+          - path
+        ops:
+          - read
+          - write
+  pi:
+    shell:
+      bash: command
+    paths:
+      read:
+        fields:
+          - path
+        ops:
+          - read
+      grep:
+        fields:
+          - path
+        ops:
+          - read
+      find:
+        fields:
+          - path
+          - pattern
+        ops:
+          - read
+      ls:
+        fields:
+          - path
+        ops:
+          - read
+      write:
+        fields:
+          - path
+        ops:
+          - write
+      edit:
+        fields:
+          - path
+        ops:
+          - read
+          - write
+  hermes:
+    translate_to: claude-code
+    tools:
+      read_file:
+        as: Read
+        fields:
+          path: file_path
+      write_file:
+        as: Write
+        fields:
+          path: file_path
+      patch:
+        as: Edit
+        fields:
+          path: file_path
+      search_files:
+        as: Grep
+        fields:
+          path: path
+      terminal:
+        as: Bash
+        fields:
+          command: command
+      execute_code:
+        as: Bash
+        fields:
+          code: command
+
+# ── the three questions of 2026-10-20, and their answers ───────────────────
+#   1. APPLIED: `perl -i`, `find -delete`, `git clean` and `git checkout --`
+#      are writes now.
+#   2. APPLIED: `git reset --hard` asks. (`git push --force-with-lease` was
+#      already covered as a push.)
+#   3. THIS FILE WAS WRONG. pi does have a glob: the `find` tool -- "Find paths
+#      using glob patterns" (pi 1.3.0, docs/cli.md:148) -- with `pattern`,
+#      `path` (default ".") and `limit` (examples/extensions/minimal-mode.ts:216).
+#      The pi entry above declared `fields: [path]` only, so a pattern naming a
+#      protected path went unchecked: the hole claude-code's `Glob` closes with
+#      `[pattern, path]`. Corrected here. No plugin and no new tool are needed.

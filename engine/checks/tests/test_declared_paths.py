@@ -415,7 +415,7 @@ def test_a_wrong_owner_claim_is_caught(monkeypatch):
     mod = _checks()
     bogus = mod.Check(
         "renamed-away", "a check nobody runs",
-        ("engine/cli/familiar-context.py", "links", "--check", "--renamed"),
+        ("engine/familiar", "context", "links", "--check", "--renamed-away"),
         frozenset({mod.GATE_MANUAL}), owner=mod.HEALTHCHECK)
     monkeypatch.setattr(mod, "CHECKS", (bogus,))
     problems = mod.owner_findings()
@@ -427,18 +427,23 @@ def test_an_owner_that_does_not_exist_is_caught(monkeypatch):
     mod = _checks()
     bogus = mod.Check(
         "ghost-owned", "owner file is gone",
-        ("engine/cli/familiar-context.py", "links", "--check"),
+        ("engine/familiar", "context", "links", "--check"),
         frozenset({mod.GATE_MANUAL}), owner="engine/checks/nope.sh")
     monkeypatch.setattr(mod, "CHECKS", (bogus,))
     assert "unreadable" in mod.owner_findings()[0]
 
 
 def test_a_check_this_registry_runs_needs_no_owner():
-    """`owner` is for the checks this registry does NOT execute. A gated check
-    needs none, and the audit must not invent one."""
+    """`owner` is for the checks a tier run leaves to someone else. A check the
+    registry runs at its tier needs none, and the audit must not invent one.
+    (Before the tiers, "owned" meant "manual-only"; an owned check now also
+    carries the tier its owner runs it at -- `tier_findings` verifies that.)"""
     mod = _checks()
-    assert not any(c.owner for c in mod.CHECKS
-                   if c.gates != frozenset({mod.GATE_MANUAL}))
+    for c in mod.CHECKS:
+        if not c.owner:
+            continue
+        assert not mod.runs_here(c, mod.GATE_DAILY), c.id
+        assert not mod.runs_here(c, mod.GATE_WEEKLY), c.id
 
 
 def test_the_shell_script_checks_are_all_in_the_registry():
@@ -451,6 +456,8 @@ def test_the_shell_script_checks_are_all_in_the_registry():
     for c in mod.CHECKS:
         if c.owner != mod.HEALTHCHECK:
             continue
+        if str(c.command[0]) == c.owner:
+            continue      # a section of the script itself; its `due` line is the claim
         exe = pathlib.Path(str(c.command[0])).name
         args = " ".join(str(p) for p in c.command[1:])
         assert any(exe in line and args in line for line in text.splitlines()), c.id
@@ -515,3 +522,13 @@ def test_every_instance_only_check_carries_a_reason_a_reader_can_act_on():
                     "every instance-measuring check would fail instead")
     for x in marked:
         assert len(x.instance_only.split()) >= 5, x.id
+
+
+def test_a_retired_spelling_under_a_foreign_root_is_not_ours():
+    D = dp
+    line = "upstream_path: /usr/share/omarchy/default/agents/skills/omarchy"
+    m = D._RETIRED_AT["agents/skills/"].search(line)
+    assert m and D._foreign(line, m.start())
+    ours = "see ~/06_SYSTEM/agents/skills/x and `agents/skills/y`"
+    assert not any(D._foreign(ours, m.start())
+                   for m in D._RETIRED_AT["agents/skills/"].finditer(ours))

@@ -1,0 +1,141 @@
+# The probes dispatch asks per item, and the rules that turn their answers
+# into an audit of the item's `model:` (PLAN.md §Dispatch, item 3c).
+#
+# CONTENT, NOT BINDING. `engine/orchestration/dispatch.py` reads it and
+# `familiar orchestration dispatch <SPECS.md>` applies it. A wording change is
+# an edit here, never in the code; the code only knows the four keys under
+# `probes:` and what each answer feeds.
+#
+# THE WORDING IS PINNED BY A HASH. Every run prints the hash of the `probes:`
+# map, the `jev_schemas` pattern: a reworded question starts a new population,
+# so an answer recorded under one hash is never compared against a threshold
+# set under another.
+#
+# THE STATE IS THE ITEM'S OWN TEXT. Each call sends one item: its id, title,
+# prose and field lines, and the declared model's id and name. Never a file
+# the item names: that text already went to the planning session's provider,
+# so Jev is one more recipient of it, not a new class of data (PLAN.md §The
+# Step 0 amendment).
+#
+# Loaded through `engine/lib/_miniyaml.py`: block mappings and sequences only,
+# every value a string.
+
+probes:
+  # Read as score / (levels - 1), so 0 is the first level and 1 the last,
+  # whatever the number of levels. `selection.yaml`'s `up_to_difficulty` is on
+  # that scale.
+  difficulty:
+    type: score
+    instructions: >
+      The state is one item of an implementation plan and the model the planner
+      declared for it. Answer how hard the item is for that model to complete
+      correctly on the first attempt, judged from the item's text alone.
+    criteria:
+      - trivial -- a mechanical change whose shape the text fully states
+      - routine -- a small change in one place, with a known pattern to follow
+      - substantial -- several parts to fit together, or a pattern to find first
+      - hard -- new design, many interacting parts, or a subtle correctness bar
+  # The options are capabilities.yaml's `task_classes:`, one map for both:
+  # dispatch refuses to run if the two key sets differ.
+  task_class:
+    type: choice
+    instructions: >
+      The state is one item of an implementation plan. Answer which kind of
+      work the item mainly is.
+    criteria:
+      edit: it changes or adds code or configuration
+      read: it reads, researches or explores, and writes nothing but a finding
+      test: it writes or runs tests, or measures a behaviour
+      docs: it writes prose -- documentation, a plan, a record
+      batch: it applies one small judgment to many similar inputs
+  open_decision:
+    type: noul
+    instructions: >
+      The state is one item of an implementation plan. Answer whether the item
+      leaves a design decision open that its own text does not fix: a choice
+      between ways of doing it that an implementer would have to make and that
+      the reviewer could reasonably have made differently.
+    criteria:
+      true: a design decision is left open
+      false: the text fixes every design decision
+  verify_alone:
+    type: noul
+    instructions: >
+      The state is one item of an implementation plan. Answer whether the
+      command on its `verify:` line, run on its own, can judge whether the item
+      is done. A `manual:` verify is a reading by a person, not a command.
+    criteria:
+      true: the verify command alone judges the item
+      false: judging it needs a person or more than the command
+
+# One question per pair of items in the same wave (3d), asked as the state
+# "item A: ... item B: ...", A first in file order. It sits outside `probes:`
+# so the `probes:` hash stays the calibration baseline; it prints its own hash.
+# A yes at or above `rules.noul_yes_at` is a missed `depends:`, reported only.
+independence:
+  type: noul
+  instructions: >
+    The state is two items of an implementation plan, A and B, that the plan
+    lets run at the same time, and neither lists the other under `depends:`.
+    Answer whether B needs anything A produces: a file, a function, a
+    config key, a decision or a result that B reads, calls, extends or
+    assumes, judged from the two items' text alone.
+  criteria:
+    true: B needs something A produces
+    false: B needs nothing A produces
+
+rules:
+  # A noul answer at or above this probability reads as yes.
+  noul_yes_at: "0.5"
+  # The answers that RAISE an item one tier (selection.yaml), because the work is
+  # no longer the class's ordinary case. `verify_alone: no` stays: a check nobody
+  # can judge alone gives a cheap model no exit to be held to, and the answer
+  # varies (0.03 to 0.55 on our own items). `open_decision` was dropped on
+  # 2026-10-14: Jev answered `yes` on 7 of 7 probed items, so it raised every item
+  # one tier -- a constant carries no information, and "always the strongest tier"
+  # is the opposite of the economy this system exists for. Difficulty still
+  # selects the tier, and the raise is fine-tuned later against 3f's labels.
+  band_raise:
+    verify_alone: "no"
+  # "Cheapest" is `price.reference`: the catalogue's cost block (cache hits and
+  # bands included) over ONE usage shape per class (14c; decision 24: quota models
+  # at API-equivalent dollars). It orders the models INSIDE a tier; a tie goes to
+  # the measured mean over the class's capabilities, then to the tier's own order.
+  # The shapes are medians of the logs on 2026-10-22: `read` over the 22
+  # delegation lines with usage (`explore` is the read role), `default` over the 59
+  # first-attempt labels (whole implementation sessions, mostly cache reads). 14e
+  # replaces them with the learned estimate per option. Until 2026-10-22 three
+  # callers handed `cheapest` the whole config instead of `rules`, so the 1:1
+  # weights this replaces were read by dispatch alone and defaulted everywhere else.
+  # 14d, amending decision 24 (the user, 2026-10-22): a `pool: quota` model is
+  # ranked at its API-equivalent $ times a weight from the live Claude usage --
+  # the fuller of the five-hour and weekly windows. No reading is weight 1.
+  quota_weight: "0.50: 0.25, 0.80: 1, else: 4"
+  # 14g, the router (ruled 2026-10-22): the greedy pick is the lowest expected cost
+  # per verified result among members whose P(verified) lower bound (the 10%
+  # quantile) reaches `route_floor`; exploration is Thompson sampling inside the
+  # tier, at most `explore_budget` dollars of exploring picks in seven days.
+  route_floor: "0.50"
+  explore_budget: "1.00"
+  # Flipped 2026-10-22, before the shadow week ended (the user): the price order had
+  # put `read` on mistral-small-2603, which never completed a 12c attempt, while the
+  # route chose deepseek-flash. `no` restores the 14c price order.
+  route_live: "yes"
+  # A class whose output a free checker can judge runs as a CASCADE under
+  # `model: class`: the next option takes over once when the check fails.
+  cascade: "read=ref+quote"
+  reference_usage:
+    default:
+      input: "244"
+      cache_write: "106552"
+      cache_read: "7689286"
+      output: "70061"
+    read:
+      input: "599"
+      cache_write: "0"
+      cache_read: "12920"
+      output: "473"
+  # Only these catalogue kinds may be suggested: a `typed` model (Jev) answers
+  # questions and cannot take a free-form item (decision 22).
+  suggest_kinds:
+    - chat

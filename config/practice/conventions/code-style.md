@@ -35,9 +35,10 @@ Always start at the simplest level that could work, and say which level you chos
 | 6 | New building block |
 | 7 | New abstraction — rarely needed |
 
-Work **with the grain** of existing tools. Prefer native features over
+- **Deletion beats addition.** Ask whether the thing needs to exist before asking how little of it to build.
+- **Work with the grain** of existing tools. Prefer native features over
 abstractions built on top of them.
-Use **tracer bullets**. Build a tiny, end-to-end slice of features first, seek feedback, then expand out from there.
+- **Use tracer bullets**. Build a tiny, end-to-end slice of features first, seek feedback, then expand out from there.
 
 ## Verifiable correctness
 

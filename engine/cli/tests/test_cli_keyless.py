@@ -10,9 +10,10 @@ hold, and copying it into a test would mean either deleting a required command o
 writing a test that fails on correct code.
 
 What the criterion MEANT is asserted here instead, and more tightly than the grep
-could: the key is read by the two commands whose whole purpose is the live check,
-and by nothing on the `queue`/`decide` path. An import is not the real question
-anyway -- the real question is which executable path can reach `load_key`.
+could: the key is read inside `harness/jev.py` and nowhere else. The two `jev`
+commands and the pass receive typed answers or a typed `JevError`; none of them
+holds the secret. An import is not the real question anyway -- the real question
+is which executable path can reach the function that reads the key.
 """
 import ast
 import pathlib
@@ -78,26 +79,41 @@ def _find_function(name):
     raise AssertionError(f"{name} not found in cli.py")
 
 
-def test_load_key_is_called_only_from_the_declared_places():
-    """One reader is what makes the mode check and the boundaries rule mean
-    anything, so the call sites are enumerated rather than assumed.
-
-    Three, and each has a reason:
-      * `jev.py` defines it;
-      * `cli.py`'s two `jev` check commands call it, and those ARE the live check;
-      * `stages/recommend.py` calls it from the PASS, which is the one place a
-        recommendation may be computed at all.
-    """
-    pkg = CLI_PY.parents[1]
-    allowed = {"harness/jev.py", "cli/cli.py", "consolidation/stages/recommend.py"}
-    callers = set()
-    for p in _modules(pkg):
-        rel = str(p.relative_to(pkg))
-        if rel in allowed or p.name == "__init__.py":
+def _key_readers():
+    """The names in `harness/jev.py` that touch the key, derived from the source
+    so a rename cannot leave this test guarding a name nobody uses."""
+    tree = ast.parse((CLI_PY.parents[1] / "harness" / "jev.py").read_text())
+    names = set()
+    for node in tree.body:
+        if not isinstance(node, ast.FunctionDef):
             continue
-        if "load_key" in p.read_text():
-            callers.add(rel)
-    assert callers == set(), f"undeclared key readers: {callers}"
+        used = {n.id for n in ast.walk(node) if isinstance(n, ast.Name)}
+        if used & {"KEY_VAR", "KEY_PATH"}:
+            names.add(node.name)
+    return names
+
+
+def test_the_key_is_read_only_inside_the_client():
+    """One reader is what makes the mode check and the boundaries rule mean
+    anything. Every module outside `harness/` reaches the key through `jev.ask`
+    and `jev.models`, which return typed answers or raise `JevError`.
+
+    `KEY_PATH` itself may be named elsewhere (the CLI prints its path and mode);
+    the functions that open it may not.
+    """
+    readers = _key_readers()
+    assert readers, "found no key reader in jev.py; the derivation is stale"
+    pkg = CLI_PY.parents[1]
+    callers = {}
+    for p in _modules(pkg):
+        rel = p.relative_to(pkg)
+        if rel.parts[0] == "harness" or p.name == "__init__.py":
+            continue
+        text = p.read_text()
+        hit = sorted(n for n in readers if re.search(rf"\b{re.escape(n)}\b", text))
+        if hit:
+            callers[str(rel)] = hit
+    assert callers == {}, f"undeclared key readers: {callers}"
 
 
 def test_the_env_var_is_not_read_by_the_cli():

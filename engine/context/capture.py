@@ -259,16 +259,33 @@ def _json_str(s):
     return "".join(out)
 
 
+# `capture`'s flags, declared like every other route's (dev/architecture 3a):
+# an undeclared flag is an error, and that rule is `invocation`'s, not a second
+# hand-written loop here. The import is local to `main` and costs ~2.7 ms on top
+# of `lib.roots`, which the hook path pays anyway (measured 2026-10-20).
+CAPTURE = None          # filled by `_spec()` on first use: `invocation` is not
+                        # imported at module load, so this file stays inspectable
+
+
+def _spec():
+    global CAPTURE
+    if CAPTURE is None:
+        from lib import invocation
+        CAPTURE = invocation.Spec(
+            name="capture", usage="capture --harness=H --event=E",
+            options=("--harness", "--event"))
+    return CAPTURE
+
+
 def main(argv, base_dir, agents_dir):
-    harness = event = ""
-    for a in argv:
-        if a.startswith("--harness="):
-            harness = a[10:]
-        elif a.startswith("--event="):
-            event = a[8:]
-        else:
-            sys.stderr.write("[familiar] unknown capture flag: %s\n" % a)
-            return 1
+    from lib import invocation
+    try:
+        inv = invocation.parse(list(argv), _spec(), base_dir, agents_dir)
+    except invocation.UsageError as exc:
+        sys.stderr.write("[familiar] %s\n" % exc)
+        return 1
+    harness = inv.get("--harness")
+    event = inv.get("--event")
     if not harness:
         sys.stderr.write("[familiar] capture requires --harness\n")
         return 1

@@ -63,13 +63,15 @@ remote_available() {
     return 0
 }
 
-# 4. Upload LOCAL into the remote folder DIR. `-f skip -d merge` is this
-#    client's spelling of the contract: skip a conflicting file, merge a
-#    folder. Your client says it differently; the contract does not change.
+# 4. Upload LOCAL into the remote folder DIR, merging folders. CONFLICT is
+#    `skip` (the default: restic's objects are immutable, so a name that exists
+#    is already right) or `replace` (the browsable mirror: an edited file must
+#    overwrite its old copy, or the access copy goes stale). A client that skips
+#    identical content on its own makes `replace` cost nothing extra.
 remote_upload() {
-    local local_path="$1" remote_dir="$2"
-    remote_available || return 1
-    example-cli upload --on-conflict skip --merge --no-thumbnails \
+    local local_path="$1" remote_dir="$2" conflict="${3:-skip}"
+    remote_ready || return 1
+    example-cli upload --on-conflict "$conflict" --merge --no-thumbnails \
                        "$local_path" "$remote_dir"
 }
 
@@ -79,6 +81,6 @@ remote_upload() {
 #    delete moves to a trash folder rather than unlinking is a better client.
 remote_delete() {
     local remote_path="$1"
-    remote_available || return 1
+    remote_ready || return 1
     example-cli delete "$remote_path"
 }

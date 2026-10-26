@@ -1,9 +1,12 @@
 /**
  * familiar-boundaries — the opencode half of BOUNDARIES.yaml.
  *
- * Reads the SAME compiled rule set as the Claude Code hook
- * (06_SYSTEM/config/boundaries/boundaries.json, emitted by
- * `boundaries-compile`). No rule is written twice; there is one config.
+ * Reads the SAME compiled rule set as the Claude Code hook and pi-guard
+ * (config/boundaries/boundaries.json, emitted by `boundaries-compile`), and runs
+ * the SAME judge as pi-guard (`../shared/judge.mjs`). No rule, no mutating
+ * command and no push verb is written twice: the rules and their vocabulary are
+ * configuration, and two evaluators (Python and this shared one) are held equal
+ * by the parity corpus in `../fixtures/parity.json`.
  *
  * Interception point, verified against @opencode-ai/plugin@1.18.18's Hooks
  * interface: `tool.execute.before(input, output)` fires before every tool
@@ -13,117 +16,45 @@
  * recorded per session from `chat.params`, which does. Sessions with no
  * recorded model are treated as `remote`, the guarded default.
  *
- * KNOWN WEAKER THAN THE CLAUDE CODE GUARD: the bash scan here has no shlex, so
- * it is a token split plus a substring backstop rather than a real
- * tokenisation. The tool-path checks are equivalent; the bash half is not.
+ * NO LONGER WEAKER: the shared judge tokenises a command line as POSIX does
+ * (single and double quotes, backslash escapes, an unbalanced quote failing
+ * closed), which is what `shlex.split` gives guard.py. The corpus found the old
+ * gap -- `\rm` passed here and was caught in Python -- and holds it closed.
  * See 06_SYSTEM/memory/knowledge/system/boundaries/boundaries.md.
  */
 import fs from "node:fs";
 import { spawn } from "node:child_process";
 import os from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { Judge, UNPARSED, configReader } from "../shared/judge.mjs";
 
 const HOME = os.homedir();
 // The roots this plugin needs, declared once each. It cannot import
 // lib/roots.py, so test_roots.py holds these to it instead.
 const ENGINE = path.join(HOME, "06_SYSTEM/engine"); // roots-twin: ENGINE
 const MEMORY = path.join(HOME, "06_SYSTEM/memory"); // roots-twin: MEMORY
-// A twin, not a join off ENGINE: R2e moved the compiled rules to config/ and
-// this line kept the old path. A missing file means "nothing to enforce", so
-// the guard failed OPEN, silently, from 2026-10-07 to 2026-10-11.
-const RULES = path.join(HOME, "06_SYSTEM/config/boundaries/boundaries.json"); // roots-twin: BOUNDARIES_JSON
+// The compiled rules of the tree THIS FILE lives in, not of the install: the
+// plugin handed a copy of the engine must enforce that copy's config, and a
+// worktree's suites were silently testing the main checkout's. Derived from the
+// module's own path, so it cannot drift the way a twin does -- R2e moved these
+// rules once and a hard-coded path failed OPEN, silently, for four days.
+const RULES_TREE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
+const RULES = path.join(RULES_TREE, "config/boundaries/boundaries.json"); // not-a-root: RULES_TREE is the tree root; "config/" here is the segment under it, not a root spelled by this file
+
 const CAPTURE_BIN = path.join(ENGINE, "familiar");
 const HATCH = path.join(HOME, ".config/opencode/guard.disabled");
 
-// opencode tool id -> which argument fields name a path, and what the tool does.
-// `grep.pattern` is a content regex, not a path, and is deliberately absent.
-const TOOLS = {
-  read:  { fields: ["filePath", "path"],            ops: ["read"] },
-  list:  { fields: ["path"],                        ops: ["read"] },
-  glob:  { fields: ["pattern", "path"],             ops: ["read"] },
-  grep:  { fields: ["path", "include"],             ops: ["read"] },
-  write: { fields: ["filePath", "path"],            ops: ["write"] },
-  edit:  { fields: ["filePath", "path"],            ops: ["read", "write"] },
-  patch: { fields: ["filePath", "path"],            ops: ["read", "write"] },
-};
+// The tool map is the VOCABULARY's now (`tools.opencode` in
+// config/boundaries/vocabulary.yaml, compiled into boundaries.json), so a tool
+// that gains a path field is a config edit. The compiled rules are re-read
+// only when the file changes.
+const config = configReader(RULES);
 
-const HEREDOC = /<<-?\s*(['"]?)([A-Za-z_][A-Za-z0-9_]*)\1[\s\S]*?^\t*\2$/gm;
-const MUTATORS = new Set(["rm", "rmdir", "mv", "cp", "dd", "truncate", "shred",
-  "tee", "chmod", "chown", "chgrp", "ln", "mkdir", "touch", "install",
-  "unlink", "rsync", "mkfs", "sponge"]);
-const GIT_WRITE = /\bgit\b[^;&|]*\b(push|filter-branch|filter-repo|rebase)\b|\bgit\b[^;&|]*\bcommit\b[^;&|]*--amend/;
-const REDIRECT = /(?:^|[\s;&|(])\d*>>?\s*(?!&)([^\s;&|<>()]+)/g;
-
-let cache = { mtime: 0, cfg: null };
-
-function config() {
-  try {
-    const m = fs.statSync(RULES).mtimeMs;
-    if (m !== cache.mtime) cache = { mtime: m, cfg: JSON.parse(fs.readFileSync(RULES, "utf8")) };
-    return cache.cfg;
-  } catch {
-    return null;              // no compiled rules -> nothing to enforce
-  }
-}
-
-function expand(token, cwd) {
-  let t = token.replaceAll("${HOME}", HOME).replaceAll("$HOME", HOME);
-  if (t === "~") t = HOME;
-  else if (t.startsWith("~/")) t = path.join(HOME, t.slice(2));
-  if (path.isAbsolute(t)) return [path.normalize(t)];
-  // A bare name is a valid relative path from either the cwd or $HOME.
-  return [path.normalize(path.join(cwd, t)), path.normalize(path.join(HOME, t))];
-}
-
-function under(rulePath, target) {
-  for (const key of ["abs", "real"]) {
-    const base = rulePath[key];
-    if (base && (target === base || target.startsWith(base.replace(/\/$/, "") + "/"))) return true;
-  }
-  return false;
-}
-
-function hitsPath(rule, value, cwd) {
-  if (typeof value !== "string" || !value) return false;
-  return expand(value, cwd).some((c) => rule.paths.some((p) => under(p, c)));
-}
-
-function tokens(cmd) {
-  return cmd.match(/'[^']*'|"[^"]*"|\S+/g)?.map((t) => t.replace(/^['"]|['"]$/g, "")) ?? [];
-}
-
-function spellings(p) {
-  const out = [p.abs];
-  if (p.real) out.push(p.real);
-  if (p.abs.startsWith(HOME + "/")) {
-    const rel = p.abs.slice(HOME.length + 1);
-    out.push("~/" + rel, "$HOME/" + rel);
-  }
-  return out;
-}
-
-function commandHits(cmd, rule, cwd) {
-  const stripped = cmd.replace(HEREDOC, "<<STRIPPED");
-  for (const tok of tokens(stripped)) if (hitsPath(rule, tok, cwd)) return true;
-  for (const p of rule.paths) {
-    for (const form of spellings(p)) {
-      const esc = form.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      if (new RegExp(esc + "($|[/\\s'\";)&|])").test(stripped)) return true;
-    }
-  }
-  return false;
-}
-
-function commandWrites(cmd, rule, cwd) {
-  const stripped = cmd.replace(HEREDOC, "<<STRIPPED");
-  REDIRECT.lastIndex = 0;
-  let m;
-  while ((m = REDIRECT.exec(stripped)) !== null) {
-    if (hitsPath(rule, m[1].replace(/^['"]|['"]$/g, ""), cwd)) return true;
-  }
-  if (tokens(stripped).some((t) => MUTATORS.has(path.basename(t)))) return true;
-  return /\bsed\b[^;&|]*\s-\S*i/.test(stripped);
-}
+// The judge is SHARED with pi-guard (../shared/judge.mjs): one evaluator for
+// both JS harnesses, held to guard.py by the parity corpus. What is left here
+// is what only opencode needs: the throw channel, and the tool map's shape.
+const judge = (cfg) => new Judge(cfg);
 
 // opencode's only channel is the throw, which aborts the call. There is no
 // confirmation prompt, so a rule with `decision: ask` degrades to a refusal
@@ -133,6 +64,8 @@ function refuse(rule, what) {
     rule.decision === "ask"
       ? `Needs the user's approval — \`${rule.mode}\`: ${what}. opencode has no confirmation prompt, so this is refused here; ask the user, or run it in Claude Code where the prompt exists.`
       : `Blocked by wards — \`${rule.mode}\`: ${what}.`;
+  // An unsplittable command matched no path; the rule's reason would mislead.
+  if (what === UNPARSED) throw new Error(head);
   const bits = [head, rule.reason];
   if (rule.instead) bits.push(`Instead: ${rule.instead}.`);
   if (rule.see) bits.push(`See ${rule.see}.`);
@@ -213,37 +146,53 @@ export const FamiliarBoundaries = async ({ directory, worktree }) => {
       const provider = modelBySession.get(input.sessionID) ?? "";
       const local = (cfg.local_providers ?? []).some((p) => provider.includes(String(p).toLowerCase()));
       const klass = local ? "local" : "remote";
-      const rules = cfg.rules.filter((r) => r.models === "all" || r.models === klass);
 
       const tool = String(input.tool || "").toLowerCase();
       const args = output?.args ?? {};
 
+      const j = judge(cfg);
       if (tool === "bash") {
         const cmd = String(args.command ?? "");
-        for (const rule of rules) {
+        for (const rule of j.rulesFor(klass)) {
+          if (rule.denies.includes("escape")) {
+            if (rule.paths.some((p) => j.under(p, path.normalize(cwd)))) {
+              const why = j.escapes(cmd, cwd);
+              if (why) refuse(rule, why);
+            }
+            continue;
+          }
           if (rule.denies.includes("push")) {
-            if (GIT_WRITE.test(cmd.replace(HEREDOC, "<<STRIPPED")) &&
-                rule.paths.some((p) => under(p, path.normalize(cwd)))) {
+            if (j.pushes(cmd) && rule.paths.some((p) => j.under(p, path.normalize(cwd)))) {
               refuse(rule, "this command pushes or rewrites git history");
             }
             continue;
           }
-          if (!commandHits(cmd, rule, cwd)) continue;
+          const hit = j.commandHits(cmd, rule, cwd);
+          if (!hit) continue;
+          if (hit === "unparsed") refuse(rule, UNPARSED);
+          if (rule.denies.includes("delete")) {
+            if (rule.paths.some((p) => j.under(p, path.normalize(cwd)))) {
+              const why = j.deletesOutsideSafe(cmd, cwd);
+              if (why) refuse(rule, why);
+            }
+            continue;
+          }
           if (rule.denies.includes("read")) refuse(rule, "this command reaches a path the rule covers");
-          if (rule.denies.includes("write") && commandWrites(cmd, rule, cwd)) {
+          if (rule.denies.includes("write") &&
+              (j.redirectTargets(cmd).some((v) => j.hitsPath(rule, v, cwd)) || j.commandWrites(cmd))) {
             refuse(rule, "this command appears to write under a protected path");
           }
         }
         return;
       }
 
-      const spec = TOOLS[tool];
+      const spec = j.toolPaths("opencode", tool);
       if (!spec) return;
-      for (const rule of rules) {
-        const overlap = spec.ops.filter((o) => rule.denies.includes(o));
+      for (const rule of j.rulesFor(klass)) {
+        const overlap = [...spec.ops].filter((o) => rule.denies.includes(o));
         if (!overlap.length) continue;
         for (const field of spec.fields) {
-          if (hitsPath(rule, args[field], cwd)) {
+          if (j.hitsPath(rule, args[field], cwd)) {
             refuse(rule, `${tool}.${field} would ${overlap.join("/")} \`${args[field]}\``);
           }
         }

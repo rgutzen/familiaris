@@ -47,6 +47,7 @@ the one exception already paid for elsewhere).
 from __future__ import annotations
 
 import collections
+import http.client
 import json
 import math
 import os
@@ -80,7 +81,7 @@ H2_RE = re.compile(r"^## (.+)$")
 SCHEMA = 3
 
 # The three branches are the register's ids, not ours (`config/knowledge/
-# subjects.yaml`); the trees they mirror are the PARA ones. `ontology.BRANCHES`
+# subjects.yaml`); the trees they mirror are the PARA ones. `ontology.branch_ids()`
 # is the authority and `validate_branch` reads it; `test_journal_index` holds
 # these three to it, so a rename in the register fails a test rather than
 # quietly producing a fourth value nothing filters on.
@@ -104,11 +105,43 @@ AREAS_DIR = "02_AREAS"
 
 
 # -- Ollama embedding client -------------------------------------------------
+# A chunk is capped before it is sent. `nomic-embed-text` reads 2,048 tokens and
+# Ollama truncates the rest silently -- measured 2026-10-25: a 67 KB text, its
+# 32 KB prefix and its 16 KB prefix embed IDENTICALLY, and its 8 KB prefix does
+# not. So 8,000 chars is about what the model would have taken anyway, and a
+# longer chunk loses only its tail: the price of keeping a 1.1 MB report section
+# (2026-10-23's `Warnings`) out of the request body. In a 2,281-input batch two
+# of them made Ollama's runner drop the /tokenize connection and answer HTTP 400.
+MAX_CHUNK_CHARS = 8000
+# Chunks per /api/embed request, and the character ceiling on one request's
+# text. Small enough that a failing request costs seconds and splits quickly.
+BATCH_CHUNKS = 32
+BATCH_CHARS = 100_000
+# How much of an error body an exception message carries.
+BODY_LIMIT = 400
+
+
 class EmbedError(RuntimeError):
-    pass
+    """Ollama could not embed. `status` is the HTTP code when the server
+    ANSWERED (so it was reachable), and None when no answer arrived."""
+    status: int | None = None
+
+    def __init__(self, message: str, status: int | None = None):
+        super().__init__(message)
+        self.status = status
 
 
-def _post_json(path: str, body: dict, timeout: int = 120) -> dict:
+class OllamaUnreachable(EmbedError):
+    """No HTTP answer: connection refused, DNS, timeout, or a connection the
+    peer closed before it answered anything. The only class for which "is
+    `ollama serve` running?" is the right question."""
+
+
+class OllamaHTTPError(EmbedError):
+    """The server answered with a non-2xx status. Reachable, and refusing."""
+
+
+def _post_json(path: str, body: dict, timeout: int = 300) -> dict:
     data = json.dumps(body).encode("utf-8")
     req = urllib.request.Request(
         OLLAMA_URL.rstrip("/") + path, data=data,
@@ -116,29 +149,62 @@ def _post_json(path: str, body: dict, timeout: int = 120) -> dict:
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             return json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        # BEFORE URLError: HTTPError subclasses it, so the order is the whole
+        # fix. An answered request is not an unreachable server, and Ollama's
+        # reason is in the body.
+        try:
+            detail = exc.read().decode("utf-8", "replace").strip()
+        except Exception:
+            detail = ""
+        raise OllamaHTTPError(
+            f"Ollama at {OLLAMA_URL} answered {path} with HTTP {exc.code} "
+            f"{exc.reason}: {detail[:BODY_LIMIT] or '(empty body)'}",
+            status=exc.code) from exc
     except urllib.error.URLError as exc:
-        raise EmbedError(
-            f"cannot reach Ollama at {OLLAMA_URL} ({exc}). "
+        raise OllamaUnreachable(
+            f"cannot reach Ollama at {OLLAMA_URL} ({exc.reason}). "
             f"Is `ollama serve` running? See ollama-local.md.") from exc
     except TimeoutError as exc:
-        raise EmbedError(f"Ollama request to {path} timed out after {timeout}s") from exc
+        raise OllamaUnreachable(
+            f"Ollama request to {path} timed out after {timeout}s") from exc
+    except (OSError, http.client.HTTPException) as exc:
+        # A peer that accepts and closes without answering -- Ollama's runner
+        # dying mid-request -- arrives as ConnectionResetError: an OSError and
+        # NOT a URLError, so no clause above sees it, and before this one it
+        # escaped as a traceback with no checkpoint and exit 1. A truncated or
+        # unparseable status line lands here for the same reason: nothing
+        # answered, so it is the "cannot reach" class, and it must stay an
+        # EmbedError for `build` to stop cleanly.
+        raise OllamaUnreachable(
+            f"cannot reach Ollama at {OLLAMA_URL} "
+            f"({exc.__class__.__name__}: {exc}). Is `ollama serve` running? "
+            f"See ollama-local.md.") from exc
+    except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+        raise EmbedError(f"Ollama answered {path} with a body that could not "
+                         f"be read as JSON ({exc})") from exc
 
 
 def embed(texts: list[str], model: str = DEFAULT_MODEL) -> list[list[float]]:
     """Embed a batch of texts. Tries the current /api/embed first, falls
     back to the legacy /api/embeddings (one text at a time) for an older
-    Ollama build."""
+    Ollama build that does not have it (HTTP 404).
+
+    Every text is capped at MAX_CHUNK_CHARS. Any other failure is raised as it
+    is: a 400 from a batch is a fact about the batch, and retrying it text by
+    text through the legacy route would hide that fact behind a second error.
+    """
     if not texts:
         return []
+    texts = [t[:MAX_CHUNK_CHARS] for t in texts]
     try:
         out = _post_json("/api/embed", {"model": model, "input": texts})
         vecs = out.get("embeddings")
         if vecs and len(vecs) == len(texts):
             return vecs
-    except EmbedError:
-        raise
-    except Exception:
-        pass                                   # fall through to legacy path
+    except OllamaHTTPError as exc:
+        if exc.status != 404:
+            raise
     vecs = []
     for t in texts:
         out = _post_json("/api/embeddings", {"model": model, "prompt": t})
@@ -309,8 +375,80 @@ def _journal_files(agents_dir: str) -> list[str]:
     return sorted(out)
 
 
+def _say(msg: str) -> None:
+    """`print`, flushed. Under systemd stdout is a pipe and block-buffered, so an
+    unflushed progress line arrives AFTER the stderr line that ends the run --
+    2026-10-24's journal read "cannot reach Ollama" followed by "embedding...".
+    """
+    print(msg, flush=True)
+
+
+def _batches(chunks: list[dict]):
+    """Consecutive runs of at most BATCH_CHUNKS chunks and BATCH_CHARS of text."""
+    batch, size = [], 0
+    for c in chunks:
+        n = len(c["text"])
+        if batch and (len(batch) >= BATCH_CHUNKS or size + n > BATCH_CHARS):
+            yield batch
+            batch, size = [], 0
+        batch.append(c)
+        size += n
+    if batch:
+        yield batch
+
+
+# A status that says the REQUEST was refused, so a smaller request can still
+# succeed: 400 (the 2026-10-24 case), 413, 422, and 500 (Ollama's runner
+# crashing on one input). Anything else -- 404 model not pulled, 401, 503 -- is
+# about the server, and splitting a batch cannot help it.
+SPLITTABLE = frozenset({400, 413, 422, 500})
+# This many chunks skipped in a row is a systemic refusal, not bad chunks.
+MAX_CONSECUTIVE_SKIPS = 5
+# A long build writes its progress at least this often, so a failure at 90% is
+# resumed from 90%, not from zero.
+CHECKPOINT_SECONDS = 60
+
+
+class _Embedder:
+    """Embeds chunks batch by batch, isolating a chunk Ollama refuses.
+
+    A batch Ollama answers with a SPLITTABLE status is halved and each half
+    retried; a single chunk that is still refused is skipped and logged with
+    Ollama's own words. Every other failure propagates -- after the caller has
+    saved what was embedded so far.
+    """
+
+    def __init__(self, model: str, log):
+        self.model, self.log = model, log
+        self.skipped: list[dict] = []
+        self._run = 0                          # consecutive skips
+
+    def embed(self, batch: list[dict]) -> list[tuple[dict, list[float] | None]]:
+        try:
+            vecs = embed([c["text"] for c in batch], self.model)
+        except OllamaHTTPError as exc:
+            if exc.status not in SPLITTABLE:
+                raise
+            if len(batch) > 1:
+                mid = len(batch) // 2
+                return self.embed(batch[:mid]) + self.embed(batch[mid:])
+            c = batch[0]
+            self.skipped.append(c)
+            self._run += 1
+            self.log(f"!! skipped {c['path']}:{c['start_line']}-{c['end_line']} "
+                     f"({c['header']!r}, {len(c['text'])} chars): {exc}")
+            if self._run >= MAX_CONSECUTIVE_SKIPS:
+                raise EmbedError(
+                    f"{self._run} chunks in a row refused by Ollama; "
+                    f"not a bad chunk, a bad server. Last: {exc}",
+                    status=exc.status) from exc
+            return [(c, None)]
+        self._run = 0
+        return list(zip(batch, vecs))
+
+
 def build(agents_dir: str, base_dir: str, model: str = DEFAULT_MODEL,
-          force: bool = False, log=print) -> dict:
+          force: bool = False, log=_say) -> dict:
     """Incremental by default: only files whose mtime changed (or are new)
     are re-chunked and re-embedded; files no longer on disk drop their
     chunks. `force` rebuilds everything from scratch.
@@ -320,6 +458,13 @@ def build(agents_dir: str, base_dir: str, model: str = DEFAULT_MODEL,
     a different SCHEMA (whose chunks lack a key the filter reads). Both are
     reported before the work starts, because the second one is invisible
     afterwards -- the chunks would look fine and the facet would be empty.
+
+    A large backlog -- 470 entries landed in one consolidation commit on
+    2026-10-23 -- is embedded in small batches and saved as it goes. A file is
+    recorded as indexed (its mtime stored) only once ALL its chunks are in, so
+    an interrupted run re-does that file and no other. A chunk Ollama refuses
+    on its own is skipped and logged, and its file is left unrecorded so the
+    next run tries it again.
     """
     idx = _empty(model) if force else _load(base_dir)
     if idx.get("model") != model:
@@ -330,7 +475,9 @@ def build(agents_dir: str, base_dir: str, model: str = DEFAULT_MODEL,
         idx = _empty(model)
 
     on_disk = set(_journal_files(agents_dir))
-    known = set(idx["files"])
+    # Chunks of a file that was left unrecorded (partly indexed) have no `files`
+    # entry, so a deletion is read off the chunks as well.
+    known = set(idx["files"]) | {c["path"] for c in idx["chunks"]}
 
     removed = known - on_disk
     for rel in removed:
@@ -339,7 +486,8 @@ def build(agents_dir: str, base_dir: str, model: str = DEFAULT_MODEL,
         idx["chunks"] = [c for c in idx["chunks"] if c["path"] not in removed]
 
     to_embed: list[dict] = []                   # chunk dicts, before embedding
-    changed_paths = []
+    entries: dict[str, dict] = {}               # rel -> its `files` record
+    new_paths, modified_paths = [], []
     for rel in sorted(on_disk):
         full = os.path.join(agents_dir, rel)
         try:
@@ -355,7 +503,13 @@ def build(agents_dir: str, base_dir: str, model: str = DEFAULT_MODEL,
         except OSError as exc:
             log(f"!! could not read {rel}: {exc}")
             continue
+        # `known`, not `idx["files"]`: a file left partly indexed by a skipping
+        # or stopped run has chunks and no `files` record, and calling its retry
+        # "new" would explain the wrong thing.
+        (modified_paths if rel in known else new_paths).append(rel)
         idx["chunks"] = [c for c in idx["chunks"] if c["path"] != rel]
+        # Dropped now, recorded again only when the file is whole: see below.
+        idx["files"].pop(rel, None)
         # The facet comes from the file's own `cwd:`, parsed from the bytes we
         # just read -- a second read of the same file would be a second answer
         # waiting to disagree with the first.
@@ -364,20 +518,64 @@ def build(agents_dir: str, base_dir: str, model: str = DEFAULT_MODEL,
         touches = touches_of(parsed.get("touches"))
         pieces = chunk_file(text)
         for header, ctext, start, end in pieces:
+            # Stored capped, exactly as it is sent: 8,000 chars is roughly the
+            # model's own 2,048-token window, so the snippet a hit prints and
+            # the vector that ranked it come from the same bytes.
             to_embed.append({"path": rel, "header": header, "start_line": start,
-                             "end_line": end, "text": ctext,
+                             "end_line": end, "text": ctext[:MAX_CHUNK_CHARS],
                              "branch": branch, "locator": locator,
                              "touches": touches})
-        idx["files"][rel] = {"mtime": mtime, "chunks": len(pieces),
-                             "branch": branch, "locator": locator,
-                             "touches": touches}
-        changed_paths.append(rel)
+        entries[rel] = {"mtime": mtime, "chunks": len(pieces),
+                        "branch": branch, "locator": locator,
+                        "touches": touches}
+    changed_paths = new_paths + modified_paths
 
+    skipped: list[dict] = []
+    with_chunks = {c["path"] for c in to_embed}
+    for rel, entry in entries.items():
+        if rel not in with_chunks:              # a file with nothing to embed
+            idx["files"][rel] = entry
     if to_embed:
-        log(f"embedding {len(to_embed)} chunk(s) from {len(changed_paths)} changed file(s)...")
-        vecs = embed([c["text"] for c in to_embed], model)
-        for chunk, vec in zip(to_embed, vecs):
-            idx["chunks"].append({**chunk, "embedding": vec})
+        # Why this many: a count alone ("474 changed") reads as an invalidated
+        # index, and on 2026-10-24 it was not -- 471 of them were new files.
+        log(f"embedding {len(to_embed)} chunk(s) from {len(changed_paths)} "
+            f"changed file(s) ({len(new_paths)} new, {len(modified_paths)} modified)...")
+        pending = collections.Counter(c["path"] for c in to_embed)
+        failed = set()
+        emb = _Embedder(model, log)
+        last_save, done = time.monotonic(), 0
+
+        def checkpoint(note: str) -> None:
+            """Save, and move `built` with it. A stamp that only moved at the
+            end would say "last complete run" over a half-written index."""
+            idx["built"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+            _save(base_dir, idx)
+            log(note)
+
+        try:
+            for batch in _batches(to_embed):
+                for chunk, vec in emb.embed(batch):
+                    pending[chunk["path"]] -= 1
+                    if vec is None:
+                        failed.add(chunk["path"])
+                    else:
+                        idx["chunks"].append({**chunk, "embedding": vec})
+                    if pending[chunk["path"]] == 0 and chunk["path"] not in failed:
+                        idx["files"][chunk["path"]] = entries[chunk["path"]]
+                done += len(batch)
+                if time.monotonic() - last_save > CHECKPOINT_SECONDS:
+                    last_save = time.monotonic()
+                    checkpoint(f"  {done} of {len(to_embed)} chunk(s) embedded, saved")
+        except EmbedError:
+            # Keep what was embedded: the files completed so far are recorded
+            # and the one in flight is not, so the next run resumes there.
+            checkpoint(f"  stopped at {done} of {len(to_embed)} chunk(s); "
+                       f"progress saved, the next run resumes")
+            raise
+        skipped = emb.skipped
+        for rel in sorted(failed):
+            # Unrecorded on purpose: no mtime means the next run re-reads it.
+            log(f"!! {rel} is only partly indexed; it will be retried")
 
     idx["built"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     _save(base_dir, idx)
@@ -391,7 +589,9 @@ def build(agents_dir: str, base_dir: str, model: str = DEFAULT_MODEL,
         f"({sum(1 for f in idx['files'].values() if f.get('touches'))} "
         f"file(s))")
     return {"files_changed": len(changed_paths), "files_removed": len(removed),
-            "chunks_embedded": len(to_embed), "total_chunks": len(idx["chunks"]),
+            "files_new": len(new_paths), "chunks_skipped": len(skipped),
+            "chunks_embedded": len(to_embed) - len(skipped),
+            "total_chunks": len(idx["chunks"]),
             "schema": SCHEMA, "branches": dict(chunks),
             "files_unmapped": files.get(UNKNOWN, 0), "touches_chunks": tagged}
 
@@ -457,7 +657,7 @@ def validate_branch(value: str) -> str:
     not a registered branch, and asking for it is how a caller inspects them.
     """
     from knowledge import ontology
-    allowed = tuple(ontology.BRANCHES) + (UNKNOWN,)
+    allowed = ontology.branch_ids() + (UNKNOWN,)
     if value not in allowed:
         raise invocation.UsageError(
             f"--branch={value} is not a branch (branch values: {', '.join(allowed)})")
@@ -467,10 +667,10 @@ def validate_branch(value: str) -> str:
 def validate_touches(value: str) -> str:
     """A `--touches=` value, held against the same register the entries use."""
     from knowledge import ontology
-    if value not in ontology.SUBJECTS:
+    if not ontology.is_subject(value):
         raise invocation.UsageError(
             f"--touches={value} is not a subject (subjects: "
-            f"{', '.join(ontology.SUBJECTS)})")
+            f"{', '.join(s.id for s in ontology.subjects())})")
     return value
 
 
@@ -524,9 +724,11 @@ def main(argv, base_dir, agents_dir) -> int:
         except EmbedError as exc:
             sys.stderr.write(f"[familiar knowledge journal index] {exc}\n")
             return 2
+        skipped = (f", {stats['chunks_skipped']} skipped"
+                   if stats["chunks_skipped"] else "")
         print(f"journal index: {stats['chunks_embedded']} chunk(s) embedded "
               f"({stats['files_changed']} file(s) changed, "
-              f"{stats['files_removed']} removed), "
+              f"{stats['files_removed']} removed{skipped}), "
               f"{stats['total_chunks']} chunk(s) total")
         return 0
 

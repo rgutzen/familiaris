@@ -135,7 +135,9 @@ root="$(remote_root)"
 
 for d in "${DIRS[@]}"; do
     log "===== $d ($(du -sh "$STAGE/$d" | cut -f1)) ====="
-    out=$(remote_upload "$STAGE/$d" "$root" 2>&1)
+    # `replace`: this is the browsable copy, and an edited file must overwrite
+    # the one uploaded before it (restic's sync keeps the default `skip`).
+    out=$(remote_upload "$STAGE/$d" "$root" replace 2>&1)
     rc=$?
     printf '%s\n' "$out" >> "$LOG"
 

@@ -57,11 +57,11 @@ import re
 import subprocess
 import sys
 
-REPO = pathlib.Path(__file__).resolve().parents[2]
-AGENTS = REPO / "memory"
-
-sys.path.insert(0, str(REPO / "engine"))
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))   # `lib/`
 from lib import roots  # noqa: E402
+
+REPO = roots.REPO
+AGENTS = roots.MEMORY
 
 # The publication classification. Named here because a finding that says "fix
 # the classification" has to say where the classification is.
@@ -334,7 +334,7 @@ class Policy:
 POLICIES: dict[str, Policy] = {
     # -- the always-loaded set, in all four places that name it -------------
     # Repo-relative since R3b: the router sits at the root and the user's
-    # directives under `config/practice/` (see `pazras.ALWAYS_LOADED`).
+    # directives under `config/practice/` (see `navigation.ALWAYS_LOADED`).
     "engine/context/navigation.py:ALWAYS_LOADED": Policy(K_EXISTS, root=R_REPO),
     "engine/context/navigation.py:CAPS": Policy(K_EXISTS, root=R_REPO),
     "engine/consolidation/posture.py:ALWAYS_LOADED": Policy(K_EXISTS, root=R_REPO),
@@ -367,13 +367,15 @@ POLICIES: dict[str, Policy] = {
     # the repo-root file no entity kind covers. The register is the source, and
     # `engine/boundaries/_boundaries.py` reads the same one for the harness
     # `ask` rules.
-    "engine/consolidation/posture.py:DIRECTIVE_FILES": Policy(
+    "engine/consolidation/posture.py:UNATTENDED_READONLY": Policy(
         K_EXISTS, root=R_REPO,
-        why="the directive files that are not an entity kind: `ROADMAP.md` is "
-            "declared directive in the router and has no `pattern:`, so no "
-            "derivation reaches it. A path here must EXIST -- it is a claim "
-            "about the present, and the historical spellings the same check "
-            "matches are deliberately not in this list.",
+        why="the files the unattended pass must not write that are not an "
+            "entity kind: `ROADMAP.md` has no `pattern:`, so no derivation "
+            "reaches it, and `CONTEXT.md` gives it a rule of its own -- editable "
+            "by an interactive agent that flags the edit, closed to the pass. "
+            "A path here must EXIST -- it is a claim about the present, and the "
+            "historical spellings the same check matches are deliberately not "
+            "in this list.",
         omitted={
             "ROADMAP.md":
                 "the roadmap plans THIS instance's tracks, with their dates and "
@@ -484,7 +486,17 @@ POLICIES: dict[str, Policy] = {
         # was wrong for 26 days. Both are checked, and neither may be excused
         # without a reason -- the generated units are not the record, this
         # table is.
-    ),
+        omitted={
+            "06_SYSTEM/dev/remote/SPECS.md":
+                "the relay track's plan, the `doc=` of `familiar-highlights`; "
+                "the classification omits `dev/`, so the published unit's "
+                "Documentation= names a file only the instance has.",
+            "06_SYSTEM/dev/orchestration/SPECS.md":
+                "the orchestration track's plan, the `doc=` of "
+                "`claude-window` and `familiar-scout`; omitted with `dev/`.",
+            "06_SYSTEM/dev/schedule/SPECS.md":
+                "the scheduler track's plan, the `doc=` of "
+                "`familiar-dispatch`; omitted with `dev/`."}),
 
     # -- outside this repo --------------------------------------------------
     "engine/consolidation/stages/replay.py:EXCLUDE_CWD": Policy(
@@ -712,6 +724,19 @@ def _install_home(repo: pathlib.Path) -> str | None:
 _RETIRED_AT = {dead: re.compile(r"(?<![\w-])" + re.escape(dead))
                for dead in RETIRED}
 
+# A retired spelling inside a path under a FOREIGN root is not ours: Omarchy 4.0.6
+# moved its bundled skills to `/usr/share/omarchy/default/agents/skills/`, and the
+# two imported skills record that upstream path (found 2026-10-22). Only a match
+# whose path token starts at one of these roots is skipped.
+FOREIGN_ROOTS = ("/usr/share/",)
+_TOKEN_START = re.compile(r"[^\s`'\"(\[]*$")
+
+
+def _foreign(line: str, at: int) -> bool:
+    """Whether the path token holding position `at` starts at a foreign root."""
+    head = _TOKEN_START.search(line[:at]).group(0)
+    return head.startswith(FOREIGN_ROOTS)
+
 
 def retired_findings(repo: pathlib.Path = REPO) -> list[Finding]:
     """Every tracked file that still points at a path O2f retired.
@@ -744,7 +769,8 @@ def retired_findings(repo: pathlib.Path = REPO) -> list[Finding]:
             continue
         for lineno, line in enumerate(text.splitlines(), 1):
             for dead, why in RETIRED.items():
-                if _RETIRED_AT[dead].search(line):
+                m = _RETIRED_AT[dead].search(line)
+                if m and not _foreign(line, m.start()):
                     findings.append(Finding(
                         f"{name}:{lineno}",
                         f"names the retired path `{dead}` -- {why} "

@@ -4,9 +4,9 @@ summary: Local-model work on the 890M iGPU — models, VRAM, what actually runs
 origin: derived             # promoted from a .lore.md store (D2->D3)
 authority: agent
 trust: trusted
-last_verified: 2026-08-29
-use_count: 5
-last_used: 2026-10-12
+last_verified: 2026-10-25
+use_count: 7
+last_used: 2026-10-13
 promoted_from: []
 source:
 supersedes:
@@ -15,7 +15,7 @@ tags: [ollama, gpu, vram, local-llm]
 scope: []
 area: [B]
 stability: evolving         # mixed rates: the hardware facts are stable, the price table is volatile
-verified_log: [2026-08-29]
+verified_log: [2026-10-25, 2026-08-29]
 ---
 
 # ollama local
@@ -71,6 +71,22 @@ never the Tailscale-exposed address.
 
 ## Traps
 
+- `/api/embed` with thousands of inputs or a megabyte-sized input answers
+  HTTP 400 after ~85 s, body `Post ".../tokenize": ... connection reset by
+  peer` (Ollama 0.40.6, `nomic-embed-text`, 2026-10-24). The server was up; the
+  runner dropped the connection. Send batches of ≤32 inputs capped near the
+  model's context (2,048 tokens for `nomic-embed-text`, ~8,000 chars) and read
+  the body: a 400 is not "unreachable" ([[journal-index]] §Failure handling).
+- **The 2,048-token read is the model's, not the Modelfile's.** `ollama show
+  nomic-embed-text` reports `num_ctx 8192`, but a 67 KB text, its 32 KB prefix
+  and its 16 KB prefix embed identically and its 8 KB prefix does not: the
+  truncation happens at the trained context (measured 2026-10-25). Raising
+  `num_ctx` does not make longer input count; cap the text instead.
+- A connection closed with **no HTTP answer** raises `ConnectionResetError`
+  from `urlopen`, not `urllib.error.URLError`: a socket that accepts and then
+  closes was measured to do exactly that (2026-10-25). A handler for
+  `URLError` alone misses it, and the caller reports a traceback where it meant
+  "cannot reach".
 - llama.cpp Vulkan MoE full-GPU offload (`-ngl 99`) on gfx1150 can corrupt output
   (Gemma-4-26B-A4B; temp-0 byte-identical loops/garbled prefix, fused MMVQ decode
   kernel; #27007, same class #24311/#25777). `--n-cpu-moe 99` is byte-correct

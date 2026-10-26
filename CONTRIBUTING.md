@@ -8,9 +8,10 @@ accepted change is applied to the private tree by hand and appears in the next
 release, credited to you. Issues, bug reports and ideas are the easiest way to
 contribute.
 
-**Contributions need the agreement below.** Familiaris is dual-licensed: under
-the GNU AGPL-3.0 for everyone, and under a commercial licence for those who
-need one (see `NOTICE`). Offering both is only possible if the author can
+**Contributions need the agreement below.** Familiaris is licensed under the
+Business Source License 1.1, each version converting to the GNU AGPL-3.0 four
+years after its publication, and under commercial licences for those who need
+one (see `NOTICE`). Offering all three is only possible if the author can
 license every part of the code. The agreement below gives that permission. You
 keep the copyright in your contribution.
 
@@ -23,7 +24,8 @@ To agree, add this line to your pull request or issue, with your name:
 
 ## Contributor Licence Agreement
 
-*Version 1.0. "You" are the person submitting a Contribution. "The
+*Version 1.1 (2026-10-26; version 1.0 promised the AGPL-3.0 from
+publication, and no one had agreed to it). "You" are the person submitting a Contribution. "The
 Maintainer" is Robin Gutzen, the author of Familiaris, and any successor
 he names in writing. "Contribution" means any code, documentation or other
 material you submit to the project, by pull request, patch, issue or any
@@ -35,8 +37,8 @@ other channel, for inclusion in it.*
 2. **Copyright licence.** You grant the Maintainer a perpetual, worldwide,
    non-exclusive, royalty-free, irrevocable licence to use, reproduce,
    modify, publish, distribute and sublicense your Contribution, and works
-   based on it, **under any licence terms, including the GNU AGPL-3.0 and
-   proprietary commercial licences**.
+   based on it, **under any licence terms, including the Business Source
+   License 1.1, the GNU AGPL-3.0 and proprietary commercial licences**.
 
 3. **Patent licence.** You grant the Maintainer, and everyone who receives
    the project from the Maintainer, a perpetual, worldwide, non-exclusive,
@@ -45,9 +47,11 @@ other channel, for inclusion in it.*
    infringe, to make, use, sell, offer for sale, import and otherwise
    transfer it.
 
-4. **Open-source promise.** The Maintainer will keep making every version that
-   contains your Contribution available under the GNU AGPL-3.0 or another
-   licence approved by the Open Source Initiative, alongside any commercial
+4. **Open-source promise.** The Maintainer will make every version that
+   contains your Contribution available under the GNU AGPL-3.0, or another
+   licence approved by the Open Source Initiative, no later than four years
+   after that version is first published. Until then the version is
+   available under the Business Source License 1.1, alongside any commercial
    licence.
 
 5. **What you confirm.** The Contribution is your own original work, or you

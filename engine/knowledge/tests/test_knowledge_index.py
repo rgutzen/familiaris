@@ -57,6 +57,19 @@ def root(tmp_path):
     return a
 
 
+def _top(p):
+    """The top index, `knowledge/INDEX.md` -- one of several INDEX.md writes."""
+    return next(c for w, c in p.writes if w == p.root / "knowledge" / "INDEX.md")
+
+
+def _group(p, group):
+    return next(c for w, c in p.writes if w == p.root / "knowledge" / group / "INDEX.md")
+
+
+def _rels(p, paths):
+    return [str(x.relative_to(p.root / "knowledge")) for x in paths]
+
+
 # ── the cells come from the leaf, never from the generator ───────────────
 def test_summary_prefers_summary_then_title_then_h1(root):
     _leaf(root, "meta/titled.md", title="Only a title")
@@ -79,12 +92,12 @@ def test_terms_prefer_triggers_over_tags_and_are_capped(root):
 def test_branch_heading_is_the_routers_own_layer_comment(root):
     p = ki.plan(root)
     assert p.branches["tools"] == "Per-tool behaviour and traps"
-    index = dict((w.name, c) for w, c in p.writes)["INDEX.md"]
+    index = _top(p)
     assert "## `tools/` — Per-tool behaviour and traps" in index
 
 
 def test_empty_branch_is_named_but_gets_no_table(root):
-    index = dict((w.name, c) for w, c in ki.plan(root).writes)["INDEX.md"]
+    index = _top(ki.plan(root))
     assert "Branches with no leaves yet: `domains/`." in index
     assert "## `domains/`" not in index
 
@@ -123,7 +136,7 @@ def test_long_summary_is_reported_never_truncated(root):
     _leaf(root, "meta/verbose.md", title="V", summary=long)
     p = ki.plan(root)
     assert any("max 110" in prob.what for prob in p.problems)
-    assert long in dict((w.name, c) for w, c in p.writes)["INDEX.md"]
+    assert long in _group(p, "meta")
 
 
 # ── failure is data, not an exit ─────────────────────────────────────────
@@ -148,6 +161,7 @@ def test_leaf_without_frontmatter_is_reported(root):
 def test_apply_is_idempotent(root):
     first = ki.plan(root).apply()
     assert {p.name for p in first} == {"INDEX.md", "CONTEXT.md"}
+    assert len([p for p in first if p.name == "INDEX.md"]) == 3, "the top and one per group"
     assert ki.plan(root).drift == []
     assert ki.plan(root).apply() == []
 
@@ -155,8 +169,8 @@ def test_apply_is_idempotent(root):
 def test_drift_appears_when_a_leaf_changes(root):
     ki.plan(root).apply()
     _leaf(root, "meta/gamma.md", title="Gamma")
-    drift = [p.name for p in ki.plan(root).drift]
-    assert drift == ["INDEX.md", "CONTEXT.md"]
+    p = ki.plan(root)
+    assert _rels(p, p.drift) == ["INDEX.md", "meta/INDEX.md", "CONTEXT.md"]
 
 
 def test_stage_run_writes_nothing_under_dry_run(root, tmp_path):
@@ -205,6 +219,18 @@ def test_an_undeclared_branch_still_falls_back_to_its_comment(root):
     assert ki.branch_blurb(router) == "whatever this is"
 
 
+def test_an_areas_group_takes_its_label_from_the_profile(root):
+    """`areas/<Area>/` is labelled by the PROFILE, not by the subject register:
+    the folder mirrors `~/02_AREAS/` (rule 7's exception), so its name is an
+    Area and `ontology.subject()` has never held one. Before 2026-10-25 the
+    index printed `—` for the branch's only real group, which reads as "this
+    subject has no name" rather than "wrong vocabulary asked"."""
+    from lib import roots as R
+    label = ki._subject_name("areas/B_Tech", {})
+    assert label == R.PROFILE.areas["B_Tech"]["description"]
+    assert ki._subject_name("areas/No_Such_Area", {}) == ""
+
+
 def test_areas_is_not_generated_and_the_reason_is_recorded():
     """`knowledge-index.md` §Known duplication: `areas/CONTEXT.md` indexes
     Areas A-P rather than leaves, so generating it would destroy human
@@ -248,3 +274,40 @@ def test_generating_the_router_is_idempotent(root):
     assert root / "knowledge/system/CONTEXT.md" in written
     assert ki.plan(root).drift == []
     assert ki.plan(root).apply() == []
+
+
+# ── split per subject (O3d, 2026-10-21) ──────────────────────────────────
+def test_the_top_index_names_each_subject_with_its_leaves_terms(root):
+    _leaf(root, "tools/pi/gamma.md", title="Gamma", triggers=["g1", "g2"])
+    _leaf(root, "tools/pi/delta.md", title="Delta", triggers=["d1"])
+    p = ki.plan(root)
+    top = _top(p)
+    assert "| `tools/pi/INDEX.md` |" in top and "| 2 | d1, g1, g2 |" in top, top
+    assert "`tools/pi/gamma.md`" not in top, "the leaves are one level down"
+    group = _group(p, "tools/pi")
+    assert "| `tools/pi/gamma.md` | Gamma | g1, g2 |" in group
+    assert "tools/beta.md" not in group
+
+
+def test_group_terms_take_one_from_each_leaf_before_a_second():
+    leaves = [ki.Leaf("a/s/x.md", "a", "x", ["x1", "x2", "x3"]),
+              ki.Leaf("a/s/y.md", "a", "y", ["y1"])]
+    assert ki._group_terms(leaves) == ["x1", "y1", "x2", "x3"]
+
+
+def test_a_subject_that_lost_its_leaves_loses_its_index(root):
+    leaf = _leaf(root, "tools/pi/gamma.md", title="Gamma")
+    ki.plan(root).apply()
+    assert (root / "knowledge" / "tools" / "pi" / "INDEX.md").exists()
+    leaf.unlink()
+    p = ki.plan(root)
+    assert "tools/pi/INDEX.md" in _rels(p, p.drift)
+    p.apply()
+    assert not (root / "knowledge" / "tools" / "pi" / "INDEX.md").exists()
+
+
+def test_the_budget_is_per_file_and_names_the_largest(root, monkeypatch):
+    monkeypatch.setattr(ki, "INDEX_BUDGET_TOKENS", 1)
+    p = ki.plan(root)
+    assert p.largest in {"INDEX.md", "meta/INDEX.md", "tools/INDEX.md"}
+    assert any(prob.what.startswith(p.largest) for prob in p.problems)

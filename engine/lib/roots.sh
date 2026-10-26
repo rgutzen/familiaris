@@ -13,6 +13,10 @@ PAZRAS_ENGINE="$PAZRAS_REPO/engine"
 PAZRAS_CONFIG="$PAZRAS_REPO/config"
 PAZRAS_MEMORY="$PAZRAS_REPO/memory"
 PAZRAS_DEV="$PAZRAS_REPO/dev"
+# Where this machine keeps its data -- `roots.data_root()`, spelled once more
+# for bash: `PAZRAS_DATA_DIR`, else ~/.local/share/pazras, an empty variable
+# counting as unset. The healthcheck writes its per-tier results under it.
+PAZRAS_DATA="${PAZRAS_DATA_DIR:-$HOME/.local/share/pazras}"
 
 # The install's facts -- PAZRAS_INSTALL, PARA_ROOT, PAZRAS_PROFILE_FILE -- from
 # the profile, through the one parser (`profile.py --sh roots`): bash reads no

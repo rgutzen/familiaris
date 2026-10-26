@@ -50,12 +50,20 @@ Ask, in order, and stop at the first yes:
 | Was any of the above true, but is no longer? | `05_ARCHIVES` |
 | Is it configuration or automation? | `06_SYSTEM` |
 
+![Where a thing goes](docs/assets/figures/filing.svg)
+
+*The filing decision: each question in turn, each yes a PARA folder, the rest stays in the inbox.*
+
 Anything not yet decided goes to `00_INBOX` and is processed later. Capture must
 stay frictionless or it stops happening.
 
 ---
 
 ## Top-level categories
+
+![Where everything sits](docs/assets/figures/pazras-tree.svg)
+
+*Five categories side by side, `03_ZETTEL` apart as permanent, `06_SYSTEM` holding config, engine and memory.*
 
 <!-- BEGIN:CATEGORIES (generated) -->
 | Directory | Role | Backup | Holds |
@@ -120,17 +128,9 @@ together.
 
 ## How the parts interact
 
-```
-   capture ──► 00_INBOX ──► processed into one of:
-                             01_PROJECTS ──(completed)──► 05_ARCHIVES
-                             02_AREAS    ──(dormant)────► 05_ARCHIVES
-                             03_ZETTEL   ── permanent, never archived
-                             04_RESOURCES
-                                  │
-   06_SYSTEM ── config ──► scripts ──► all of the above
-        │
-        └── memory/ ── the cross-harness knowledge base (see CONTEXT.md)
-```
+![Two files drive every script](docs/assets/figures/pazras-interact.svg)
+
+*The profile and the master config feed the loader, every script sources the loader, and the scripts act on the seven categories.*
 
 **Two files drive everything.** The profile (`config/profile.yaml`) holds the
 install's facts, the Areas among them; `config/structure/pazras-master-config.sh`

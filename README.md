@@ -14,6 +14,13 @@ Three names, three levels, and they are not interchangeable:
 | **Familiaris** | the software that defines and maintains it: this repository |
 | **familiar** | the one command you type: `familiar <subject> <verb>` |
 
+The distinction reaches the paths. `~/.local/share/pazras/` (override:
+`PAZRAS_DATA_DIR`) holds one tree's state — its transcripts, ledgers and index —
+so it carries the tree's name, not the software's: two PAZRAS trees on one
+machine need two roots, and a Familiaris upgrade must not have to move them.
+The `PAZRAS_` prefix on every variable says the same thing, so a Familiaris
+upgrade renames no variable and moves no root.
+
 The mythic vocabulary (the Vigil, the Clew, the Guises) is documentation, never
 a path or a config key; `memory/knowledge/system/publication/glossary.md` maps
 each name to its subject.
@@ -50,8 +57,26 @@ set the dependency up first. Every row below was run in that scratch tree
 | `familiar knowledge journal index\|search` | needs an install | the journal's embedding index: nothing to do while there is no journal, and Ollama with an embedding model once there is one |
 | `familiar backup run\|verify\|prune\|sync\|reconcile` | needs an install | restic repositories at the profile's `storage:` paths. `run` writes to them, which needs a passphrase file. `sync` and `reconcile` also need an adapter: `engine/backup/remotes/` is the interface, `storage.remote:` picks one, and with none the off-site half is skipped with a warning |
 | `familiar schedule timers [--check]` | needs an install | stages systemd units from the timer table into a dotfiles source; `--apply-dotfiles` writes them, and is a sign-off decision |
-| `familiar checks healthcheck` | needs an install | an installed machine's links, timers and mounts; on a fresh clone the units it asks `systemctl` about are not this machine's |
+| `familiar checks healthcheck [--tier daily\|weekly\|monthly]` | needs an install | an installed machine's links, timers, mounts and every registered check at that tier's cadence (see below); on a fresh clone the units it asks `systemctl` about are not this machine's |
+| `familiar checks updates [--check]` | needs an install | which tools (`mise`), pi extensions (`npm`) and linked skill upstreams (`git ls-remote`) have a newer version. Read-only: it prints the command that applies each and the checks to run after |
 | `python3 engine/checks/checks.py --run pre-commit` | runnable | the commit gate. Green here, with the checks that measure the exporting instance skipped and counted |
+| `python3 engine/checks/checks.py --run daily\|weekly\|monthly` | runnable | a healthcheck tier's registry checks, without the machine-state sections `familiar checks healthcheck` adds. `--coverage` lists every `familiar` check mode against the registry |
+
+### How often each check runs
+
+Every check is an entry in `engine/checks/checks.py` and sits at the cheapest cadence
+it can afford. A timer tier runs its own checks and every tier below it.
+
+| gate | runs | forbids | measured |
+|---|---|---|---|
+| `pre-commit` | every commit | network, a model, a harness | about 70 s |
+| `daily` | `familiar-healthcheck-daily.timer`, 06:45 | the same, so a flaky link cannot fail it | about 6 s |
+| `weekly` | `familiar-healthcheck.timer`, Wednesday 07:00 | a paid call | about 90 s |
+| `monthly` | `familiar-healthcheck-monthly.timer`, the 3rd, 07:30 | a paid call | see `memory/knowledge/system/checks/healthcheck.md` |
+
+Each run leaves `$PAZRAS_DATA_DIR/healthcheck/<tier>.status`. The shell greeting
+(`engine/host/pazras-aliases.sh`) prints a banner while a tier's last run was red or its
+timer stopped, and clears it on the next green run.
 
 ## First run
 
@@ -185,15 +210,19 @@ yet.
 
 ## Licence
 
-Familiaris is free software under the **GNU Affero General Public License,
-version 3** (`LICENSE`). Copyright (C) 2025-2026 Robin Gutzen.
+Familiaris is source-available under the **Business Source License 1.1**
+(`LICENSE`), and each version becomes open source under the GNU AGPL-3.0 four
+years after it is published. Copyright (C) 2025-2026 Robin Gutzen.
 
 | You want to | What applies |
 |---|---|
-| run it as your own personal system, at home or at work | the AGPL; nothing else needed |
-| change it, and share or host your changed version | the AGPL: offer its source to the people you share it with or who use it over a network |
-| build it into a product or service without publishing your source | a **commercial licence** from the author (`NOTICE`) |
+| run it as your own personal system, at home or at work | free, under the licence's Additional Use Grant |
+| use it for non-commercial research or teaching | free, under the same grant |
+| read, change and share the code outside production | free, under the licence itself |
+| build it into a product or service, or offer it to others, with or without publishing the source | a **commercial licence** from the author (`NOTICE`); field-exclusive licences are possible |
+| use a version published four or more years ago | the AGPL-3.0 |
 
-Contributions are welcome under the contributor licence agreement in
-`CONTRIBUTING.md`, which keeps both licences possible. The project's name is
-not covered by either licence (`NOTICE`).
+The releases published up to 2026-10-20 were released under the AGPL-3.0 and
+stay under it. Contributions are welcome under the contributor licence
+agreement in `CONTRIBUTING.md`, which keeps these licences possible. The
+project's name is not covered by any licence (`NOTICE`).

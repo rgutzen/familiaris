@@ -1,0 +1,201 @@
+# Bindings: who does a tool's, a command's or a skill's work (decision 17,
+# PLAN.md §Bindings, item 6b).
+#
+# CONTENT, NOT BINDING CODE. `engine/orchestration/bindings.py` reads it and
+# `familiar orchestration bindings --check | --resolve | run` applies it.
+#
+# THREE RULES, each from PLAN.md §Bindings:
+#   1. A binding delegates to a CHILD (`pi-agent <role> --model <id>`); it never
+#      switches the parent's model, which would forfeit the parent's cache.
+#   2. The child returns something VERIFIABLE, named by `contract:`; the runner
+#      checks the shape, and for `ref+quote` (`path:line` plus a verbatim quote;
+#      a key cannot hold a colon) the quotes against the files, before the
+#      parent sees a result it could trust.
+#   3. Bindings are static. `model: route` is per-call routing, accepted only
+#      where a binding declares it with its own question, its `models:` per
+#      answer and a `default:`. Below `route_confident_at` the default runs.
+#
+# THE CHAIN (2026-10-14, the user's decision). A binding resolves through an
+# EFFECTIVE CHAIN, in this order:
+#   1. its `model:`, for `model: route` the routed choice;
+#   2. its `default:`, routed bindings only;
+#   3. its `fallbacks:`, in the order written.
+# The first entry AVAILABLE under the active profile runs, under three rules:
+#   a. An entry is unavailable when `profiles.resolve` says so (no key, no login
+#      file, jurisdiction not allowed, provider none), or when its privacy class
+#      is not the binding's `privacy:` (unless that is `any`). It is skipped, with
+#      its reason, at resolve time; that is not checkable offline, so `--check`
+#      never reports it. No entry borrows another profile (decision 26).
+#   b. The swap is never silent: the `binding:` line and `--resolve` name the
+#      entry that runs, its place in the chain and the reason for each entry
+#      skipped before it.
+#   c. A chain with no available entry exits 3 and names every entry's reason,
+#      one line each.
+#
+# Fields per binding:
+#   on:       item:<id> | tool:<name> | command:<name> | skill:<name>
+#   contract: a key of `contracts:` below
+#   role:     the pi-agent definition (config/orchestration/<role>.md) the child
+#             runs as; a role not in the roster leaves the binding INACTIVE
+#             (reported, not a finding) until it exists
+#   model:    a callable catalogue id, or `route`
+#   default:  required with `route`; a callable catalogue id; chain link 2
+#   fallbacks: optional, chain link 3: callable catalogue ids, comma-separated
+#   effort:   optional, pi's thinking level (off|minimal|low|medium|high|xhigh|
+#             max): the cheapest dial there is, since the same model at more
+#             effort costs only its output tokens. It wins over the role's own
+#             `effort:`, and `--check` refuses a level a model in the chain
+#             cannot serve (a model with `thinking: no` refuses every level)
+#   scope:    optional, `inherited` (default) or `ignored`: whether the calling
+#             directory's scope orders this binding's candidates. `ignored` is
+#             for a call that reads no local file (a web search, a fetch), where
+#             the jurisdiction of the caller's files is not at issue
+#             (`a, b`; every value is a string). `--check` refuses an id that is
+#             not callable, a duplicate, `route`, and the `default:` or `model:`
+#             repeated in it
+#   note:     optional, `command:` / `skill:` only: limits of the child's setting,
+#             appended after the command's or skill's text (it cannot ask the
+#             user or start sub-agents)
+#   privacy:  `any`, or one class as `profiles.privacy_class` computes it
+#             (`local`, `EU-no-training`, ...); the model resolved under the
+#             active profile must be that class, or the binding is unavailable
+#   route:    with `model: route` only: `instructions:`, `criteria:` (answer ->
+#             meaning) and `models:` (answer -> catalogue id), one Jev `choice`
+#             question whose state is the call's task text. Routing sends that
+#             text to Jev, so a routed binding must be `privacy: any`.
+#
+# A `command:<name>` binding runs ~/.claude/commands/<name>.md, a `skill:<name>`
+# binding the skill's SKILL.md, as the CHILD's instructions (PLAN.md rule 1).
+# In pi the extension registers `/<name>` and `/bound-<name>` for them.
+#
+# Loaded through `engine/lib/_miniyaml.py`: every value a string.
+
+# Jev's probability for the chosen answer must reach this, or `default:` runs.
+# A placeholder until 6d's labels give it a measured value: Jev was confident
+# (>= 0.8) on 42% of the 3c items, so routing falls back more often than not.
+route_confident_at: "0.8"
+
+contracts:
+  ref+quote: >
+    one finding per line, `path:line` (or `path:start-end`) then a verbatim
+    quote of that line in double quotes or backticks; at least one finding, or
+    the single line `not found`. Each quote is checked against its file.
+  extract+url: >
+    one extract per paragraph, each with the http(s) URL it came from and a
+    verbatim quote; at least one, or the single line `not found`.
+  ref+quote+defect: >
+    for a review: one finding per line, `path:line`, then a verbatim quote of that
+    line in double quotes or backticks, then `--` and ONE clause naming what is
+    wrong. A line without the clause is not a finding, because a citation and a
+    finding are indistinguishable otherwise (measured 2026-10-14: the review role
+    returned four bare citations and the checker passed them). The single line
+    `not found` when there is no defect.
+  rewrite: >
+    the shape, for a prompt improver: a labelled analysis above the block -- `field:`,
+    at least one `reject:` and one `add:`, `raw:` and `check:` -- then exactly ONE
+    fenced block holding the rewritten prompt, then `kept:` lines (each quoting at least
+    two words of the original prompt, or `kept: none` when the original carried no
+    constraint) and a `self:` line. At most 240 words before the block — the
+    budget the role declares, raised from 160 over six real replies at 133-210.
+    Only the shape is checked; whether the rewrite is deeper is a reading by a person.
+  command+exit: >
+    for each command the instructions tell you to run: a line `$ <command>` exactly
+    as written, then its output, then a line `exit <n>` with the real exit code.
+    Every listed command appears; none is skipped after a failure. The shape and
+    the coverage are checked; nothing re-runs a command.
+
+bindings:
+  - on: tool:explore
+    contract: ref+quote
+    role: explore
+    effort: low
+    model: route
+    default: claude-haiku-5-5
+    # A reader for a checked artifact: the other cheap one, not a frontier model.
+    # The routed `lookup` answer already names deepseek-flash, so a swap costs
+    # nothing but the resolution line.
+    fallbacks: deepseek-flash
+    privacy: any
+    route:
+      instructions: >
+        The state is one request to a codebase explorer. Answer which kind of
+        search it is.
+      criteria:
+        lookup: one named thing to locate -- a symbol, a file, a key, a string
+        recon: an open question that needs several files read and connected
+      models:
+        lookup: deepseek-flash
+        recon: claude-haiku-5-5
+  - on: tool:read
+    contract: ref+quote
+    role: explore
+    effort: low
+    model: deepseek-flash
+    fallbacks: claude-haiku-5-5
+    privacy: any
+  - on: tool:fetch
+    contract: extract+url
+    role: research
+    effort: low
+    model: deepseek-flash
+    fallbacks: claude-haiku-5-5
+    privacy: any
+    scope: ignored
+  - on: tool:websearch
+    contract: extract+url
+    role: research
+    effort: low
+    model: deepseek-flash
+    fallbacks: claude-haiku-5-5
+    privacy: any
+    scope: ignored
+  # The suite behind /verify is five fixed commands and an exit code each: no
+  # judgement, a small token bill, and nothing in the output that is private.
+  - on: command:verify
+    contract: command+exit
+    role: bash
+    effort: low
+    model: deepseek-flash
+    fallbacks: claude-haiku-5-5
+    privacy: any
+    note: >
+      Read-only. Run each command once and report it in the contract's form; if one
+      fails, report it and go on to the next. Do not fix anything or ask anything.
+  # A review is reading a diff: the bulk of its tokens, and its findings cite
+  # lines, so ref+quote lets the parent drop any finding whose quote is not in the
+  # file. Haiku, not deepseek-flash: the standards axis is a judgement call and the
+  # diff is this repo's code. The findings are candidates, not verdicts.
+  - on: skill:code-review
+    contract: ref+quote+defect
+    role: bash
+    effort: high
+    model: claude-haiku-5-5
+    # Preference, then continuity (ruled 2026-10-14): a bigger Claude model
+    # first, because the diff is this repository's code, and the non-Claude peer
+    # last, because a strict posture would halt the day the Claude window closes.
+    fallbacks: claude-sonnet-5-5, deepseek-flash
+    privacy: any
+    note: >
+      You are alone: there are no sub-agents and nobody to ask. Run the Standards
+      axis, then the Spec axis, yourself, one after the other. The task names the
+      fixed point; if it names none, answer `not found`. Use `git diff`, `git log`
+      and `cat -n` through bash. Report each finding as `path:line` and a verbatim
+      quote of that line as it is in the file now; skip a finding you cannot quote.
+      Other lines (a missing spec, the one-line summary) carry no `path:line`.
+
+  # 1c (deepen track): the prompt improver. `on: role:deepen` reads the roster body
+  # as the child's instructions, so there is no command or skill text and no temp
+  # role. The fallbacks are load-bearing from the first call, not insurance: a spent
+  # Claude window is an availability reason (orchestration 15a), and on 2026-10-24 the
+  # weekly window read 1.00, so this call runs on deepseek-flash today.
+  # `effort: high` and not the docs class's medium: deepseek-flash lists low/high/max,
+  # and `--check` refuses a level a chain member cannot serve (a swap must not land on
+  # a child that refuses its own level).
+  - on: role:deepen
+    contract: rewrite
+    role: deepen
+    model: claude-sonnet-5-5
+    fallbacks: deepseek-flash, qwen3:30b-a3b-thinking-2507-q4_K_M
+    effort: high
+    privacy: any
+    scope: ignored

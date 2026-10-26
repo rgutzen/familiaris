@@ -3,6 +3,9 @@
 Documentation for people, in four kinds. The shape is Diátaxis: a page belongs
 to the kind that matches what its reader needs, and never to two.
 
+![The four kinds of documentation](assets/figures/diataxis.svg)
+*A page belongs to one cell; explanation is the focal kind.*
+
 | Folder | The reader's need | State |
 |---|---|---|
 | [`tutorial/`](tutorial/README.md) | learning — one end-to-end walk, on a scratch tree | **written and executed**: six steps, every output the one that came back |

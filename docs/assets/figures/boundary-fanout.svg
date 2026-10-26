@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 960 600" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="boundary-fanout-title boundary-fanout-desc" id="boundary-fanout-root">
+        <title id="boundary-fanout-title">One rule, every surface</title>
+        <desc id="boundary-fanout-desc">Architecture diagram: rule files and the vocabulary feed compile.py, which writes the Claude Code and opencode JSON, the Pi policy, advisory pages and the hermes memory block.</desc>
+        <defs>
+      <style>#boundary-fanout-root { --color-paper:   #f5f5f5;
+      --color-ink:     #2d3142;
+      --color-muted:   #4f5d75;
+      --color-accent:  #bf4520;
+      --font-sans:     'Geist', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace; }
+      #boundary-fanout-root { font-family: var(--font-sans); color: var(--color-ink); }
+      #boundary-fanout-root .diagram-container { width: 100%; overflow-x: auto; }
+      @media print {
+#boundary-fanout-root .diagram-container { overflow-x: visible; }
+}</style>
+          <marker id="boundary-fanout-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+          <marker id="boundary-fanout-arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#bf4520"/></marker>
+        </defs>
+
+        <rect width="100%" height="100%" fill="#f5f5f5"/>
+
+        <!-- Arrows first (behind boxes) -->
+        <path d="M 216,236 H 256 Q 264,236 264,244 V 268 Q 264,276 272,276 H 312" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#boundary-fanout-arrow)"/>
+        <path d="M 216,348 H 256 Q 264,348 264,340 V 316 Q 264,308 272,308 H 312" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#boundary-fanout-arrow)"/>
+        <path d="M 488,268 H 508 Q 516,268 516,260 V 168 Q 516,160 524,160 H 592" fill="none" stroke="#bf4520" stroke-width="1.2" marker-end="url(#boundary-fanout-arrow-accent)"/>
+        <path d="M 488,284 H 532 Q 540,284 540,276 V 256 Q 540,248 548,248 H 592" fill="none" stroke="#bf4520" stroke-width="1.2" marker-end="url(#boundary-fanout-arrow-accent)"/>
+        <path d="M 488,300 H 532 Q 540,300 540,308 V 328 Q 540,336 548,336 H 592" fill="none" stroke="#bf4520" stroke-width="1.2" marker-end="url(#boundary-fanout-arrow-accent)"/>
+        <path d="M 488,316 H 508 Q 516,316 516,324 V 416 Q 516,424 524,424 H 592" fill="none" stroke="#bf4520" stroke-width="1.2" marker-end="url(#boundary-fanout-arrow-accent)"/>
+        <rect x="40" y="204" width="176" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="40" y="204" width="176" height="64" rx="6" fill="#4f5d75" stroke="#5a6580" stroke-width="1" fill-opacity="0.10"/>
+        <rect x="48" y="212" width="60" height="12" rx="2" fill="none" stroke="#5a6580" stroke-width="0.8" stroke-opacity="0.40"/>
+        <text x="78.0" y="221" fill="#5a6580" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">YOU WRITE</text>
+        <text x="128.0" y="240" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">Rules</text>
+        <text x="128.0" y="256" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">*.yaml, one per domain</text>
+        <rect x="40" y="316" width="176" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="40" y="316" width="176" height="64" rx="6" fill="#4f5d75" stroke="#5a6580" stroke-width="1" fill-opacity="0.10"/>
+        <rect x="48" y="324" width="40" height="12" rx="2" fill="none" stroke="#5a6580" stroke-width="0.8" stroke-opacity="0.40"/>
+        <text x="68.0" y="333" fill="#5a6580" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">WORDS</text>
+        <text x="128.0" y="352" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">Vocabulary</text>
+        <text x="128.0" y="368" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">vocabulary.yaml</text>
+        <rect x="312" y="252" width="176" height="80" rx="6" fill="#f5f5f5"/>
+        <rect x="312" y="252" width="176" height="80" rx="6" fill="#bf4520" stroke="#bf4520" stroke-width="1" fill-opacity="0.08"/>
+        <rect x="320" y="260" width="48" height="12" rx="2" fill="none" stroke="#bf4520" stroke-width="0.8" stroke-opacity="0.50"/>
+        <text x="344.0" y="269" fill="#bf4520" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">COMPILE</text>
+        <text x="400.0" y="304" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">compile.py</text>
+        <text x="400.0" y="320" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">engine/boundaries</text>
+        <rect x="592" y="128" width="328" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="592" y="128" width="328" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="600" y="136" width="52" height="12" rx="2" fill="none" stroke="#2d3142" stroke-width="0.8" stroke-opacity="0.40"/>
+        <text x="626.0" y="145" fill="#2d3142" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">ENFORCED</text>
+        <text x="756.0" y="164" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">boundaries.json</text>
+        <text x="756.0" y="180" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">read by the Claude Code hook and opencode plugin</text>
+        <rect x="592" y="216" width="328" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="592" y="216" width="328" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="600" y="224" width="52" height="12" rx="2" fill="none" stroke="#2d3142" stroke-width="0.8" stroke-opacity="0.40"/>
+        <text x="626.0" y="233" fill="#2d3142" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">ENFORCED</text>
+        <text x="756.0" y="252" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">Pi permission policy</text>
+        <text x="756.0" y="268" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">pi-permission-system/config.json</text>
+        <rect x="592" y="304" width="328" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="592" y="304" width="328" height="64" rx="6" fill="#2d3142" stroke="#2d3142" stroke-width="1" fill-opacity="0.03" stroke-opacity="0.30"/>
+        <rect x="600" y="312" width="52" height="12" rx="2" fill="none" stroke="#2d3142" stroke-width="0.8" stroke-opacity="0.22"/>
+        <text x="626.0" y="321" fill="#5a6580" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">ADVISORY</text>
+        <text x="756.0" y="340" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">Advisory pages</text>
+        <text x="756.0" y="356" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">one prose page beside each source yaml</text>
+        <rect x="592" y="392" width="328" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="592" y="392" width="328" height="64" rx="6" fill="#2d3142" stroke="#2d3142" stroke-width="1" fill-opacity="0.03" stroke-opacity="0.30"/>
+        <rect x="600" y="400" width="52" height="12" rx="2" fill="none" stroke="#2d3142" stroke-width="0.8" stroke-opacity="0.22"/>
+        <text x="626.0" y="409" fill="#5a6580" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">ADVISORY</text>
+        <text x="756.0" y="428" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">hermes memory block</text>
+        <text x="756.0" y="444" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">~/.hermes/memories/MEMORY.md, if it exists</text>
+        <line x1="40" y1="492" x2="920" y2="492" stroke="#2d3142" stroke-width="0.8" stroke-opacity="0.10"/>
+        <text x="40" y="508" fill="#4f5d75" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="0.18em">LEGEND</text>
+        <rect x="40" y="524" width="14" height="10" rx="2" fill="#bf4520" stroke="#bf4520" stroke-width="1" fill-opacity="0.08"/>
+        <text x="60" y="532" fill="#4f5d75" font-size="8.5" font-family="'Geist', system-ui, sans-serif">Compile step</text>
+        <rect x="160" y="524" width="14" height="10" rx="2" fill="#4f5d75" stroke="#5a6580" stroke-width="1" fill-opacity="0.10"/>
+        <text x="180" y="532" fill="#4f5d75" font-size="8.5" font-family="'Geist', system-ui, sans-serif">Written by the user</text>
+        <rect x="320" y="524" width="14" height="10" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <text x="340" y="532" fill="#4f5d75" font-size="8.5" font-family="'Geist', system-ui, sans-serif">Enforced surface</text>
+        <rect x="472" y="524" width="14" height="10" rx="2" fill="#2d3142" stroke="#2d3142" stroke-width="1" fill-opacity="0.03" stroke-opacity="0.30"/>
+        <text x="492" y="532" fill="#4f5d75" font-size="8.5" font-family="'Geist', system-ui, sans-serif">Advisory surface</text>
+      </svg>

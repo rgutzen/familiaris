@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 960 528" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="lore-publication-title lore-publication-desc" id="lore-publication-root">
+        <title id="lore-publication-title">Every path declares once, and the tree is gated before it ships</title>
+        <desc id="lore-publication-desc">Data flow across the private tree, the per-path classification, the export and the gate it runs inside the tree it built, the scanner, and the generated public repository. A path with no answer fails the audit, and an exclusion-list shortcut is stopped at the trust boundary.</desc>
+        <defs>
+      <style>#lore-publication-root { --paper: #f5f5f5; --ink: #2d3142; --muted: #4f5d75; --soft: #5a6580;
+      --accent: #bf4520; --rule: rgba(45,49,66,0.12);
+      --sans: 'Geist', system-ui, sans-serif;
+      --serif: 'Instrument Serif', serif;
+      --mono: 'Geist Mono', ui-monospace, monospace; }
+      #lore-publication-root { color: var(--ink); font-family: var(--sans); }
+      #lore-publication-root .diagram-container { width: 100%; overflow-x: auto; }
+      @media print {
+#lore-publication-root .diagram-container { overflow-x: visible; }
+}
+      #lore-publication-root .step-no { font: 600 7px var(--mono); fill: var(--ink); text-anchor: middle; }
+      #lore-publication-root .step-label { font: 500 7px var(--mono); fill: var(--muted); text-anchor: middle; letter-spacing: 0.12em; }
+      #lore-publication-root .lane-label { font: 500 8px var(--mono); fill: var(--muted); text-anchor: middle; letter-spacing: 0.14em; }
+      #lore-publication-root .role { font: 600 7px var(--mono); fill: var(--ink); text-anchor: middle; letter-spacing: 0.06em; }
+      #lore-publication-root .node-name { font: 600 12px var(--sans); fill: var(--ink); text-anchor: middle; }
+      #lore-publication-root .node-sub { font: 400 9px var(--mono); fill: var(--muted); text-anchor: middle; }
+      #lore-publication-root .node-tool { font: 400 9px var(--mono); fill: var(--soft); text-anchor: middle; }
+      #lore-publication-root .zone-label { font: 500 8px var(--mono); fill: var(--muted); text-anchor: middle; letter-spacing: 0.12em; }
+      #lore-publication-root .arrow-label { font: 400 8px var(--mono); fill: var(--accent); text-anchor: middle; letter-spacing: 0.06em; }
+      #lore-publication-root .legend-label { font: 500 7px var(--mono); fill: var(--muted); text-anchor: end; letter-spacing: 0.12em; }
+      #lore-publication-root .legend-text { font: 400 8.5px var(--sans); fill: var(--muted); }
+      #lore-publication-root .note { font: italic 400 13px var(--serif); fill: var(--soft); }
+      #lore-publication-root .focal { fill: var(--accent); }</style>
+          <pattern id="lore-publication-lore-publication-dots" width="22" height="22" patternUnits="userSpaceOnUse"><circle cx="11" cy="11" r="0.8" fill="#2d3142" fill-opacity="0.10"/></pattern>
+          <marker id="lore-publication-lore-publication-arr-muted" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 Z" fill="#4f5d75"/></marker>
+          <marker id="lore-publication-lore-publication-arr-accent" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 Z" fill="#bf4520"/></marker>
+          <marker id="lore-publication-lore-publication-arr-link" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 Z" fill="#2e5aa8"/></marker>
+        </defs>
+
+        <rect width="960" height="528" fill="#f5f5f5"/>
+        <rect width="960" height="528" fill="url(#lore-publication-lore-publication-dots)"/>
+
+        <!-- lane tints: lanes 0 and 2 -->
+        <rect x="0" y="44" width="960" height="96" fill="#2d3142" fill-opacity="0.018"/>
+        <rect x="0" y="236" width="960" height="96" fill="#2d3142" fill-opacity="0.018"/>
+
+        <!-- lane rules and the label column -->
+        <line x1="0" y1="44" x2="960" y2="44" stroke="#2d3142" stroke-width="0.8" stroke-opacity="0.12"/>
+        <line x1="0" y1="140" x2="960" y2="140" stroke="#2d3142" stroke-width="0.8" stroke-opacity="0.12"/>
+        <line x1="0" y1="236" x2="960" y2="236" stroke="#2d3142" stroke-width="0.8" stroke-opacity="0.12"/>
+        <line x1="140" y1="44" x2="140" y2="428" stroke="#2d3142" stroke-width="0.8" stroke-opacity="0.12"/>
+
+        <!-- step header -->
+        <rect x="201" y="8" width="36" height="16" rx="8" fill="#2d3142" fill-opacity="0.12"/>
+        <text class="step-no" x="219" y="20">01</text>
+        <text class="step-label" x="219" y="35">TRACKED</text>
+        <rect x="359" y="8" width="36" height="16" rx="8" fill="#bf4520" fill-opacity="0.20"/>
+        <text class="step-no focal" x="377" y="20">02</text>
+        <text class="step-label focal" x="377" y="35">DECLARED</text>
+        <rect x="517" y="8" width="36" height="16" rx="8" fill="#2d3142" fill-opacity="0.12"/>
+        <text class="step-no" x="535" y="20">03</text>
+        <text class="step-label" x="535" y="35">BUILT</text>
+        <rect x="675" y="8" width="36" height="16" rx="8" fill="#2d3142" fill-opacity="0.12"/>
+        <text class="step-no" x="693" y="20">04</text>
+        <text class="step-label" x="693" y="35">CHECKED</text>
+        <rect x="833" y="8" width="36" height="16" rx="8" fill="#2d3142" fill-opacity="0.12"/>
+        <text class="step-no" x="851" y="20">05</text>
+        <text class="step-label" x="851" y="35">SHIPPED</text>
+
+        <!-- lane labels -->
+        <text class="lane-label" x="70" y="88">THE PRIVATE</text>
+        <text class="lane-label" x="70" y="100">TREE</text>
+        <text class="lane-label" x="70" y="184">EVERY</text>
+        <text class="lane-label" x="70" y="196">PATH</text>
+        <text class="lane-label" x="70" y="280">THE</text>
+        <text class="lane-label" x="70" y="292">EXPORT</text>
+        <text class="lane-label" x="70" y="376">THE SIGN</text>
+        <text class="lane-label" x="70" y="388">OUTWARD</text>
+
+        <!-- the trust boundary, crossed once, by the permitted route only -->
+        <line x1="0" y1="332" x2="960" y2="332" stroke="#2d3142" stroke-width="1" stroke-dasharray="4,4" stroke-opacity="0.35"/>
+        <rect x="617" y="326" width="96" height="12" rx="2" fill="#f5f5f5"/>
+        <text class="zone-label" x="665" y="335">TRUST BOUNDARY</text>
+
+        <!-- connectors, drawn before the boxes -->
+        <path d="M 285 92 H 369 Q 377 92 377 100 V 156" fill="none" stroke="#bf4520" stroke-width="1.2" marker-end="url(#lore-publication-lore-publication-arr-accent)"/>
+        <path d="M 443 188 H 527 Q 535 188 535 196 V 252" fill="none" stroke="#4f5d75" stroke-width="1" marker-end="url(#lore-publication-lore-publication-arr-muted)"/>
+        <path d="M 601 284 H 627" fill="none" stroke="#4f5d75" stroke-width="1" marker-end="url(#lore-publication-lore-publication-arr-muted)"/>
+        <path d="M 759 284 H 785" fill="none" stroke="#4f5d75" stroke-width="1" marker-end="url(#lore-publication-lore-publication-arr-muted)"/>
+        <path d="M 851 316 V 348" fill="none" stroke="#4f5d75" stroke-width="1" marker-end="url(#lore-publication-lore-publication-arr-muted)"/>
+        <!-- the exclusion-list shortcut: stopped before it enters -->
+        <path d="M 219 124 V 322" fill="none" stroke="#4f5d75" stroke-width="1" stroke-dasharray="4,3"/>
+        <line x1="209" y1="322" x2="229" y2="322" stroke="#4f5d75" stroke-width="2"/>
+
+        <!-- the focal handoff label -->
+        <rect x="295" y="74" width="64" height="12" rx="2" fill="#f5f5f5"/>
+        <text class="arrow-label" x="327" y="83">EVERY PATH</text>
+
+        <!-- the private tree -->
+        <rect x="153" y="60" width="132" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="153" y="60" width="132" height="64" rx="6" fill="#4f5d75" stroke="#5a6580" stroke-width="1" fill-opacity="0.10"/>
+        <rect x="161" y="64" width="24" height="12" rx="2" fill="#2d3142" fill-opacity="0.12"/>
+        <text class="role" x="173" y="73">TRE</text>
+        <text class="node-name" x="219" y="90">Private tree</text>
+        <text class="node-sub" x="219" y="104">every tracked path</text>
+
+        <!-- the classification: the design choice's focal element -->
+        <rect x="311" y="156" width="132" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="311" y="156" width="132" height="64" rx="6" fill="#bf4520" stroke="#bf4520" stroke-width="1.2" fill-opacity="0.08"/>
+        <rect x="319" y="160" width="24" height="12" rx="2" fill="#bf4520" fill-opacity="0.20"/>
+        <text class="role focal" x="331" y="169">PAT</text>
+        <text class="node-name" x="377" y="186">Classification</text>
+        <text class="node-sub" x="377" y="200">a rule or an entry</text>
+        <text class="node-tool" x="377" y="213">no answer fails</text>
+
+        <!-- the export -->
+        <rect x="469" y="252" width="132" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="469" y="252" width="132" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="477" y="256" width="24" height="12" rx="2" fill="#2d3142" fill-opacity="0.12"/>
+        <text class="role" x="489" y="265">EXP</text>
+        <text class="node-name" x="535" y="282">Export</text>
+        <text class="node-sub" x="535" y="296">from each answer</text>
+        <text class="node-tool" x="535" y="309">writes the tree</text>
+
+        <!-- the gate -->
+        <rect x="627" y="252" width="132" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="627" y="252" width="132" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+        <rect x="635" y="256" width="24" height="12" rx="2" fill="#2d3142" fill-opacity="0.12"/>
+        <text class="role" x="647" y="265">GTE</text>
+        <text class="node-name" x="693" y="282">The gate</text>
+        <text class="node-sub" x="693" y="296">runs inside the tree</text>
+        <text class="node-tool" x="693" y="309">it just built</text>
+
+        <!-- the scanner -->
+        <rect x="785" y="252" width="132" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="785" y="252" width="132" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="793" y="256" width="24" height="12" rx="2" fill="#2d3142" fill-opacity="0.12"/>
+        <text class="role" x="805" y="265">SCN</text>
+        <text class="node-name" x="851" y="282">Scanner</text>
+        <text class="node-sub" x="851" y="296">names · paths · ids</text>
+        <text class="node-tool" x="851" y="309">declared · counted</text>
+
+        <!-- the public repository, past the boundary -->
+        <rect x="785" y="348" width="132" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="785" y="348" width="132" height="64" rx="6" fill="#2d3142" stroke="#2d3142" stroke-width="1" fill-opacity="0.03" stroke-opacity="0.30"/>
+        <rect x="793" y="352" width="24" height="12" rx="2" fill="#2d3142" fill-opacity="0.12"/>
+        <text class="role" x="805" y="361">PUB</text>
+        <text class="node-name" x="851" y="378">Public repo</text>
+        <text class="node-sub" x="851" y="392">the sign outward</text>
+        <text class="node-tool" x="851" y="405">what strangers see</text>
+
+        <!-- legend -->
+        <line x1="40" y1="440" x2="920" y2="440" stroke="#2d3142" stroke-width="0.8" stroke-opacity="0.10"/>
+
+        <text class="legend-label" x="132" y="458">STEPS</text>
+        <rect x="148" y="447" width="24" height="12" rx="6" fill="#2d3142" fill-opacity="0.12"/>
+        <text class="step-no" x="160" y="455">01</text>
+        <text class="legend-text" x="178" y="458">Tracked</text>
+        <rect x="292" y="447" width="24" height="12" rx="6" fill="#bf4520" fill-opacity="0.20"/>
+        <text class="step-no focal" x="304" y="455">02</text>
+        <text class="legend-text" x="322" y="458">Declared</text>
+        <rect x="400" y="447" width="24" height="12" rx="6" fill="#2d3142" fill-opacity="0.12"/>
+        <text class="step-no" x="412" y="455">03</text>
+        <text class="legend-text" x="430" y="458">Built</text>
+        <rect x="492" y="447" width="24" height="12" rx="6" fill="#2d3142" fill-opacity="0.12"/>
+        <text class="step-no" x="504" y="455">04</text>
+        <text class="legend-text" x="522" y="458">Checked</text>
+        <rect x="596" y="447" width="24" height="12" rx="6" fill="#2d3142" fill-opacity="0.12"/>
+        <text class="step-no" x="608" y="455">05</text>
+        <text class="legend-text" x="626" y="458">Shipped</text>
+
+        <text class="legend-label" x="132" y="484">FLOW</text>
+        <line x1="148" y1="481" x2="172" y2="481" stroke="#4f5d75" marker-end="url(#lore-publication-lore-publication-arr-muted)"/>
+        <text class="legend-text" x="180" y="484">Permitted route</text>
+        <line x1="280" y1="481" x2="304" y2="481" stroke="#bf4520" stroke-width="1.2" marker-end="url(#lore-publication-lore-publication-arr-accent)"/>
+        <text class="legend-text" x="312" y="484">Declared once</text>
+        <line x1="400" y1="481" x2="418" y2="481" stroke="#4f5d75" stroke-dasharray="4,3"/>
+        <line x1="424" y1="475" x2="424" y2="487" stroke="#4f5d75" stroke-width="2"/>
+        <text class="legend-text" x="432" y="484">Blocked · exclusion list</text>
+        <line x1="580" y1="481" x2="604" y2="481" stroke="#2d3142" stroke-dasharray="4,4" stroke-opacity="0.35"/>
+        <text class="legend-text" x="612" y="484">Trust boundary</text>
+
+        <text class="note" x="40" y="512">two classes of check are declared instance-only, and counted as skipped</text>
+      </svg>

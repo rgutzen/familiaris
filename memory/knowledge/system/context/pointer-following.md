@@ -6,8 +6,8 @@ authority: agent
 trust: trial
 last_verified: 2026-10-09
 verified_log: [2026-10-09, 2026-09-11]
-use_count: 6
-last_used: 2026-10-11
+use_count: 11
+last_used: 2026-10-22
 promoted_from: []
 source:
 supersedes:

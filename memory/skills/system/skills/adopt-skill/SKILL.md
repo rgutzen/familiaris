@@ -4,8 +4,8 @@ origin: authored
 authority: human
 trust: trusted
 last_verified: 2026-09-12
-use_count: 3
-last_used: 2026-09-03
+use_count: 7
+last_used: 2026-10-15
 promoted_from: []           # authored 2026-08-28; no journal entry for that session
 source:
 supersedes:
@@ -89,6 +89,17 @@ projects.
 
 ### 02 · Review — *full for `imported`, light for `learned`, skip if `authored`*
 
+9a. **Scan before you read.** `familiar skills scan skills/system/<subject>/<name>`.
+   It scans the record and, for `mode: link`, the upstream body, then writes the
+   result to `memory/skills/_scans.json` pinned to a content digest. A `HIGH` or
+   `CRITICAL` finding blocks admission until it is dispositioned
+   (`--accept <skill> <fingerprint> --reason "…"`); an open finding on a
+   `trust: trusted` skill fails `familiar skills scan --check`.
+   **Static only, and it does not replace step 9.** The semantic analyzers were
+   measured against this library on 2026-10-24: zero true HIGHs over 54 scans, and
+   a HIGH band dominated by opinions about documentation. They are `--llm`, by
+   hand, advisory. The scanner is also blind to paraphrase, and the one true
+   finding in this library was a visible `sudo` line — so read the body anyway.
 9. **Read the entire body before adopting it.** It is executable text from a
    stranger that will govern agent behaviour.
 10. Check for: instructions acting outside the stated purpose; exfiltration;
@@ -137,3 +148,8 @@ because it is the claim an agent cannot back.
   from the model permanently; that is a design decision, not a shortcut.
 - Copying an upstream body into a slash command. The command is a **pointer**;
   a copy forks from upstream on the next `git pull` and nobody notices.
+- Treating the scan as the review. It catches invisible payloads and exact
+  jailbreak phrasing; it does not catch a well-written sentence that redirects
+  the agent. Step 9 is still the review, and the scan is the record of it.
+- Adopting a `link` skill by scanning only our record. The body is upstream, and
+  that is where the instructions the agent will follow actually live.

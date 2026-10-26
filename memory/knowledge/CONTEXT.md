@@ -2,15 +2,15 @@
 
 <!-- LAYER 2 · ROUTING ONLY · Content lives in leaves, never here -->
 
-**Looking for a fact, not a folder? Read `INDEX.md`.** It lists every leaf in
-this tree with one line and its trigger terms, and it is the only index a model
-needs between `../../CONTEXT.md` and a leaf — one level of disclosure, never two
-([[knowledge-index]]). The branches below are for navigating by hand.
+**Looking for a fact, not a folder? Read `INDEX.md`.** It lists every subject
+with its leaves' trigger terms; the subject's own `INDEX.md` lists its leaves, one
+line each. Two levels since 2026-10-21, when one flat file outgrew its budget
+([[knowledge-index]], O3d). The branches below are for navigating by hand.
 
 <!-- BEGIN:BRANCHES (generated) -->
 | Branch | Holds | n |
 |---|---|---|
-| `system/` | The Workshop: what we built and maintain. Mirrors the codebase's own directories one scale down. | 33 |
+| `system/` | The Workshop: what we built and maintain. Mirrors the codebase's own directories one scale down. | 42 |
 <!-- END:BRANCHES -->
 
 Each branch's `Holds` line is its **criteria in `config/knowledge/subjects.yaml`**

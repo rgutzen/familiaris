@@ -41,7 +41,7 @@ def repo(tmp_path):
 @pytest.fixture
 def ctx(repo, tmp_path):
     # base != agents in production (PAZRAS_DATA_DIR lives outside the repo,
-    # see `familiar-memory.py`'s BASE_DIR) -- the lock file must not land inside
+    # see `roots.data_root()`) -- the lock file must not land inside
     # the tree it is guarding, or it would always be the dirty path.
     base = tmp_path / "data"
     base.mkdir()

@@ -174,7 +174,7 @@ def _batch_estimate(ctx, item: dict) -> tuple:
                               for m in members]))
 
 
-def _ask_batch(ctx, item: dict, key: str, usage: dict) -> tuple:
+def _ask_batch(ctx, item: dict, usage: dict) -> tuple:
     """Ask one question per member. Returns `(answered, stopped_fatally)`.
 
     The answer is written onto the MEMBER, keyed by nothing: one call carries
@@ -193,7 +193,7 @@ def _ask_batch(ctx, item: dict, key: str, usage: dict) -> tuple:
     for m in pending[:MAX_MEMBERS_PER_NIGHT]:
         try:
             out = jev.ask(_member_state(ctx, item, m),
-                          {"answer": question}, key=key)
+                          {"answer": question})
         except jev.JevError as exc:
             ctx.note("8b", f"Jev skipped member {m.get('ref')} of "
                            f"{item['kind']}: {exc.kind}: {exc}",
@@ -385,12 +385,6 @@ def run(ctx) -> bool:
     if not askable:
         return True
 
-    try:
-        key = jev.load_key()
-    except jev.JevError as exc:
-        ctx.note("8b", f"no Jev recommendations: {exc.kind}: {exc}", "error")
-        return True
-
     usage = {"input_tokens": 0, "output_tokens": 0}
     recorded = 0
     minted: list = []
@@ -399,7 +393,7 @@ def run(ctx) -> bool:
         # members' and its `drop`-banded members leave as their own numbered
         # items, so it cannot go through the single-answer path below.
         if item.get("members"):
-            n, fatal = _ask_batch(ctx, item, key, usage)
+            n, fatal = _ask_batch(ctx, item, usage)
             if n:
                 minted += _store_batch(ctx, item)
                 recorded += 1
@@ -411,7 +405,7 @@ def run(ctx) -> bool:
         # ambiguous about which item it belongs to.
         try:
             out = jev.ask(_state_for(ctx, item),
-                          {item["id"]: jev_schemas.question(item["kind"])}, key=key)
+                          {item["id"]: jev_schemas.question(item["kind"])})
         except jev.JevError as exc:
             # Never fatal to the pass. A skipped recommendation is a queue with
             # no recommendation, which `queue` and `decide` already handle.

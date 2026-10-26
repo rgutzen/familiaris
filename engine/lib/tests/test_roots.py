@@ -48,10 +48,15 @@ def test_every_named_home_sits_under_a_root():
             p.parent == roots.REPO, name
 
 
-def test_tilde_names_the_install():
-    install = roots.INSTALL.relative_to(pathlib.Path.home()).as_posix()
-    assert roots.tilde(roots.KNOWLEDGE) == f"~/{install}/{roots.rel(roots.KNOWLEDGE)}"
-    assert roots.from_home(roots.KNOWLEDGE) == f"{install}/{roots.rel(roots.KNOWLEDGE)}"
+def test_tilde_names_the_install(tmp_path, monkeypatch):
+    """A controlled install under home: the live one may be anywhere
+    (`PAZRAS_INSTALL=/opt/familiaris` is valid), and the case outside home
+    is the next test's."""
+    monkeypatch.setattr(pathlib.Path, "home", lambda: tmp_path / "home")
+    monkeypatch.setattr(roots, "INSTALL", tmp_path / "home" / "06_SYSTEM")
+    rel = roots.rel(roots.KNOWLEDGE)
+    assert roots.tilde(roots.KNOWLEDGE) == f"~/06_SYSTEM/{rel}"
+    assert roots.from_home(roots.KNOWLEDGE) == f"06_SYSTEM/{rel}"
 
 
 def test_an_install_outside_home_spells_itself_absolutely(tmp_path, monkeypatch):
@@ -81,7 +86,7 @@ def test_every_js_twin_agrees():
         if path.suffix not in (".js", ".mjs", ".ts") or "node_modules" in path.parts:
             continue
         for line in path.read_text().splitlines():
-            if "roots-twin:" not in line:
+            if "roots-twin:" not in line or "roots-twin: DATA_DEFAULT" in line:
                 continue
             m = twin.search(line)
             assert m, f"{path}: unparseable roots-twin line: {line!r}"
@@ -89,6 +94,24 @@ def test_every_js_twin_agrees():
             assert value == roots.rel(getattr(roots, name)), (path, name, value)
             seen += 1
     assert seen >= 5
+
+
+def test_every_js_data_root_twin_agrees():
+    """A plugin outside Python spells the data root's default on a line tagged
+    `// roots-twin: DATA_DEFAULT`, and that spelling is `roots.DATA_DEFAULT`."""
+    import re
+    twin = re.compile(r'homedir\(\), "([^"]+)"\);?\s*//\s*roots-twin:\s*DATA_DEFAULT')
+    seen = 0
+    for path in roots.ENGINE.rglob("*"):
+        if path.suffix not in (".js", ".mjs", ".ts") or "node_modules" in path.parts:
+            continue
+        for line in path.read_text().splitlines():
+            if "roots-twin: DATA_DEFAULT" in line:
+                m = twin.search(line)
+                assert m, f"{path}: unparseable data-root twin: {line!r}"
+                assert "~/" + m.group(1) == roots.DATA_DEFAULT, (path, m.group(1))
+                seen += 1
+    assert seen >= 1
 
 
 def test_the_vault_guard_refuses_only_the_target_nobody_chose(tmp_path, monkeypatch):

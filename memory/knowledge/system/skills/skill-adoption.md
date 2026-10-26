@@ -5,8 +5,8 @@ origin: authored
 authority: human
 trust: trusted
 last_verified: 2026-08-28
-use_count: 4
-last_used: 2026-10-09
+use_count: 9
+last_used: 2026-10-15
 promoted_from: []           # authored 2026-08-28; no journal entry for that session
 source:
 supersedes:
@@ -87,7 +87,7 @@ need a supply-chain review.
 |---|---|---|
 | 00 intake | fetch, hash, dedup check, licence, upstream pin | script |
 | 01 classify | subject (its folder), scope, triggers, antitriggers | agent |
-| 02 review | safety, boundary check, cite-not-restate | agent + human |
+| 02 review | safety, boundary check, cite-not-restate; the scan records it | agent + human + `skills scan` |
 | 03 install | frontmatter, place, regenerate routers | script |
 | 04 trial | accrue `use_count`, record notes, promote or deprecate | runtime + cron |
 
@@ -97,6 +97,24 @@ need a supply-chain review.
 | `learned` | skip | ✓ | light | ✓ | ✓ |
 | `derived` | source provenance only | ✓ | ✓ | ✓ | ✓ |
 | `imported` | ✓ | ✓ | **full** | ✓ | ✓ |
+
+### The scan is the instrument, not the gate
+
+`familiar skills scan` runs skillspector (static) over the artifact an agent will
+read — our record, plus the upstream body when `mode: link` — and writes
+`memory/skills/_scans.json` pinned to a digest of the bytes it saw. That record is
+the point: 30 of 40 skills are `link`, so a body can change under us, and
+"reviewed" was previously unfalsifiable. `--check` fails when the bytes on disk
+are not the bytes that were scanned, and when a `trust: trusted` skill has an
+undispositioned HIGH.
+
+What it does not do is decide. Measured on 2026-10-24 over 84 scans: 40
+HIGH/CRITICAL labels, one real finding, and the semantic tier (`--llm`, by hand,
+advisory) contributed none while emitting 19 labels that were opinions about
+documentation. Static catches invisible payloads — zero-width, bidi, hidden
+comments, encoded blobs — which no reader can do, and exact jailbreak phrasing,
+which any rewrite evades. Read the body as well; the scanner is a record and a
+tripwire, not a reviewer.
 
 ### Why stage 02 is not bureaucracy
 

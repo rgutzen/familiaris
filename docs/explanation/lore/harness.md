@@ -25,6 +25,11 @@ payload, no boundary hook, no capture ([codex](../../../memory/knowledge/system/
 It is in `harnesses.py`'s `ALL` because the audit measures it, which is a weaker
 claim than being an entry point.
 
+
+![The guises: one memory base, reached by every harness at the same path](../../assets/figures/lore-harness.svg)
+
+*the guises: one memory base, reached by every harness at the same path.*
+
 ## The design choice, and why
 
 **The harness is replaceable; the tree is not.** Everything the system knows

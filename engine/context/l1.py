@@ -8,7 +8,7 @@ expands no import syntax in `AGENTS.md`, so it names its instruction files in
 module is the compiler that makes the promise a mechanism.
 
 ONE SOURCE, SEVERAL SURFACES, ONE SPLICE WITH boundaries-compile. The always-loaded
-set lives in `pazras.ALWAYS_LOADED`; this module reads those files and emits each
+set lives in `navigation.ALWAYS_LOADED`; this module reads those files and emits each
 harness's surface. It writes into a file it does not own (a generated block in a
 markdown file, a JSON field), so idempotency (`compile && compile --check` exits 0)
 and drift detection (`--check`) come from `generated_block.splice` (2026-09-05) --

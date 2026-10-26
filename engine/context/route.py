@@ -39,7 +39,7 @@ import pathlib
 import re
 
 
-# Repo-relative since R3b, like `pazras.ALWAYS_LOADED`: the router is at the
+# Repo-relative since R3b, like `navigation.ALWAYS_LOADED`: the router is at the
 # root and the user's files under `config/`.
 CANONICAL = ("CONTEXT.md", "config/practice/user/user-identity.md",
              "config/practice/conventions/collaboration.md",

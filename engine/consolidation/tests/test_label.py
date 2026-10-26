@@ -79,7 +79,6 @@ def _stub(monkeypatch, answer):
                 "usage": {"input_tokens": 100, "output_tokens": 5}}
 
     monkeypatch.setattr(recommend.jev, "ask", fake_ask)
-    monkeypatch.setattr(recommend.jev, "load_key", lambda *a, **k: "k")
     return calls
 
 

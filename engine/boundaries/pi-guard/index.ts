@@ -9,8 +9,10 @@
  * guard that fills it.
  *
  * It reads the SAME compiled rule set as the Claude Code hook and the opencode
- * plugin (06_SYSTEM/config/boundaries/boundaries.json). No rule is
- * written twice. It enforces ONLY the rules whose `models` is `local` or
+ * plugin (06_SYSTEM/config/boundaries/boundaries.json) and runs the SAME judge
+ * as the opencode plugin (`../shared/judge.mjs`). No rule, no mutating command
+ * and no push verb is written twice; the two evaluators are held equal by the
+ * parity corpus. It enforces ONLY the rules whose `models` is `local` or
  * `remote` — the model-agnostic ones are gotgenes' job, and re-enforcing them
  * here would double-prompt or contradict the gotgenes config.
  *
@@ -23,13 +25,15 @@
  * a prompt (ctx.ui.confirm), NOT degraded to a refusal the way opencode's
  * throw-only channel forces. A `deny` blocks outright.
  *
- * KNOWN WEAKER THAN THE CLAUDE CODE GUARD: the bash scan here is a token split
- * plus a substring backstop (no shlex), matching the opencode plugin's
- * acknowledged limit. The tool-path checks are equivalent.
+ * NO LONGER WEAKER: the shared judge tokenises a command line as POSIX does,
+ * so the bash scan matches guard.py's `shlex.split`, and an unbalanced quote
+ * fails closed, as it does there.
  */
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { Judge, UNPARSED } from "../shared/judge.mjs";
 
 // Deliberately no import of `@earendil-works/pi-coding-agent`: this file lives
 // OUTSIDE Pi's module tree (version-controlled in 06_SYSTEM, reached through a
@@ -43,31 +47,15 @@ const HOME = os.homedir();
 // lib/roots.py, so test_roots.py holds these to it instead.
 const ENGINE = path.join(HOME, "06_SYSTEM/engine"); // roots-twin: ENGINE
 const MEMORY = path.join(HOME, "06_SYSTEM/memory"); // roots-twin: MEMORY
-// A twin, not a join off ENGINE: R2e moved the compiled rules to config/ and
-// this line kept the old path. A missing file means "nothing to enforce", so
-// the guard failed OPEN, silently, from 2026-10-07 to 2026-10-11.
-const RULES = path.join(HOME, "06_SYSTEM/config/boundaries/boundaries.json"); // roots-twin: BOUNDARIES_JSON
+// The compiled rules of the tree THIS FILE lives in, not of the install: the
+// extension handed a copy of the engine must enforce that copy's config, and a
+// worktree's suites were silently testing the main checkout's. Derived from the
+// module's own path, so it cannot drift the way a twin does -- R2e moved these
+// rules once and a hard-coded path failed OPEN, silently, for four days.
+const RULES_TREE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
+const RULES = path.join(RULES_TREE, "config/boundaries/boundaries.json"); // not-a-root: RULES_TREE is the tree root; "config/" here is the segment under it, not a root spelled by this file
+
 const HATCH = path.join(HOME, ".pi", "agent", "guard.disabled");
-
-// Pi's path-bearing built-ins (the six gotgenes gates), each with `input.path`
-// and its read/write effect. grep's `pattern` is a content regex, not a path,
-// and is deliberately absent. This list matches PATH_BEARING_TOOLS in
-// gotgenes/pi-packages — keep the two in agreement or the gates disagree.
-const TOOLS: Record<string, { fields: string[]; ops: string[] }> = {
-  read:  { fields: ["path"], ops: ["read"] },
-  grep:  { fields: ["path"], ops: ["read"] },
-  find:  { fields: ["path"], ops: ["read"] },
-  ls:    { fields: ["path"], ops: ["read"] },
-  write: { fields: ["path"], ops: ["write"] },
-  edit:  { fields: ["path"], ops: ["read", "write"] },
-};
-
-const HEREDOC = /<<-?\s*(['"]?)([A-Za-z_][A-Za-z0-9_]*)\1[\s\S]*?^\t*\2$/gm;
-// Word-for-word the mutators from wards / the opencode plugin.
-const MUTATORS = new Set(["rm", "rmdir", "mv", "cp", "dd", "truncate", "shred",
-  "tee", "chmod", "chown", "chgrp", "ln", "mkdir", "touch", "install",
-  "unlink", "rsync", "mkfs", "sponge"]);
-const REDIRECT = /(?:^|[\s;&|(])\d*>>?\s*(?!&)([^\s;&|<>()]+)/g;
 
 type Cfg = { local_providers: string[]; rules: Rule[] };
 type Rule = {
@@ -95,64 +83,10 @@ function config(): Cfg | null {
   }
 }
 
-function expand(token: string, cwd: string): string[] {
-  let t = token.replaceAll("${HOME}", HOME).replaceAll("$HOME", HOME);
-  if (t === "~") t = HOME;
-  else if (t.startsWith("~/")) t = path.join(HOME, t.slice(2));
-  if (path.isAbsolute(t)) return [path.normalize(t)];
-  return [path.normalize(path.join(cwd, t)), path.normalize(path.join(HOME, t))];
-}
-
-function under(rulePath: { abs: string; real: string | null }, target: string): boolean {
-  const bases = [rulePath.abs, rulePath.real].filter(Boolean) as string[];
-  return bases.some((b) =>
-    target === b || target.startsWith(b.replace(/\/$/, "") + "/"));
-}
-
-function hitsPath(rule: Rule, value: unknown, cwd: string): boolean {
-  if (typeof value !== "string" || !value) return false;
-  return expand(value, cwd).some((c) =>
-    rule.paths.some((p) => under(p, c)));
-}
-
-function tokens(cmd: string): string[] {
-  return cmd.match(/'[^']*'|"[^"]*"|\S+/g)?.map((t) => t.replace(/^['"]|['"]$/g, "")) ?? [];
-}
-
-function spellings(p: { abs: string; real: string | null }): string[] {
-  const out = [p.abs];
-  if (p.real) out.push(p.real);
-  if (p.abs.startsWith(HOME + "/")) {
-    const rel = p.abs.slice(HOME.length + 1);
-    out.push("~/" + rel, "$HOME/" + rel);
-  }
-  return out;
-}
-
-function commandHits(cmd: string, rule: Rule, cwd: string): boolean {
-  const stripped = cmd.replace(HEREDOC, "<<STRIPPED");
-  for (const tok of tokens(stripped)) if (hitsPath(rule, tok, cwd)) return true;
-  for (const p of rule.paths) {
-    for (const form of spellings(p)) {
-      const esc = form.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      if (new RegExp(esc + "($|[/\\s'\";)&|])").test(stripped)) return true;
-    }
-  }
-  return false;
-}
-
-function commandWrites(cmd: string, rule: Rule, cwd: string): boolean {
-  const stripped = cmd.replace(HEREDOC, "<<STRIPPED");
-  REDIRECT.lastIndex = 0;
-  let m;
-  while ((m = REDIRECT.exec(stripped)) !== null) {
-    if (hitsPath(rule, m[1].replace(/^['"]|['"]$/g, ""), cwd)) return true;
-  }
-  if (tokens(stripped).some((t) => MUTATORS.has(path.basename(t)))) return true;
-  return /\bsed\b[^;&|]*\s-\S*i/.test(stripped);
-}
-
 function reason(rule: Rule, what: string): string {
+  // An unsplittable command matched no path, so the rule's reason and the
+  // "do not retry" line would mislead: the fix is to balance a quote.
+  if (what === UNPARSED) return `\`${rule.mode}\`: ${what}.`;
   const bits = [`\`${rule.mode}\`: ${what}.`, rule.reason];
   if (rule.instead) bits.push(`Instead: ${rule.instead}.`);
   if (rule.see) bits.push(`See ${rule.see}.`);
@@ -175,13 +109,17 @@ export default function familiarGuard(pi: ExtensionAPI): void {
     const local = (cfg.local_providers ?? []).some((p) =>
       provider.includes(String(p).toLowerCase()));
     const klass = local ? "local" : "remote";
-    const rules = cfg.rules.filter((r) => r.models === klass);
+    // gotgenes' bash surface cannot express "a delete, EXCEPT under these
+    // paths": its patterns are globs and carry no exception. So the delete rule
+    // stays this guard's job even when it is model-agnostic (item 8i).
+    const rules = cfg.rules.filter((r) => r.models === klass || r.mode === "no-delete");
     if (!rules.length) return;
 
     const cwd = ctx.cwd || process.cwd();
     const tool = String(event.toolName ?? "").toLowerCase();
     const input = (event.input ?? {}) as Record<string, unknown>;
 
+    const judge = new Judge(cfg);
     const block = (rule: Rule, what: string) => {
       const msg = reason(rule, what);
       return rule.decision === "ask"
@@ -193,22 +131,33 @@ export default function familiarGuard(pi: ExtensionAPI): void {
     if (tool === "bash") {
       const cmd = String(input.command ?? "");
       for (const rule of rules) {
-        if (!commandHits(cmd, rule, cwd)) continue;
+        const hit = judge.commandHits(cmd, rule, cwd);
+        if (!hit) continue;
+        if (hit === "unparsed") return block(rule, UNPARSED);
+        if (rule.denies.includes("delete")) {
+          if (rule.paths.some((p) => judge.under(p, path.normalize(cwd)))) {
+            const why = judge.deletesOutsideSafe(cmd, cwd);
+            if (why) return block(rule, why);
+          }
+          continue;
+        }
         if (rule.denies.includes("read")) return block(rule, "this command reaches a path the rule covers");
-        if (rule.denies.includes("write") && commandWrites(cmd, rule, cwd)) {
+        if (rule.denies.includes("write") &&
+            (judge.redirectTargets(cmd).some((v) => judge.hitsPath(rule, v, cwd)) ||
+             judge.commandWrites(cmd))) {
           return block(rule, "this command appears to write under a protected path");
         }
       }
       return;
     }
 
-    const spec = TOOLS[tool];
+    const spec = judge.toolPaths("pi", tool);
     if (!spec) return;
     for (const rule of rules) {
-      const overlap = spec.ops.filter((o) => rule.denies.includes(o));
+      const overlap = [...spec.ops].filter((o) => rule.denies.includes(o));
       if (!overlap.length) continue;
       for (const field of spec.fields) {
-        if (hitsPath(rule, input[field], cwd)) {
+        if (judge.hitsPath(rule, input[field], cwd)) {
           return block(rule, `${tool}.${field} would ${overlap.join("/")} \`${input[field]}\``);
         }
       }

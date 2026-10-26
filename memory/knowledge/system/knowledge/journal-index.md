@@ -4,10 +4,10 @@ summary: The journal's shape, the M4 embedding index over it, and its two facets
 origin: authored
 authority: agent
 trust: trial
-last_verified: 2026-10-09
-verified_log: [2026-10-09, 2026-09-01]
-use_count: 10
-last_used: 2026-10-09
+last_verified: 2026-10-25
+verified_log: [2026-10-25, 2026-10-09, 2026-09-01]
+use_count: 11
+last_used: 2026-10-15
 promoted_from: []           # built 2026-09-01, ROADMAP.md M4
 source:
 supersedes:
@@ -53,11 +53,8 @@ have not yet been shown to be too slow.
   CPU, not a generative reranker — ROADMAP.md M4 is explicit: "embeddings
   only, no generative reranker"). Default model
   `nomic-embed-text` (override: `PAZRAS_EMBED_MODEL`); default endpoint
-  `http://127.0.0.1:11434` (override: `PAZRAS_OLLAMA_URL`). **Not yet pulled
-  as of 2026-09-01 — this session could not verify `ollama list` (the safety
-  classifier that gates Bash calls to network/package tools was intermittently
-  unavailable all session). Run `ollama pull nomic-embed-text` before the
-  first `familiar knowledge journal index`.**
+  `http://127.0.0.1:11434` (override: `PAZRAS_OLLAMA_URL`). Pulled, verified
+  with `ollama list` on 2026-10-25.
 - **Chunks by H2 (`## `) header**, one chunk per section, plus a preamble
   chunk when real content precedes the first header. Coarse on purpose — this
   finds the right entry and line range, not a sub-paragraph fact; the point is
@@ -67,7 +64,23 @@ have not yet been shown to be too slow.
   — outside git, like every other `PAZRAS_DATA_DIR` cache) stores each source
   file's mtime; a rebuild only re-chunks and re-embeds files whose mtime
   changed, and drops chunks for files removed from disk. `--force` rebuilds
-  everything (also triggered automatically if the embedding model changes).
+  everything (also triggered automatically if the embedding model or the
+  schema changes). The build log says what "changed" means: `474 changed
+  file(s) (471 new, 3 modified)`. A model or schema rebuild announces itself
+  with `forcing full rebuild` on the line before.
+- **Small batches, saved as it goes** (`BATCH_CHUNKS` 32, `BATCH_CHARS`
+  100,000, a save at least every 60 s). A file is recorded as indexed, with
+  its mtime, only once every chunk of it is embedded; a run that dies keeps the
+  files it finished and the next run starts at the one in flight.
+- **Chunks are capped at 8,000 chars** (`MAX_CHUNK_CHARS`), stored and sent.
+  `nomic-embed-text` reads 2,048 tokens and Ollama truncates the rest silently,
+  so 8,000 chars — ~2,000 tokens of English — is about what the model takes
+  anyway. A chunk longer than that keeps its opening and loses its tail: the
+  measured price of keeping a 1 MB section out of the request body. A hit's
+  `start_line`–`end_line` still span the whole section. Chunks written before
+  the cap keep their full text until a `--force` run — 64 of them, 2.3 MB, on
+  2026-10-25 — and their vectors are unchanged, so that rebuild is only worth
+  it when the stale text is in the way.
 - **Pure-Python cosine similarity**, no numpy — stdlib only, same constraint
   `frontmatter.py` states for the same reason: a systemd-timer script must not
   depend on an import that can go missing from whatever `python3` is first on
@@ -169,9 +182,57 @@ key and runs: `../consolidation/_data/o5c-*`; `python3 o5c-retrieval.py
 enforcement and per-harness wiring: [[mcp-servers]]. This module's
 `search()` function is unchanged by that — the server is a thin wrapper.
 
+## Failure handling
+
+`_post_json` separates three outcomes, because the remedies differ:
+
+| Class | Cause | Message starts | Index build |
+|---|---|---|---|
+| `OllamaUnreachable` | no HTTP answer: refused, DNS, timeout, a socket closed unanswered | `cannot reach Ollama ... Is ollama serve running?` | stops, progress saved |
+| `OllamaHTTPError`, status in {400, 413, 422, 500} | the server refused this request | `Ollama at … answered /api/embed with HTTP 400 Bad Request: <body>` | the batch is halved until the chunk is alone; that chunk is skipped and logged (`!! skipped path:lines`) |
+| `OllamaHTTPError`, any other status (404 model not pulled, 401, 503) | the server, not the request | same, with the body | stops, progress saved |
+
+Five chunks skipped in a row stop the run: that is a refusing server, not bad
+chunks. A file with a skipped chunk is left unrecorded, so the next run retries
+it; the run still exits 0 and the `!!` lines are in the unit's journal
+(`journalctl --user -u familiar-journal-index`). Exit code 2 is only for a stop.
+
+**The 2026-10-24 incident.** The unit failed on 10-24 and 10-25 with "cannot
+reach Ollama (HTTP Error 400)". Both statements were wrong:
+
+- *The index was not invalidated.* 388 of its 391 recorded mtimes still matched
+  the live journal. The 474 "changed" files were 471 new entries and 3 edits:
+  commit `4457f8d` (nightly consolidation 2026-10-23, stage 1 replay) added 470
+  entries to `journal/2026/10/` at once, 391 → 862 files. A backlog that size
+  is a real 2,281-chunk build, not a cache miss.
+- *Ollama was reachable.* One `/api/embed` request carrying 2,281 chunks
+  (4.7 MB) ran 85 s and returned HTTP 400, body `Post
+  "http://127.0.0.1:…/tokenize": … connection reset by peer`. Two chunks of
+  1.1 MB each (the `Warnings` section of `reports/2026-10-23_consolidation{,.full}.md`)
+  caused it: each embeds alone in 0.5 s, and the same 2,281 chunks capped at
+  8,000 chars each pass in 84 s. The old code raised `HTTPError`, a subclass
+  of `URLError`, as "cannot reach", and saved only after the whole batch, so
+  each day began again at zero.
+
+**Run it from the install.** The index keys files by path inside `memory/` and
+compares mtimes. A git checkout sets every mtime to the checkout time, so
+indexing a worktree's `memory/` against the live index re-embeds every file. To
+test a change, point the worktree's code at the install's journal and a copy of
+the index: `PAZRAS_MEMORY_DIR=~/06_SYSTEM/memory PAZRAS_DATA_DIR=/tmp/x
+./engine/familiar knowledge journal index`. Measured on 2026-10-25: on a copy,
+2,281 chunks in 3 min 24 s with three checkpoint saves; then the live unit,
+2,281 chunks from 474 changed files in **92 s**, no chunk skipped,
+`Result=success`, 4,200 chunks total, and the run 15 s later embedding 0. So
+the daily timer is incremental again, and the copy run's 3 min 24 s was the
+pessimistic number (a cold `/tmp` copy, not the install's own page cache). The
+data root keeps the name `pazras` because it is the state of
+one PAZRAS tree; the naming decision (`24e792a`, ratified 2026-10-13) renames
+the software to Familiaris and leaves paths and `PAZRAS_*` variable names
+alone.
+
 ## Scheduling
 
-`pazras-journal-index.timer`, daily, incremental — see
+`familiar-journal-index.timer`, daily, incremental — see
 [[scheduled-processes]]. Deliberately its **own** unit, not folded into the
 nightly consolidation pass ([[consolidation-cycle]]'s 9 stages are D3-only:
 git-committing, tree-scoring machinery that does not fit a disposable,

@@ -184,15 +184,17 @@ def classify(rel: str, all_rules: list[Rule]) -> tuple[Rule | None, str]:
 
 
 def _places(repo: pathlib.Path = roots.REPO) -> list[str]:
-    """Every directory the ontology register files: `places:` and `unmapped:`."""
-    path = repo / roots.CONFIG_REL / "knowledge" / "subjects.yaml"
+    """Every directory the ontology register files: `places:` and `unmapped:`.
+
+    It asks `knowledge.ontology` rather than parsing `subjects.yaml` a second
+    time (dev/architecture 4d): two readers of one register is two chances for
+    them to disagree about which directories it claims.
+    """
+    from knowledge import ontology
     try:
-        cfg = _miniyaml.load(path.read_text()) or {}
-    except (OSError, _miniyaml.YamlError) as exc:
-        raise SystemExit(f"publish-audit: cannot read {roots.rel(path)} ({exc})")
-    out = [p for s in cfg.get("subjects") or [] for p in (s.get("places") or [])]
-    out += [u["id"] for u in cfg.get("unmapped") or [] if u.get("id")]
-    return out
+        return list(ontology.all_places())
+    except Exception as exc:              # noqa: BLE001 - the register is the input
+        raise SystemExit(f"publish-audit: cannot read the ontology register ({exc})")
 
 
 def _covers(r: Rule, place: str) -> bool:

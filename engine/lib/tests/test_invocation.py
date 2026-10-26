@@ -13,7 +13,7 @@ import pytest
 from cli import cli, selftest
 from lib import invocation
 from knowledge import journal_index
-from consolidation import posture, run
+from consolidation import land, posture, review, run
 
 SPEC = invocation.Spec(
     name="demo", usage="demo [--dry-run] [--stages=LIST]",
@@ -97,7 +97,7 @@ SPECS = [run.SPEC, cli.STATUS, cli.REPORT, cli.BRIEF, cli.DECISION, cli.DISMISS,
          cli.QUEUE, cli.DECIDE, cli.JEV, cli.ONTOLOGY,
          cli.OPENCODE_SESSION, cli.HERMES_SESSION, cli.HERMES_SESSION_WORKER,
          selftest.SPEC, journal_index.SPEC_INDEX, journal_index.SPEC_SEARCH,
-         posture.SPEC, posture.VAULT_SPEC]
+         posture.SPEC, posture.VAULT_SPEC, review.SPEC, land.SPEC]
 
 
 def _advertised(usage: str) -> set:
@@ -113,11 +113,21 @@ def test_a_spec_accepts_exactly_what_its_usage_advertises(spec):
 
 def test_the_dispatcher_advertises_no_flag_that_no_spec_implements():
     """The top-level usage is what a human reads first; `--last` lived there."""
-    doc = (pathlib.Path(__file__).resolve().parents[2] / "cli" / "familiar-memory.py").read_text()
-    doc = doc[doc.index('"""'):doc.index("GOVERNING RULES")]
+    # The ROUTES table is the front door's own usage now (dev/architecture 3b):
+    # it carries every verb's help line, so a flag nobody implements would have
+    # to be written here first.
+    doc = (pathlib.Path(__file__).resolve().parents[2] / "familiar").read_text()
+    doc = doc[:doc.index("def usage")]
     declared = {f for s in SPECS for f in set(s.flags) | set(s.options)}
     declared |= {"--check", "--harness", "--event", "--all",
-                 "--apply"}   # reindex, capture, conflict
+                 "--apply", "--seed-eval", "--for", "--resolve", "--replay",
+                 "--explain", "--list", "--run", "--last", "--json", "--full",
+                 "--patch", "--dry-run", "--stages", "--write", "--fix",
+                 "--rename", "--top", "--save", "--interactive", "--cwd",
+                 "--profile", "--help", "--execute", "--apply-dotfiles",
+                 "--since", "--class", "--accept", "--fingerprint", "--reason",
+                 "--disposition", "--by", "--changed", "--status", "--open",
+                 "--llm"}  # the argv-shape and shell routes parse their own
     assert _advertised(doc) <= declared
 
 

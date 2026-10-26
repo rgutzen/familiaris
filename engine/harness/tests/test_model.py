@@ -26,7 +26,7 @@ import pathlib
 
 import pytest
 
-from harness import model
+from harness import model, pi_call
 from lib import _miniyaml, roots
 
 
@@ -89,8 +89,15 @@ def test_the_seam_is_the_profile_and_nothing_else():
         assert model.MODEL == configured
 
 
-def test_the_id_is_passed_to_pi_verbatim():
+def test_the_id_is_passed_to_pi_verbatim(monkeypatch):
     """Whatever the profile says reaches `--model` unchanged. A seam that
-    rewrote the id would be a second place models are named."""
-    src = pathlib.Path(model.__file__).read_text()
-    assert '"--model", MODEL' in src
+    rewrote the id would be a second place models are named. Behavioural since
+    2026-10-20: the old source-text check broke the moment the spawn
+    moved into `pi_call`, though the id still reached pi unchanged."""
+    seen = {}
+    monkeypatch.setattr(model, "available", lambda: True)
+    monkeypatch.setattr(pi_call, "spawn",
+                        lambda cmd, **kw: seen.setdefault("argv", cmd) and pi_call.Result(0, "ok"))
+    assert model.ask("hi") == "ok"
+    i = seen["argv"].index("--model")
+    assert seen["argv"][i + 1] == model.MODEL

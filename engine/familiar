@@ -25,92 +25,144 @@ A shell back-end is `exec`'d: same process slot, no wrapper left waiting.
 KEYLESS. Nothing here reads a credential; `cli/tests/test_cli_keyless.py`
 scans this file with the rest.
 """
+
 import os
 import sys
 
 HERE = os.path.dirname(os.path.realpath(__file__))
 
-# back-end name -> (kind, path relative to engine/). The key is the PROGRAM's
-# name: `memory` would be read as the memory ROOT by `checks/root_literals.py`,
-# and it is not one (found when the vault became `memory/`, R3b).
-BACKENDS = {
-    "familiar-memory": ("python", "cli/familiar-memory.py"),
-    "familiar-context": ("python", "cli/familiar-context.py"),
-    "pazras": ("exec", "structure/pazras.sh"),
-    "pazras-utils": ("exec", "host/pazras-utils.sh"),
-}
+# A ROUTE IS THE ENTRY FUNCTION ITSELF (dev/architecture 3a). Each value says
+# where the verb's code lives, which Spec parses its flags, and the SHAPE of the
+# call. The two back-ends this front door used to hide (`familiar-memory.py`,
+# `familiar-context.py`) are gone: they were dispatch tables over these same
+# functions, and `tests/test_front_door.py` no longer has to hold two tables in
+# agreement.
+#
+#   PY(target, spec, shape, help)   a Python function in engine/
+#   EXE(script, prefix, help)       a shell script, exec'd in this process slot
+#
+# shape says how the parsed invocation is handed over:
+#   "inv"   fn(inv)          -- modern: the function takes the parsed Invocation
+#   "argv"  fn(argv)         -- the function keeps its own argparse (or its own
+#   "argv2" fn(argv, base, agents)   -- parse) and gets the raw words
+# The shapes exist while the modules converge; each is a fact about the function,
+# not a second dispatch table, and none of them parses a flag.
+def PY(target, spec, shape, help):
+    return ("py", target, spec, shape, help)
 
-# subject -> verb -> (back-end, argv prefix, one line of help). Subject ids
-# are the engine's folder names, which are the register's ids after R3a.
+
+def EXE(script, prefix, help):
+    return ("exec", script, prefix, "", help)
+
+
+# subject -> verb -> route. Subject ids are the engine's folder names, which are
+# the register's ids after R3a.
 ROUTES = {
     "knowledge": {
-        "index": ("familiar-memory", ["knowledge", "index"], "rebuild knowledge/INDEX.md and the routers [--check]"),
-        "glossary": ("familiar-memory", ["knowledge", "glossary"], "O3c: rebuild the generated subject glossary [--check]"),
-        "journal": ("familiar-memory", ["journal"], "index [--force] | search '<query>' [--top=N]: the journal's embedding index"),
-        "ontology": ("familiar-memory", ["ontology"], "<cmd>: the class registers, read and checked"),
+        "index": PY("knowledge.knowledge_index:main", "", "argv", "rebuild knowledge/INDEX.md and the routers [--check]"),
+        "glossary": PY("knowledge.glossary:main", "", "argv", "O3c: rebuild the generated subject glossary [--check]"),
+        "journal": PY("knowledge.journal_index:main", "", "argv2", "index [--force] | search '<query>' [--top=N]: the journal's embedding index"),
+        "ontology": PY("cli.cli:ontology_cmd", "ONTOLOGY", "inv", "<cmd>: the class registers, read and checked"),
     },
     "consolidation": {
-        "run": ("familiar-memory", ["run"], "the nightly pass [--dry-run] [--stages=LIST]"),
-        "status": ("familiar-memory", ["status"], "staging and log counts"),
-        "report": ("familiar-memory", ["report"], "the latest report [--full] [--patch]"),
-        "brief": ("familiar-memory", ["brief"], "what changed, what's open, what failed"),
-        "posture": ("familiar-memory", ["posture"], "the memory-poisoning checks"),
-        "vault": ("familiar-memory", ["vault"], "the vault contract, derived [--check | --write]"),
-        "queue": ("familiar-memory", ["queue"], "the open decisions, numbered [--all] [--json]"),
-        "decide": ("familiar-memory", ["decide"], "resolve item N, or walk the queue"),
-        "decision": ("familiar-memory", ["decision"], "record a user decision --kind=K --text=T"),
-        "dismiss": ("familiar-memory", ["dismiss"], "stop a decided proposal recurring --target=P --kind=K"),
-        "conflicts": ("familiar-memory", ["conflicts"], "stage 5d alone [--check] [--apply]"),
+        "run": PY("consolidation.run:main", "SPEC", "inv", "the nightly pass [--dry-run] [--stages=LIST]"),
+        "status": PY("cli.cli:status", "STATUS", "inv", "staging and log counts"),
+        "report": PY("cli.cli:show_report", "REPORT", "inv", "the latest report [--full] [--patch]"),
+        "brief": PY("cli.cli:show_brief", "BRIEF", "inv", "what changed, what's open, what failed"),
+        "posture": PY("consolidation.posture:main", "SPEC", "inv", "the memory-poisoning checks"),
+        "vault": PY("consolidation.posture:vault_main", "VAULT_SPEC", "inv", "the vault contract, derived [--check | --write]"),
+        "queue": PY("cli.cli:show_queue", "QUEUE", "inv", "the open decisions, numbered [--all] [--json]"),
+        "decide": PY("cli.cli:decide", "DECIDE", "inv", "resolve item N, or walk the queue"),
+        "land": PY("consolidation.land:main", "SPEC", "inv", "schedule one job that lands the decisions marked Land it [--dry-run]"),
+        "review": PY("consolidation.review:main", "SPEC", "inv", "walk the queue from the phone --remote [--detach]"),
+        "decision": PY("cli.cli:decision", "DECISION", "inv", "record a user decision --kind=K --text=T"),
+        "dismiss": PY("cli.cli:dismiss", "DISMISS", "inv", "stop a decided proposal recurring --target=P --kind=K"),
+        "conflicts": PY("consolidation.stages.conflict:main", "", "argv", "stage 5d alone [--check] [--apply]"),
     },
     "skills": {
-        "index": ("familiar-memory", ["skills", "index"], "rebuild the skill routers [--check]"),
+        "index": PY("consolidation.stages.reindex:main", "", "argv", "rebuild the skill routers [--check]"),
+        "scan": PY("skills.scan:main", "", "argv",
+                   "scan a skill's record and body; the digest ledger [--all|--check|--accept]"),
     },
     "context": {
-        "capture": ("familiar-memory", ["capture"], "hook payload on stdin --harness=H --event=E"),
-        "opencode-session": ("familiar-memory", ["opencode-session"], "stage one opencode transcript --session=ID"),
-        "hermes-session": ("familiar-memory", ["hermes-session"], "hook-facing: session_id on stdin"),
-        "hermes-session-worker": ("familiar-memory", ["hermes-session-worker"], "the detached worker --session=ID"),
-        "pointers": ("familiar-memory", ["pointers"], "which paths sessions touched"),
-        "harness": ("familiar-context", ["harness"], "drive each harness once against a stub"),
-        "tree": ("familiar-context", ["tree"], "what navigating the tree costs, by route [--check]"),
-        "route": ("familiar-context", ["route"], "is the tree delivered, or only reachable"),
-        "links": ("familiar-context", ["links"], "do the tree's pointers resolve [--check] [--fix]"),
-        "l1": ("familiar-context", ["l1"], "compile the always-on payload [--check]"),
-        "all": ("familiar-context", ["all"], "the context audits, one report"),
+        "capture": PY("context.capture:main", "", "argv2", "hook payload on stdin --harness=H --event=E"),
+        "opencode-session": PY("cli.cli:opencode_session", "OPENCODE_SESSION", "inv", "stage one opencode transcript --session=ID"),
+        "hermes-session": PY("cli.cli:hermes_session", "HERMES_SESSION", "inv", "hook-facing: session_id on stdin"),
+        "hermes-session-worker": PY("cli.cli:hermes_session_worker", "HERMES_SESSION_WORKER", "inv", "the detached worker --session=ID"),
+        "pointers": PY("context.pointers:main", "SPEC", "inv", "which paths sessions touched"),
+        "harness": PY("context.cli:cmd_harness", "HARNESS", "inv", "drive each harness once against a stub"),
+        "tree": PY("context.cli:cmd_tree", "TREE", "inv", "what navigating the tree costs, by route [--check]"),
+        "loadout": PY("context.cli:cmd_loadout", "LOADOUT", "inv", "what a harness declares to the model, replayed from its session [--check]"),
+        "route": PY("context.cli:cmd_route", "ROUTE", "inv", "is the tree delivered, or only reachable"),
+        "links": PY("context.cli:cmd_links", "LINKS", "inv", "do the tree's pointers resolve [--check] [--fix]"),
+        "l1": PY("context.cli:cmd_l1", "L1", "inv", "compile the always-on payload [--check]"),
+        "all": PY("context.cli:cmd_all", "ALL", "inv", "the context audits, one report"),
     },
     "harness": {
-        "jev": ("familiar-memory", ["jev"], "check | probe: the labelling model's key and pin"),
+        "jev": PY("cli.cli:jev_cli", "JEV", "inv", "check | probe: the labelling model's key and pin"),
+    },
+    "orchestration": {
+        "specs": PY("orchestration.specs:main", "", "argv", "the SPECS.md item contract --explain"),
+        "todos": PY("orchestration.todos:main", "", "argv", "the tracks' SPECS: done, open, what waits on you [track]"),
+        "dispatch": PY("orchestration.dispatch:main", "", "argv", "check a SPECS.md is dispatchable --check <file>"),
+        "models": PY("orchestration.models:main", "", "argv", "the model catalogue --check against pi"),
+        "bindings": PY("orchestration.bindings:main", "", "argv", "who does a tool's work --check | --resolve <on> | run"),
+        "eval": PY("orchestration.eval:main", "", "argv", "the evaluation set --list | --run"),
+        "trigger": PY("orchestration.trigger:main", "", "argv", "the count trigger --replay <n>"),
+        "selection": PY("orchestration.selection:main", "", "argv", "the pre-selections --check | --explain | --for <class>"),
+        "asks": PY("orchestration.asks:main", "", "argv", "the permission-ask census --replay <n>"),
+        "ping": PY("orchestration.ping:main", "", "argv", "keep the Claude window open: one minimal call when no 5h window runs [--last N]"),
+        "delegations": PY("orchestration.log:main", "", "argv", "the delegation log, or --replay <n> parent sessions with `used`"),
+        "report": PY("orchestration.log:report_main", "", "argv", "one screen for 5d: window, floors, gate [--since] [--json] [--check]"),
+        "scout": PY("orchestration.scout:main", "", "argv", "nominate a model the chart puts ahead of a class's incumbent [--check]"),
+        "posterior": PY("orchestration.posterior:main", "", "argv", "P(verified) per (model, effort, class), from each class's own evidence [--class K]"),
+        "costs": PY("orchestration.costs:main", "", "argv", "what one attempt of each (model, effort, class) uses, from the logs [--explain M]"),
+        "labels": PY("orchestration.labels:main", "", "argv", "per-item outcome labels (3f) [--seed-eval]"),
+        "verify": PY("orchestration.labels:verify_main", "", "argv", "run one item's verify: and label it <SPECS.md> <id>"),
     },
     "checks": {
-        "healthcheck": ("pazras", ["healthcheck"], "stow, drift, unit results, mounts [--fix]"),
-        "selftest": ("familiar-memory", ["selftest"], "the pass's invariants, parity, hook cost"),
+        "healthcheck": EXE("structure/pazras.sh", ["healthcheck"], "stow, drift, unit results, mounts [--fix]"),
+        "selftest": PY("cli.selftest:main", "SPEC", "inv", "the pass's invariants, parity, hook cost"),
+        "evals": PY("checks.evaluation:main", "", "argv", "is each component worth it: list | read | review | verdict"),
+        "updates": PY("cli.updates:main", "", "argv", "what has a newer version: tools, pi extensions, skill upstreams; never applies [--check]"),
     },
     "structure": {
-        "init": ("pazras", ["init"], "create the PARA tree under $PARA_ROOT, from the profile"),
-        "skeleton": ("pazras", ["skeleton"], "seed the vault's missing always-loaded files [--check]"),
-        "link": ("pazras", ["link"], "install `familiar` into ~/.local/bin (one symlink)"),
-        "generate": ("pazras", ["structure"], "regenerate STRUCTURE.md [--check]"),
-        "maps": ("pazras", ["maps"], "regenerate the architecture figures [--check]"),
-        "validate": ("pazras", ["validate"], "the profile and master config parse, no duplicate Area codes"),
-        "status": ("pazras", ["status"], "system status report"),
-        "config": ("pazras", ["config"], "where the master config is"),
-        "project": ("pazras", ["project"], "create | complete | list"),
-        "zettel": ("pazras", ["zettel"], "daily | new"),
+        "init": EXE("structure/pazras.sh", ["init"], "create the PARA tree under $PARA_ROOT, from the profile"),
+        "skeleton": EXE("structure/pazras.sh", ["skeleton"], "seed the vault's missing always-loaded files [--check]"),
+        "link": EXE("structure/pazras.sh", ["link"], "install `familiar` into ~/.local/bin (one symlink)"),
+        "generate": EXE("structure/pazras.sh", ["structure"], "regenerate STRUCTURE.md [--check]"),
+        "maps": EXE("structure/pazras.sh", ["maps"], "regenerate the architecture figures [--check]"),
+        "validate": EXE("structure/pazras.sh", ["validate"], "the profile and master config parse, no duplicate Area codes"),
+        "status": EXE("structure/pazras.sh", ["status"], "system status report"),
+        "config": EXE("structure/pazras.sh", ["config"], "where the master config is"),  # not-a-root: the VERB is named `config`; the path beside it is the script
+        "project": EXE("structure/pazras.sh", ["project"], "create | complete | list"),
+        "zettel": EXE("structure/pazras.sh", ["zettel"], "daily | new"),
     },
     "schedule": {
-        "timers": ("pazras", ["timers"], "stage the units from PAZRAS_TIMERS [--check | --apply-dotfiles]"),
+        "timers": EXE("structure/pazras.sh", ["timers"], "stage the units from PAZRAS_TIMERS [--check | --apply-dotfiles]"),
+        "sessions": PY("schedule.sessions:main", "", "argv", "sessions, once or repeating: add | list | show | cancel | run [--check]"),
+    },
+    "relay": {
+        "serve": PY("relay.cli:serve", "", "argv", "the phone channel: one Telegram poller and the ask socket"),
+        "status": PY("relay.cli:status", "", "argv", "the poller, the owner and the open asks [--check]"),
+        "ask": PY("relay.cli:ask", "", "argv", "ask the owner and wait for the answer (a manual test)"),
+        "pair": PY("relay.cli:pair", "", "argv", "print a one-time code to pair the phone"),
+        "pause": PY("relay.cli:pause", "", "argv", "hold every ask; only the machine resumes"),
+        "resume": PY("relay.cli:resume", "", "argv", "lift a pause"),
+        "notify": PY("relay.cli:notify", "", "argv", "send the owner a note"),
+        "withdraw": PY("relay.cli:withdraw", "", "argv", "close an open ask without an answer"),
     },
     "backup": {
-        "run": ("pazras", ["backup"], "today's scheduled backups [FREQUENCY]"),
-        "verify": ("pazras", ["backup", "verify"], "restic integrity check [PERCENT]"),
-        "prune": ("pazras", ["backup", "prune"], "retention and space reclamation"),
-        "sync": ("pazras", ["backup", "sync"], "push repo deltas offsite"),
-        "reconcile": ("pazras", ["backup", "reconcile"], "remote packs the local repo dropped [--execute]"),
+        "run": EXE("structure/pazras.sh", ["backup"], "today's scheduled backups [FREQUENCY]"),
+        "verify": EXE("structure/pazras.sh", ["backup", "verify"], "restic integrity check [PERCENT]"),
+        "prune": EXE("structure/pazras.sh", ["backup", "prune"], "retention and space reclamation"),
+        "sync": EXE("structure/pazras.sh", ["backup", "sync"], "push repo deltas offsite"),
+        "reconcile": EXE("structure/pazras.sh", ["backup", "reconcile"], "remote packs the local repo dropped [--execute]"),
     },
     "host": {
-        "goto": ("pazras-utils", ["goto"], "print a PARA directory: inbox|projects|areas|zettel|resources|system|<Area>"),
-        "capture": ("pazras-utils", ["capture"], "append a line to 00_INBOX/quick-capture.md"),
-        "daily": ("pazras-utils", ["daily"], "create or show today's daily note"),
+        "goto": EXE("host/pazras-utils.sh", ["goto"], "print a PARA directory: inbox|projects|areas|zettel|resources|system|<Area>"),
+        "capture": EXE("host/pazras-utils.sh", ["capture"], "append a line to 00_INBOX/quick-capture.md"),
+        "daily": EXE("host/pazras-utils.sh", ["daily"], "create or show today's daily note"),
     },
 }
 
@@ -119,13 +171,13 @@ def usage(out=sys.stdout) -> int:
     out.write("usage: familiar <subject> <verb> [args]\n")
     for subject, verbs in ROUTES.items():
         out.write(f"\n{subject}\n")
-        for verb, (_, _, text) in verbs.items():
-            out.write(f"  {verb:<22}{text}\n")
+        for verb, route in verbs.items():
+            out.write(f"  {verb:<22}{route[-1]}\n")
     return 0
 
 
 def resolve(argv):
-    """argv -> (back-end, argv for it), or raise SystemExit with a message."""
+    """argv -> (route, rest), or raise SystemExit with a message."""
     if not argv or argv[0] in ("-h", "--help", "help"):
         raise SystemExit(usage())
     subject = argv[0]
@@ -134,30 +186,59 @@ def resolve(argv):
                          f"{', '.join(ROUTES)}\n")
         raise SystemExit(1)
     verbs = ROUTES[subject]
-    if len(argv) < 2 or argv[1] in ("-h", "--help", "help"):
-        sys.stdout.write(f"familiar {subject} <verb>\n")
-        for verb, (_, _, text) in verbs.items():
-            sys.stdout.write(f"  {verb:<22}{text}\n")
-        raise SystemExit(0 if len(argv) >= 2 else 1)
+    if len(argv) == 1 or argv[1] in ("-h", "--help", "help"):
+        # A subject with no verb is an incomplete command (exit 1); `--help`
+        # asks for the list (exit 0). The old front door drew the same line.
+        sys.stdout.write(f"usage: familiar {subject} <verb> [args]\n")
+        for verb, route in verbs.items():
+            sys.stdout.write(f"  {verb:<22}{route[-1]}\n")
+        raise SystemExit(0 if len(argv) > 1 else 1)
     verb = argv[1]
     if verb not in verbs:
         sys.stderr.write(f"familiar: {subject} has no verb {verb!r}. Verbs: "
                          f"{', '.join(verbs)}\n")
         raise SystemExit(1)
-    backend, prefix, _ = verbs[verb]
-    return backend, prefix + list(argv[2:])
+    return verbs[verb], list(argv[2:])
+
+
+def agents_dir() -> str:
+    from lib import roots
+    return os.environ.get("PAZRAS_MEMORY_DIR", str(roots.INSTALL / roots.MEMORY_REL))
 
 
 def main(argv) -> int:
-    backend, args = resolve(argv)
-    kind, rel = BACKENDS[backend]
-    path = os.path.join(HERE, rel)
+    route, rest = resolve(argv)
+    kind, target, spec_attr, shape, _ = route
     if kind == "exec":
-        os.execv(path, [path] + args)
-    import runpy
-    sys.argv = [path] + args
-    runpy.run_path(path, run_name="__main__")
-    return 0
+        # A shell back-end is exec'd: same process slot, no wrapper left waiting.
+        path = os.path.join(HERE, target)
+        os.execv(path, [path] + list(spec_attr) + rest)
+
+    import importlib
+    module_name, _, func_name = target.partition(":")
+    module = importlib.import_module(module_name)
+    fn = getattr(module, func_name)
+    if shape == "argv2":                   # fn(argv, data root, memory root)
+        from lib import roots
+        return fn(rest, str(roots.data_root()), agents_dir())
+    if not spec_attr:                      # the function parses its own flags
+        return fn(rest)
+
+    from lib import invocation, roots
+    spec = getattr(module, spec_attr)
+    try:
+        inv = invocation.parse(rest, spec, str(roots.data_root()), agents_dir())
+    except invocation.UsageError as exc:
+        sys.stderr.write(f"[familiar] {exc}\n")
+        return 1
+    if inv.help:
+        sys.stderr.write(f"  usage: {spec.usage}\n")
+        return 0
+    try:
+        return fn(inv)
+    except invocation.UsageError as exc:
+        sys.stderr.write(f"[familiar] {exc}\n")
+        return 1
 
 
 if __name__ == "__main__":

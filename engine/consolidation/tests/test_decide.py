@@ -1,6 +1,6 @@
 """`decide`, every form, and the staleness refusal (SPECS.md items 1c, 1d, 1g).
 
-`decide` is run through the real dispatcher (`familiar-memory.py`'s `main`) so the
+`decide` is run through the real dispatcher (`familiar`'ss `main`) so the
 parse, the Spec and the resolution path are exercised together -- an undeclared
 flag must fail here exactly as it does for a user.
 """
@@ -16,7 +16,9 @@ from lib import invocation
 from consolidation import ledger, queue
 
 ROOT = pathlib.Path(__file__).resolve().parents[2] / "cli"
-BIN = ROOT / "familiar-memory.py"
+# The front door (dev/architecture 3b): `decide` is run through the real
+# dispatcher, and the dispatcher is `familiar` now.
+BIN = ROOT.parent / "familiar"      # ROOT is engine/
 
 ITEMS = [
     queue.as_dict("dangling-link", "knowledge-vs-skills", "`related: voice`",
@@ -43,7 +45,7 @@ def env(tmp_path, monkeypatch):
 
 
 def _run(base, argv, stdin=None):
-    p = subprocess.run([sys.executable, str(BIN)] + argv, capture_output=True,
+    p = subprocess.run([sys.executable, str(BIN), "consolidation"] + argv, capture_output=True,
                        text=True, input=stdin,
                        env={**__import__("os").environ,
                             "PAZRAS_DATA_DIR": str(base),
@@ -276,12 +278,68 @@ def test_an_untouched_queue_does_not_refuse(env):
 def test_decide_dispatches_opaque_kinds_through_the_dismissal_ledger(env):
     """An opaque item must time-box, not hash to "" and suppress forever."""
     base, _ = env
-    queue.save(base, ITEMS)
+    items = ITEMS[:3] + [queue.as_dict("adopt", "some-skill", "adopt it", "", "5",
+                                       "opaque", "2026-09-29")]
+    queue.save(base, items)
     assert _run(base, ["decide", "4"])[0] == 0
     rows = ledger.read(base, ledger.DISMISSALS).rows
     assert len(rows) == 1
     assert rows[0]["target_kind"] == "opaque"
-    assert "leaf_sha" not in rows[0]
+    assert "leaf_sha" not in rows[0] and not rows[0].get("retired")
+
+
+# ── a decision's own answers (dev/remote R6c) ────────────────────────────────
+
+def test_a_decision_without_a_choice_is_refused_not_guessed(env):
+    base, _ = env
+    queue.save(base, ITEMS)
+    rc, out, err = _run(base, ["decide", "4"])
+    assert rc == 1 and "land" in err
+    assert queue.items(base)[3]["resolution"] is None
+
+
+def test_drop_retires_a_decision_for_good(env):
+    base, _ = env
+    queue.save(base, ITEMS)
+    assert _run(base, ["decide", "4", "--choice=drop"])[0] == 0
+    assert ledger.retired(base) == {"dec-51452279"}
+    assert queue.items(base)[3]["resolution"]["action"] == "drop"
+
+
+def test_superseded_needs_the_replacing_id(env):
+    base, _ = env
+    queue.save(base, ITEMS)
+    assert _run(base, ["decide", "4", "--choice=superseded"])[0] == 1
+    assert _run(base, ["decide", "4", "--choice=superseded", "--by=dec-1"])[0] == 0
+    assert "superseded by dec-1" in ledger.read(base, ledger.DISMISSALS).rows[0]["note"]
+
+
+def test_land_queues_the_decision_and_note_leaves_it_open(env):
+    from consolidation import resolve
+    base, _ = env
+    queue.save(base, ITEMS)
+    assert _run(base, ["decide", "4", "--choice=note", "--note=check with Work"])[0] == 0
+    assert queue.items(base)[3]["resolution"] is None
+    assert ledger.read(base, resolve.NOTES).rows[0]["note"] == "check with Work"
+    assert _run(base, ["decide", "4", "--choice=land"])[0] == 0
+    assert resolve.pending_landings(base)[0]["target"] == "dec-51452279"
+    assert not ledger.retired(base)
+
+
+def test_the_walk_offers_a_decision_its_own_keys(env):
+    base, _ = env
+    queue.save(base, ITEMS)
+    rc, out, err = _run(base, ["decide", "--walk"], stdin="s\ns\ns\np\ndec-9\n")
+    assert rc == 0, err
+    assert "[l] Land it" in out
+    assert queue.items(base)[3]["resolution"]["by"] == "dec-9"
+
+
+def test_a_retired_decision_is_never_raised_again(tmp_path):
+    base = tmp_path
+    ledger.record_dismissal(base, tmp_path, "dec-1", "decision", "dropped",
+                            target_kind="opaque", retired=True)
+    assert ledger.retired(base) == {"dec-1"}
 
 
 def test_a_leaf_item_records_a_hash_so_it_self_clears(env):

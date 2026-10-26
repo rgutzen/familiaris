@@ -34,6 +34,12 @@ scope: []                            # path globs where this applies; empty = an
                                      #   a retrieval PRIOR, never a filter — memory-ranking.md
 platforms: []                        # empty = portable
 requires_tools: []                   # skill is invisible unless these exist
+command_body:                        # optional, `invocation: user` only: the generated
+                                     #   slash command's own text, replacing the default
+                                     #   "Read <SKILL.md> and follow it". One line; place
+                                     #   `$ARGUMENTS` yourself. Use it when the skill
+                                     #   DISPATCHES its work to a child, where the wrapper
+                                     #   would make the calling model the executor.
 ---
 
 # Skill name

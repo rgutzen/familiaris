@@ -15,7 +15,9 @@ import sys
 from consolidation import brief, pass_ctx, posture, queue, report
 from lib import git, invocation
 from lib import roots
-from consolidation.stages import aggregate, associate, conflict, consolidate, downscale, label, preflight, recommend, reindex, replay, score
+from consolidation.stages import (aggregate, associate, bindings as bindings_stage,
+                                conflict, consolidate, downscale, label, preflight,
+                                recommend, reindex, replay, score)
 from knowledge import knowledge_index
 
 SPEC = invocation.Spec(
@@ -56,6 +58,7 @@ STAGES = [
     # PROPOSAL-ONLY stage -- neither of them may write -- and `--stages=6` must
     # mean all of it. Separate callables so one cannot take the other down.
     ("6", "label",       label.run),         # proposal-only, always (3a)
+    ("6", "bindings",    bindings_stage.run),  # proposal-only, always (6d)
     ("7", "reindex",     reindex.run),
     # Same stage id on purpose: stage 7 is "regenerate the derived indexes",
     # and it has two generators over two populations (skills, knowledge). They

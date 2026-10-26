@@ -5,12 +5,12 @@ origin: authored
 authority: agent
 trust: trial
 last_verified: 2026-09-11
-use_count: 20
-last_used: 2026-10-11
+use_count: 26
+last_used: 2026-10-21
 promoted_from: []
 source:
 supersedes:
-related: [memory-mechanisms, memory-ranking, memory-architecture, prior-art-memory-systems, skill-routing, healthcheck, journal-index, scheduled-processes, memory-poisoning-posture, pointer-following, agent-prompt-dream-memory-consolidation]
+related: [scheduled-sessions, memory-mechanisms, memory-ranking, memory-architecture, prior-art-memory-systems, skill-routing, healthcheck, journal-index, scheduled-processes, memory-poisoning-posture, pointer-following, agent-prompt-dream-memory-consolidation]
 tags: [consolidation, scheduling, sleep, pruning, cron]
 scope: ["06_SYSTEM/**"]
 area: [B]
@@ -68,6 +68,15 @@ pre-sleep snapshot`, all paths), kept separate from the pass's commit so invaria
 4 still holds. Exception: a dirty path whose mtime is under `QUIET_SECONDS`
 (120 s) aborts the pass instead — a snapshot must not freeze a half-typed
 sentence. Takes the lock that stops two nights overlapping after a suspend.
+
+**The pass is a declared conflict of the scheduler** ([[scheduled-sessions]],
+dev/schedule 1b-1d). A scheduled session that works in `~/06_SYSTEM` (or writes
+`memory/`, which lives there) would collide with this stage: its half-done files
+would be snapshotted, or the pass would abort on a fresh mtime, and both race
+for `index.lock`. So `config/schedule/sessions.yaml` declares `familiar-memory`
+(03:30, tree `~/06_SYSTEM`, lead 30 m, `consolidation.lock`). An overlapping job
+does not start within the lead or while the lock is held. A run already going
+stops at its next item, and the dispatcher interrupts it at 03:30 if it has not.
 
 **1 · Replay.** One journal entry per staged transcript, citing the verbatim file
 by id. Append-only; an existing entry is never rewritten. (Loop A.)

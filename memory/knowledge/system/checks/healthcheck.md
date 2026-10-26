@@ -4,24 +4,26 @@ summary: Checking the system is sound; what a `--check` drift report means
 origin: authored
 authority: agent
 trust: trial
-last_verified: 2026-09-01
-verified_log: [2026-09-01]
-use_count: 6
-last_used: 2026-10-02
+last_verified: 2026-10-25
+verified_log: [2026-09-01, 2026-10-25]
+use_count: 7
+last_used: 2026-10-14
 promoted_from: []           # built 2026-09-01, ROADMAP.md cross-cutting item
 source:
 supersedes:
 related: [scheduled-processes, consolidation-cycle]
-tags: [systemd, healthcheck, stow, drift]
-scope: ["06_SYSTEM/engine/checks/healthcheck.sh"]
+tags: [systemd, healthcheck, stow, drift, tiers, cadence, updates]
+scope: ["06_SYSTEM/engine/checks/healthcheck.sh", "06_SYSTEM/engine/checks/checks.py", "06_SYSTEM/engine/checks/check_coverage.py", "06_SYSTEM/engine/cli/updates.py"]
 area: [B]
 stability: evolving
 ---
 
 # Health check — the third scheduled process
 
-`familiar checks healthcheck`, wired as `pazras-healthcheck.timer` (weekly) in
-[[scheduled-processes]]'s `PAZRAS_TIMERS` table. The ROADMAP cross-cutting
+`familiar checks healthcheck [--tier daily|weekly|monthly]`, wired as three timers
+(`familiar-healthcheck-daily`, `familiar-healthcheck`, `familiar-healthcheck-monthly`)
+in [[scheduled-processes]]'s `PAZRAS_TIMERS` table. See §Tiers; before 2026-10-25 it was one
+weekly run, and a leaf here called its unit `pazras-healthcheck.timer`, which no longer exists. The ROADMAP cross-cutting
 item asked for this "separate from memory": where `familiar consolidation run`
 ([[consolidation-cycle]]) asks *is the knowledge tree still true*, this asks
 *is the machinery underneath it still correctly wired* — a structurally
@@ -38,7 +40,7 @@ documented in [[consolidation-cycle]].
    existed before.)
 2. **Generated-file drift** — `familiar structure generate --check`,
    `familiar schedule timers --check`, `boundaries-compile --check`,
-   `pazras-context {links,tree,l1} --check`, `pazras-memory {skills,knowledge}
+   `familiar context {links,tree,l1} --check`, `familiar {skills,knowledge}
    index --check`. Every generator this system has gets checked, from one of two
    places — see §Which gate runs what, because "one place" was wrong here.
 3. **Scheduled-unit results**, not just activation. The trap this section
@@ -58,42 +60,92 @@ documented in [[consolidation-cycle]].
 6. **Available system updates** — reported via `checkupdates` (pacman-contrib)
    if present. **Never applied.**
 
-## Which gate runs what — two runners, and `--list` now says so
+## Tiers — one cadence per check, written once in the registry
 
-Corrected 2026-09-11, because a reader (the author of this correction) concluded
-from `checks.py --list` that `context-links` **never runs**. It does. There are
-two runners and only one of them is the registry:
+A check is in `pre-commit` and/or in **one** timer tier of `engine/checks/checks.py`.
+A tier run covers its own checks and every tier below it, so the weekly run is the
+daily run plus what is too slow or too distant to repeat daily. The registry is the only
+place a cadence is written: `healthcheck.sh` asks `checks.py --due TIER` and wraps each
+section it owns in `due ID`, and `checks.py --audit` fails when a section loses its line,
+a `due` line has no entry, an owned check is in no tier, or a tier names a timer that
+`PAZRAS_TIMERS` does not declare.
 
-| Runner | Fires | Runs |
-|---|---|---|
-| `engine/checks/pre-commit` → `checks.py --run pre-commit` | every commit | `boundaries-compile`, the pytest suites, `wards`, `pi-emitter`, `memory-invariants`, `declared-paths` |
-| `pazras-healthcheck.timer` (Wed 07:00) → `healthcheck.sh` | weekly | that script's own drift checks **directly**, plus `checks.py --run healthcheck` for the unit-test section |
-| `checks.py --run manual` | when a human runs it | everything |
+| gate | fires | runs | forbids | measured 2026-10-25 |
+|---|---|---|---|---|
+| `pre-commit` | every commit | the lint, drift and unit gates | network, model, harness, anything heavy | 68 s |
+| `daily` | `familiar-healthcheck-daily.timer`, 06:45 | file and live-state checks: drift, generated files, budgets, relay, the catalogue, unit results, mounts, git trees | network, model, Ollama, paid call, harness, heavy | 6 s |
+| `weekly` | `familiar-healthcheck.timer`, Wed 07:00 | daily + the 12 test suites, the node suites, `updates`, `jev check`, `eval --validate`, package updates, proposals | paid call | 83 s |
+| `monthly` | `familiar-healthcheck-monthly.timer`, day 3, 07:30 | weekly + `context route` | paid call | 394 s, of which `context route` is 287 s |
 
-`checks.py` is the registry of *what exists*, and `--audit` is the mechanism that
-makes it complete: it walks `engine/**` for test files no entry runs, and since
-2026-09-11 it also verifies every `owner` claim below by grepping the file that
-claim names for the command.
+Why these cuts. **Cost:** daily must stay under a few seconds a check, or it is skipped
+by hand. **Network:** a flaky link must never fail the nightly tier, so `updates` and
+`jev check` are weekly and `advisory`. **Drift rate:** the nightly pass rewrites the tree at
+03:30 and the machine moves between runs, so tree, budget and live-state checks are daily;
+a harness changes what it sends only when it is upgraded, so `context route`, which starts
+four harness CLIs against a recorder, is monthly. **Side effects:** `orchestration scout`
+writes `scout-last.json` and its exit 1 is meant to fail a unit, so it keeps its Monday
+timer and the registry names that timer's config line as its `owner`; `backup verify` and
+`structure validate` likewise. An `owner` that is a timer line is run by no gate.
 
-The label was the defect, not the coverage, and it is fixed in the registry
-rather than only here: `--list` prints a legend and an **owner column**, so a
-`manual` entry now says *who* runs it — `engine/checks/healthcheck.sh` for
-the nine drift checks, `nothing (documented only)` for the four that genuinely
-have no runner (`pi-guard-node` and `opencode-plugin-node` need node;
-`memory-selftest --signals` is a gate a person runs deliberately), and
-`this registry` for everything gated on pre-commit or healthcheck. The claim is
-checked, so a renamed command cannot leave `--list` asserting a runner that no
-longer invokes it.
+Each entry may declare `effects` (`network`, `model`, `ollama`, `paid`, `harness`, `writes`,
+`heavy`). `tests/test_tiers.py` fails an entry in `pre-commit` or `daily` that declares one
+of the expensive ones, and any scheduled entry that declares `paid`. `advisory="reason"`
+turns a red result into a warning: a release landing or a republish due is news for a
+person, not a defect.
 
-Two consequences worth knowing:
+### How to run each tier
 
-- `--list` now answers both questions — *is it registered* and *when does it
-  fire* — so this table is a summary rather than the only place the second one
-  is written down.
-- Adding the column found a genuine omission: `healthcheck.sh` has
-  always run `familiar knowledge index --check` and the registry did not
-  name it at all. A check the shell script runs and the registry does not
-  mention is exactly the gap `--audit` exists for, one level up. Added.
+```bash
+familiar checks healthcheck --tier daily         # the timer's command; add --fix for the mechanical repairs
+familiar checks healthcheck --tier weekly        # the default, as before
+familiar checks healthcheck --tier monthly
+familiar checks healthcheck --only hc-mounts     # one section the script owns; leaves no result
+python3 engine/checks/checks.py --run daily      # only the registry's own checks of that tier
+python3 engine/checks/checks.py --run CHECK_ID   # one check
+python3 engine/checks/checks.py --list --gate weekly
+python3 engine/checks/checks.py --coverage       # every familiar check mode vs the registry
+```
+
+### How a failure surfaces
+
+1. **The tier's result file**, `$PAZRAS_DATA_DIR/healthcheck/<tier>.status` (key=value:
+   result, time, counts, seconds, `stale_after` = twice the tier's period).
+2. **The shell greeting** (`engine/host/pazras-aliases.sh`) prints a banner naming each tier
+   whose last run was `FAIL`, or older than its `stale_after` (the timer stopped), and prints
+   nothing otherwise. The next green run clears it. This replaces reading
+   `~/.cache/pazras-status` alone, which `notify@` overwrites (last writer wins) and nothing
+   clears; the `⚠ PAZRAS: FAIL` banner for a crashed unit is unchanged.
+3. **The phone**: one `familiar relay notify` when a tier turns from not-red to red. A standing
+   red is the banner's job, so it does not repeat.
+4. **`notify@`** still fires if the script itself exits non-zero (`OnFailure=`), as before.
+
+### The extension point for performance evaluations
+
+A measurement that passes or fails against a budget is a `Check` whose command exits 0 inside
+the budget and prints the metric; give it a tier and `effects`, and `--json-out` already records
+its seconds. Nothing else needs to change. `feat/perf-evals` owns the content;
+`checks selftest --hook-cost` is excluded from the coverage test for that reason.
+
+### What "covered" means, and the test that keeps it true
+
+`engine/checks/check_coverage.py` reads the route table in `engine/familiar` and lists every
+verb with a check mode: a `--check`, `--gate` or `--validate` flag in its `Spec` or its
+argparse declarations, and the flagless verbs declared in `VERB_MODES` (`posture`, `ontology
+check`, `jev check`). `tests/test_coverage.py` fails when one has neither a registry entry nor a
+reason in `NOT_REGISTERED`, when a declaration names something that no longer exists, and when
+a registry entry runs a verb that is not a route. The measured table, with every cost and the
+checks found red when they were first registered, is `dev/checks/2026-10-25-coverage.md`.
+
+### Updates are a check, not a timer that applies them
+
+`familiar checks updates` reads three sources and applies nothing: `mise outdated` (pi and the
+harness CLIs), `npm outdated` in pi's package directory (the extensions), and `git ls-remote`
+against the pin of each linked skill upstream. Each finding prints the command that applies it
+and the checks to run afterwards. A harness upgrade is re-verified by `context route|loadout` and
+`orchestration models`; a skill upstream pull changes the bytes, which `skills scan --check`
+reports as digest drift, so the re-audit is triggered by the pull and not done unattended. The
+same line the leaf draws for pacman: whether to upgrade a binary that a running session depends
+on is a judgement an unattended run does not get to make.
 
 ### Why a deleted file's name trips no gate — by design, not by omission
 
@@ -152,7 +204,8 @@ manages — the same boundary [[scheduled-processes]] describes for
 ## Verification
 
 ```bash
-familiar checks healthcheck            # read-only; exit 1 iff a FAIL was found
-familiar checks healthcheck --fix      # also applies the mechanical repairs above
-systemctl --user status pazras-healthcheck.service
+familiar checks healthcheck --tier daily      # read-only; exit 1 iff a FAIL was found
+familiar checks healthcheck --fix             # also applies the mechanical repairs above
+systemctl --user status familiar-healthcheck.service
+cat "${PAZRAS_DATA_DIR:-$HOME/.local/share/pazras}"/healthcheck/*.status
 ```

@@ -20,9 +20,17 @@ made, what may be asserted without a source. `user/` holds facts about the perso
 the system serves: how they think, what they are working on, what to ask them and
 what not to.
 
-**Neither travels.** Both are directives, read by agents and changed by the user,
-and the publication classification omits them from the published tree — which is
-why [the Intention](../intention.md) quotes the mission rather than linking it.
+**The conventions travel; the person does not.** Both are directives, read by
+agents and changed by the user, but the publication classification treats them
+differently. `conventions/` is public: the rules ship as written. `user/` is
+omitted, and the published tree carries placeholders in its place that say what
+each file is for and nothing about whom. That is why
+[the Intention](../intention.md) quotes the mission rather than linking it.
+
+
+![The craft: the user's conventions, loaded in full by each harness](../../assets/figures/lore-practice.svg)
+
+*the craft: the user's conventions, loaded in full by each harness.*
 
 ## The design choice, and why
 

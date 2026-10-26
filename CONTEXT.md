@@ -30,5 +30,6 @@ Paths here are relative to the repository root: `memory/` changes with use,
   entry point by `familiar context l1`. Everything else is reached by pointer.
 - **Skills are not installed in any harness.** Route via
   `memory/skills/CONTEXT.md`; never load the library wholesale.
-- **Directive:** the `human_owned` paths of the vault contract. Propose
-  changes; do not make them.
+- **Directive:** the `human_owned` paths of the vault contract — an agent does not
+  edit them; a change comes back as a proposal. `ROADMAP.md` is the one
+  exception: edit it, and flag each edit in the turn.

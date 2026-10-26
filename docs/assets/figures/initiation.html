@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The initiation: six steps, one evening · User journey</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:   #f5f5f5;
+      --color-ink:     #2d3142;
+      --color-muted:   #4f5d75;
+      --color-accent:  #bf4520;
+      --font-sans:     'Geist', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace;
+    }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+    }
+    .frame { max-width: 960px; width: 100%; }
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 0.5rem;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      color: var(--color-ink);
+      margin-bottom: 1.5rem;
+    }
+    svg { width: 100%; min-width: 720px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">User journey · 06_SYSTEM</p>
+    <h1>The initiation: six steps, one evening</h1>
+
+    <svg viewBox="0 0 960 600" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="ini-title ini-desc">
+      <title id="ini-title">The initiation: six steps, one evening</title>
+      <desc id="ini-desc">Six tutorial steps in order: validate the profile, create the tree, file a thought, wait for the nightly pass, write the harness entry points, run the check. Each step lists the familiar command and what it touches. The check writes nothing and is the focal step.</desc>
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M1,1 L9,5 L1,9" fill="none" stroke="#4f5d75" stroke-width="1.5"/>
+        </marker>
+      </defs>
+      <rect width="100%" height="100%" fill="#f5f5f5"/>
+      <rect x="72" y="48" width="120" height="56" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="132" y="72" fill="#4f5d75" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.14em">STEP 1</text>
+      <text x="132" y="92" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">Profile</text>
+      <line x1="192" y1="76" x2="208" y2="76" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+      <text x="132" y="160" fill="#2d3142" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">structure validate</text>
+      <text x="132" y="244" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">reads one file:</text>
+      <text x="132" y="260" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">config/profile</text>
+      <text x="132" y="276" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">  .example.yaml</text>
+      <rect x="208" y="48" width="120" height="56" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="268" y="72" fill="#4f5d75" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.14em">STEP 2</text>
+      <text x="268" y="92" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">Tree</text>
+      <line x1="328" y1="76" x2="344" y2="76" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+      <text x="268" y="160" fill="#2d3142" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">structure init</text>
+      <text x="268" y="244" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">creates 40 dirs,</text>
+      <text x="268" y="260" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">1 symlink, 5 READMEs,</text>
+      <text x="268" y="276" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">3 templates</text>
+      <rect x="344" y="48" width="120" height="56" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="404" y="72" fill="#4f5d75" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.14em">STEP 3</text>
+      <text x="404" y="92" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">Thought</text>
+      <line x1="464" y1="76" x2="480" y2="76" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+      <text x="404" y="152" fill="#2d3142" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">zettel daily</text>
+      <text x="404" y="168" fill="#2d3142" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">project create</text>
+      <text x="404" y="244" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">a daily note in</text>
+      <text x="404" y="260" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">03_ZETTEL; a project</text>
+      <text x="404" y="276" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">moves to 05_ARCHIVES</text>
+      <rect x="480" y="48" width="120" height="56" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="540" y="72" fill="#4f5d75" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.14em">STEP 4</text>
+      <text x="540" y="92" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">Wait</text>
+      <line x1="600" y1="76" x2="616" y2="76" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+      <text x="540" y="160" fill="#2d3142" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">consolidation status</text>
+      <text x="540" y="244" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">reads the timer and</text>
+      <text x="540" y="260" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">staging area;</text>
+      <text x="540" y="276" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">the pass is not run</text>
+      <rect x="616" y="48" width="120" height="56" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="676" y="72" fill="#4f5d75" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.14em">STEP 5</text>
+      <text x="676" y="92" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">Entry points</text>
+      <line x1="736" y1="76" x2="752" y2="76" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+      <text x="676" y="160" fill="#2d3142" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">context l1</text>
+      <text x="676" y="244" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">splices a block into</text>
+      <text x="676" y="260" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">~/.claude/CLAUDE.md;</text>
+      <text x="676" y="276" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">absent ones skip</text>
+      <rect x="752" y="48" width="120" height="56" rx="6" fill="rgba(191,69,32,0.08)" stroke="#bf4520" stroke-width="1.2"/>
+      <text x="812" y="72" fill="#bf4520" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.14em">STEP 6</text>
+      <text x="812" y="92" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">Check</text>
+      <rect x="752" y="120" width="120" height="192" rx="6" fill="rgba(191,69,32,0.08)" stroke="#bf4520" stroke-width="1.2"/>
+      <text x="812" y="160" fill="#2d3142" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">generate --check</text>
+      <text x="812" y="244" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">writes nothing;</text>
+      <text x="812" y="260" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">each generator says</text>
+      <text x="812" y="276" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">what it would change</text>
+      <line x1="72" y1="120" x2="872" y2="120" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+      <line x1="72" y1="208" x2="872" y2="208" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+      <line x1="72" y1="312" x2="872" y2="312" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+      <text x="64" y="168" fill="#4f5d75" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end" letter-spacing="0.14em">FAMILIAR</text>
+      <text x="64" y="244" fill="#4f5d75" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="end" letter-spacing="0.14em">TOUCHES</text>
+      <text x="760" y="352" fill="#bf4520" font-size="14" font-style="italic" font-family="'Instrument Serif', serif" text-anchor="middle">the step that says the tree is still sound</text>
+      <line x1="40" y1="548" x2="920" y2="548" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+      <text x="40" y="564" fill="#4f5d75" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="start" letter-spacing="0.14em">LEGEND</text>
+      <rect x="40" y="572" width="16" height="12" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="64" y="582" fill="#4f5d75" font-size="8.5" font-family="'Geist', system-ui, sans-serif">Step, in order</text>
+      <rect x="220" y="572" width="16" height="12" rx="2" fill="rgba(191,69,32,0.08)" stroke="#bf4520" stroke-width="1.2"/>
+      <text x="244" y="582" fill="#4f5d75" font-size="8.5" font-family="'Geist', system-ui, sans-serif">Focal: the check</text>
+    </svg>
+  </div>
+</body>
+</html>

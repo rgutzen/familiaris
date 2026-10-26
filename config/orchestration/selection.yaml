@@ -1,0 +1,236 @@
+# Selection -- who does a class of work when nobody decided (decision 27, 2026-10-14).
+#
+# THE PRE-SELECTIONS. This file answers one question: for a kind of work, which
+# models are adequate, and which of those runs. It is POLICY, not measurement:
+# every entry is a judgement a person can read, argue with and update when a
+# model or a version changes. `familiar orchestration selection --explain`
+# prints it, `--check` validates it against the catalogue.
+#
+# WHY TIERS AND NOT A SCORE FLOOR. A percentile-within-catalogue floor was the
+# first attempt (`dispatch.yaml`'s `capability_floor`, retired here) and it was
+# the wrong instrument twice over: it made the candidate set a singleton (the
+# catalogue's median is where the frontier models live, so only `claude-opus-5-5`
+# cleared it for `edit`/`test`, and nothing cleared it for `read`/`docs`/`batch`,
+# whose benchmarks are unmeasured), and it disqualified a model for a *missing*
+# measurement, which `capabilities.yaml` explicitly forbids ("No benchmark, no
+# score: unknown, never zero"). A benchmark score says how well a model does, not
+# whether it may do the work; it now only orders models inside a tier.
+#
+# A TIER is an adequacy claim: "these models are fit for this class at this
+# difficulty". The rule picks the CHEAPEST member of the chosen tier (API-
+# equivalent list price, decision 24; ties by measured score, then the order
+# written here). So the judgement is where it can be argued with, and the
+# arithmetic is where it can be checked. A tier that names one model asserts
+# something narrow on purpose: for work whose result nobody can check before it
+# lands (`edit`, `test`, `docs`), the tier names only models we are willing to
+# stand behind; for `read`, whose artifact is checked before it is used
+# (`path:line` + verbatim quote, 5a/6b), a cheap reader is enough.
+#
+# WHY `difficulty_up_to`. The tiers are ordered from the class's ordinary case
+# upward. An item whose difficulty probe reads `d` gets the FIRST tier whose
+# `difficulty_up_to` is at least `d`; the last tier has none, so it catches
+# everything. With no difficulty reading at all (offline, or a probe that did not
+# answer), the first tier applies: a pre-selection is the baseline, and a probe
+# may only move an item UP, never invent a model.
+#
+# WHY EVERY TIER NAMES AN EFFORT. The level is the cheapest dial there is (8a):
+# the same model at more effort costs only its output tokens, while a tier step
+# changes vendor, price per token and egress. So the level a tier runs at is
+# declared beside the models -- pi's `--thinking` levels, validated against the
+# catalogue's per-model `capabilities.effort` (`--check` refuses a level a model
+# cannot serve; `thinking: no` refuses every level above `off`).
+# `effort_by: model=level` declares a member's own level when its vendor lacks
+# the tier's: deepseek-flash serves low/high/max only, and pi clamps a missing
+# level UPWARD (medium -> high). So every dispatch cell in 4e that ran
+# deepseek-flash "at medium" really ran at high; the override writes that down.
+#
+# WHAT IS NOT HERE. A fallback for an unavailable model is a DIFFERENT and weaker
+# claim than a tier's adequacy -- "if the intended model cannot be reached, this
+# one keeps the work moving, and the swap is recorded" -- so it lives where the
+# choice is made: `fallbacks:` on a binding, and `fallback:` on a SPECS.md item.
+# Tools, commands and skills are bound in `bindings.yaml`, which answers who does
+# one call; this file answers which class of work gets which models at all.
+#
+# Loaded through `engine/lib/_miniyaml.py`: block mappings and sequences only,
+# every value a string.
+
+# class -> tiers, cheapest case first. The class names are
+# `capabilities.yaml`'s `task_classes:` -- dispatch refuses to load if the two
+# key sets differ, so a class cannot be added here alone.
+classes:
+  read:
+    - up_to_difficulty: "0.75"
+      models: claude-haiku-5-5, deepseek-flash, mistral-small-2603, zai-glm-5-3-flash
+      effort: low
+      reason: >
+        Retrieval returns a checked artifact (path:line + a verbatim quote the
+        caller verifies), so a cheap reader is enough; the cheapest member of
+        the tier runs, so haiku unless the profile cannot serve it.
+        zai-glm-5-3-flash added 2026-10-23: the checked artifact is what makes an
+        UNMEASURED reader admissible here, its input rate is half deepseek-flash's
+        and its cache rate is five times dearer -- the router weighs the two, this
+        tier only says both may run.
+    - models: claude-sonnet-5-5, deepseek-flash
+      effort: medium
+      effort_by: deepseek-flash=high
+      reason: >
+        Recon that must connect several files, or answer from a large fraction
+        of the tree, where a shallow reader returns plausible but wrong refs.
+  edit:
+    - up_to_difficulty: "0.6"
+      models: claude-sonnet-5-5, deepseek-flash, zai-glm-5-3-flash
+      effort: medium
+      effort_by: deepseek-flash=high, zai-glm-5-3-flash=high
+      reason: >
+        A routine edit is a pattern to follow, and the three are peers on the
+        catalogue's numbers (coding: sonnet 44, deepseek-flash 42, GLM-5.3-Flash
+        unmeasured). A non-Claude member is deliberate: the cheapest member of
+        the tier runs, so a routine edit costs the USD pool rather than the Claude
+        quota -- and when the Claude window closes, as it does most days, this
+        class keeps working. zai-glm-5-3-flash placed 2026-10-24 on its own
+        evidence: the six-item eval set as this class's instrument (arm `model`)
+        gave 5/6 first-pass, posterior mean 0.83 at a 0.67 lower bound, against
+        deepseek-flash's 3/5 and 0.50. Its level is `high` because the vendor
+        publishes no `medium` and pi clamps upward (measured: `--thinking medium`
+        ran at high in all six sessions).
+    - up_to_difficulty: "0.85"
+      models: claude-sonnet-5-5, claude-opus-5-5
+      effort: high
+      reason: >
+        Several parts to fit together, or a correctness bar the verifier names.
+        Sonnet runs unless it is unavailable; opus is admissible, not required.
+    - models: claude-opus-5-5
+      effort: high
+      reason: >
+        New design, many interacting parts, or a subtle bar: the frontier model,
+        because a wrong shape here poisons everything that follows it.
+  test:
+    - up_to_difficulty: "0.6"
+      models: claude-sonnet-5-5
+      effort: medium
+      reason: Writing or running a check is mechanical until it fails.
+    - models: claude-opus-5-5, claude-sonnet-5-5
+      effort: high
+      reason: >
+        A failing check that must be diagnosed: the diagnosis is the work, and
+        the cheapest member of this tier runs.
+  docs:
+    - models: claude-sonnet-5-5
+      effort: medium
+      reason: >
+        Prose whose only check is a reading by a person. `writing` has no
+        benchmark in the catalogue, so this tier is asserted rather than
+        measured -- and it is deliberately not the cheapest model available.
+  batch:
+    - models: claude-haiku-5-5, deepseek-flash, zai-glm-5-3-flash
+      effort: low
+      reason: >
+        One small judgement applied many times: the answer key decides, not the
+        prose, and the frontier model buys nothing. Haiku is the cheapest Claude
+        member and therefore the Claude pick; deepseek-flash is the second.
+        zai-glm-5-3-flash added 2026-10-23 on the argument `read` already makes: the
+        answer key checks every row, so an unmeasured member is admissible, and it
+        is the cheapest priced row in the catalogue. The local models stay out
+        until option D's trigger (a batch job whose frontier tokens are worth
+        measuring).
+  # No class at all: the prompt is not a SPECS.md item (a retrieval, web or
+  # batch question), or the class probe did not answer. Decision 23's session
+  # default, unchanged.
+  unknown:
+    - models: claude-opus-5-5
+      effort: medium
+      reason: >
+        No class: the session default. Not a tier anyone chose, and the reason
+        it is here is that a rule must never invent a cheaper model for work
+        nobody classified.
+
+# A SCOPE ORDERS, IT DOES NOT FILTER (ruled 2026-10-14). Privacy classes are not
+# ordered anywhere in this system (`local`, `EU-no-training`, `CN-undisclosed`,
+# `US-unknown` are distinct and none is narrower than another), so "the tightest
+# wins" is not expressible. What a scope does instead is say which posture a piece
+# of work *prefers*: the chain resolves to a model of that class first and takes a
+# different one only when nothing of the preferred class is available -- "same
+# jurisdiction first, then anything allowed", because a strict limit halts work
+# the day the Claude window closes. Only a DECLARATION filters: a binding's
+# `privacy:`, an item's `privacy:` at column 0, or a call's own argument.
+#
+# WHAT A SCOPE GOVERNS. It is about LOCAL DATA: which jurisdiction may see the
+# files under that path. A call that reads no local file (a web search, a fetch)
+# is declared `scope: ignored` on its binding and is not ordered by any scope.
+# A child inherits its parent's scope -- `pi-agent` runs in the caller's cwd, so
+# the same prefix matches -- which is what makes a ruling transfer to children
+# without being repeated. A scope whose work must NOT transfer (a scratch copy, a
+# throwaway tree under /tmp) simply has no declaration of its own.
+#
+# A KEY IS A DIRECTORY PREFIX AND CARRIES NO QUOTES: this parser reads a key up to
+# its first ':'. Nesting is by prefix, so a project may differ from its parent.
+scope:
+  ~/06_SYSTEM:
+    egress: cloud
+    reason: "this repository is public in parts and the default posture applies"
+  # TEMPLATES, none of them active: uncomment and edit when the work under the
+  # path actually carries the sensitivity. A wrong guess here is worse than none,
+  # because it looks like a ruling.
+  # ~/01_PROJECTS/<client>:            # work under contract
+  #   privacy: EU-no-training
+  #   reason: "client data; no CN vendor, no training"
+  # ~/02_AREAS/B_Tech/<employer>:
+  #   privacy: US-unknown
+  #   reason: "employer material; the company profile's vendors only"
+  # ~/04_RESOURCES/<dataset-with-terms>:
+  #   privacy: local
+  #   reason: "licence forbids third-party processing; local models only"
+  # ~/.ssh:
+  #   privacy: local
+  #   reason: "keys never leave the machine"
+
+# NOMINATION POLICY (item 13a). What the daily model chart must show before this
+# system proposes a model for measurement. `familiar orchestration scout` reads
+# the chart (`paraplouis/llm-pareto-frontier`) and compares each class's
+# FIRST-TIER members -- the model a class runs on its ordinary case -- with every
+# model on it. The chart ranks CHAT PREFERENCE, so it may only nominate; the
+# reader calibration (12c) is what may recommend.
+#
+# TWO MARGINS, EACH A CLAIM WITH ITS REASON:
+#   elo_margin 20  about two of the Arena's confidence intervals (it is about 10
+#                  Elo per model), so a nomination is not a lead inside the
+#                  noise. Paired with price_cap: a model that is better AND
+#                  dearer has to be better by that much AND not dearer by more.
+#   price_cap 1.5  paying 50% more per token is the most a better reader is worth
+#                  before its own measurement has said anything.
+#   close_elo 5    within 5 Elo the two are the same model for this purpose, so
+#                  the only reason to move is the price.
+#   half_price 0.5 half is the smallest saving that pays for a new account, a new
+#                  key, and a row in three files.
+#   The GAP between +5 and +20 Elo is deliberate: a chart that cannot separate the
+#   two models justifies neither claim, and a rule that read the gap as either
+#   would be reading noise.
+#   reopen_elo 5 / reopen_price 0.25  when a dismissed nomination is raised again:
+#                  more Elo than the close threshold, or a quarter cheaper. A "no"
+#                  is a no to that comparison, not to the model forever.
+#
+# `hosts:` maps the chart's `cheapest_provider` -- where the tokens would actually
+# go, not the developer -- to a jurisdiction `profiles.yaml` knows. A host that is
+# not here is REPORTED and never nominated: a model this profile may not call is
+# not a nomination. The chart marks a resold route `~Vendor`; that is the vendor's
+# own jurisdiction.
+nominate:
+  elo_margin: "20"
+  price_cap: "1.5"
+  close_elo: "5"
+  half_price: "0.5"
+  reopen_elo: "5"
+  reopen_price: "0.25"
+  # 13b's `recommend_seconds` is gone (14h): the scout nominates a calibration slot
+  # and recommends nothing; the router (14g) weighs a measured run.
+  hosts:
+    Anthropic: US
+    Google: US
+    Meta: US
+    Mistral: EU
+    DeepSeek: CN
+    Z Ai: CN
+    Alibaba: CN
+    Moonshotai: CN
+    Inclusionai: CN
+    Thinkingmachines: US

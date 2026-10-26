@@ -122,6 +122,9 @@ def test_a_write_into_another_checkout_s_vault_is_refused(tmp_path, monkeypatch)
     `config/backup` and `config/schedule` from a tree that has all three. The
     default root is the INSTALL's vault, which is right for a read and ruinous
     for a write, so the write is what carries the guard."""
+    # The override is the documented way THROUGH the guard, so a gate run that
+    # sets it for a worktree must not turn this refusal into a write.
+    monkeypatch.delenv("PAZRAS_MEMORY_DIR", raising=False)
     other = tmp_path / "another-vault"
     (other / "knowledge").mkdir(parents=True)
     monkeypatch.setattr(glossary, "DEFAULT_ROOT", other)

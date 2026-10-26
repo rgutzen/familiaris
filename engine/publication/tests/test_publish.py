@@ -263,9 +263,12 @@ def test_the_export_writes_the_public_tree_and_a_second_run_changes_nothing(
 
     # What must not be there: the journals, the user's own decisions, this
     # machine's schedule, and the classification itself.
-    for absent in ("memory/journal", "dev",
-                   "config/schedule", "dotfiles", "DATA-ARCHITECTURE.md"):
+    for absent in ("memory/journal", "dev", "dotfiles", "DATA-ARCHITECTURE.md"):
         assert not (target / absent).exists(), absent
+    # The schedule is its generated unit pairs; the session policy beside them
+    # is hand-written and travels, because the scheduler loads it.
+    assert sorted(p.name for p in (target / "config/schedule").iterdir()) == \
+        ["session-prompt.md", "sessions.yaml"]
 
     # The user's files and the session pointers travel as the skeleton's
     # placeholders (P2), byte for byte: the instance's own never do.

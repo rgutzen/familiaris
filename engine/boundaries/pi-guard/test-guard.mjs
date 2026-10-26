@@ -73,5 +73,45 @@ for (const [label, provider, tool, input, expect] of CASES) {
   console.log(`${ok ? "ok  " : "FAIL"}  ${label.padEnd(26)} ${provider.padEnd(6)} ` +
               `expect=${(expect ? "BLOCK" : "allow").padEnd(5)} got=${got ? "BLOCK" : "allow"}`);
 }
-console.log("\nFAILURES:", fail, `/ ${CASES.length} cases`);
+
+// ── the parity corpus (boundaries.md §Parity corpus) ─────────────────────────
+// One fixture, run by every judge. A case whose `expected_fail` names this judge
+// must still FAIL here; one that starts passing is reported, so the entry goes.
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+const PARITY = JSON.parse(readFileSync(
+  fileURLToPath(new URL("../fixtures/parity.json", import.meta.url)), "utf8")).cases;
+const VAULT_NAME = "03_" + "ZETTEL";
+const expand = (v) => v.replaceAll("{VAULT_NAME}", VAULT_NAME)
+  .replaceAll("{VAULT}", HOME + "/" + VAULT_NAME)
+  .replaceAll("{CWD}", CWD).replaceAll("{HOME}", HOME);
+// pi-guard enforces only the model axis (`models: local|remote`); a `models: all`
+// rule is gotgenes' job, so such a case expects `allow` HERE. `find` IS pi's
+// glob tool ("Find paths using glob patterns", docs/cli.md) and carries both a
+// `path` and a `pattern`, which the vocabulary checks -- a corpus case that used
+// to be skipped for pi now runs.
+const PI = { read: ["read", { path: "path" }], write: ["write", { path: "path" }],
+             edit: ["edit", { path: "path" }], grep: ["grep", { pattern: "pattern", path: "path" }],
+             find: ["find", { path: "path", pattern: "pattern" }],
+             bash: ["bash", { command: "command" }] };
+let skipped = 0;
+for (const c of PARITY) {
+  const toolName = (c.tool_by_judge && c.tool_by_judge.pi) || c.tool;
+  if (!PI[toolName]) { skipped++; continue; }
+  const [tool, fields] = PI[toolName];
+  const input = Object.fromEntries(Object.entries(c.args).map(([k, v]) => [fields[k], expand(v)]));
+  const got = await run(tool, input, c.model === "local" ? "ollama" : "deepseek");
+  // A case may state this judge's own answer, for a reason in `why` -- pi does
+  // not judge `models: all` rules, but an unparseable command still fails closed.
+  const stated = c.expect_by_judge && c.expect_by_judge.pi;
+  const want = stated ? stated !== "allow" : (c.rule === "all" ? false : c.expect !== "allow");
+  const known = (c.expected_fail || {}).pi;
+  const ok = known ? got !== want : got === want;
+  fail += !ok;
+  console.log(`${known && ok ? "xfail" : ok ? "ok  " : "FAIL"}  parity: ${c.label.padEnd(26)} ` +
+              `expect=${(want ? "BLOCK" : "allow").padEnd(5)} got=${got ? "BLOCK" : "allow"}` +
+              (known ? `  (known: ${known})` : ""));
+}
+console.log("\nFAILURES:", fail, `/ ${CASES.length + PARITY.length - skipped} cases ` +
+            `(${PARITY.length - skipped} parity, ${skipped} skipped: no such pi tool)`);
 process.exit(fail ? 1 : 0);

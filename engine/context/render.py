@@ -182,3 +182,33 @@ def links_table(broken, adoptions, fixed, agents) -> str:
     if not broken and not adoptions:
         lines.append("\n  every pointer resolves, and every file is reachable")
     return "\n".join(lines)
+
+
+def loadout_table(lo, budgets, top=12) -> str:
+    """One harness's declared loadout, by owner. Bars compare rows to the
+    largest row, not to the cap: the question the table answers is "what grew",
+    and the cap is stated once per owner beside its total."""
+    lines = [rule("LOADOUT — what this harness declares before your turn")]
+    lines.append(f"  session: {lo.session}")
+    lines.append(f"  cwd:     {lo.cwd or '(not recorded in the header)'}")
+
+    section_total = lo.section_chars
+    lines.append(f"\n  {'sections':22} {'bytes':>8} {'~tokens':>8}")
+    for name, chars, toks in lo.section_rows():
+        lines.append(f"  {name:22} {chars:8,} {toks:8,}  {_bar(chars, section_total)}")
+    lines.append(f"  {'section total':22} {lo.section_chars:8,} {lo.section_tokens:8,}"
+                 + (f"   cap {budgets['sections']:,}" if budgets.get("sections") else ""))
+
+    lines.append(f"\n  {'tool':22} {'bytes':>8} {'~tokens':>8}")
+    for t in sorted(lo.tools, key=lambda t: -t.tokens)[:top]:
+        lines.append(f"  {t.name:22} {t.chars:8,} {t.tokens:8,}  {_bar(t.chars, lo.tool_chars)}")
+    if len(lo.tools) > top:
+        rest = sum(t.chars for t in sorted(lo.tools, key=lambda t: -t.tokens)[top:])
+        lines.append(f"  {'... ' + str(len(lo.tools) - top) + ' more':22} {rest:8,}")
+    lines.append(f"  {'tool total':22} {lo.tool_chars:8,} {lo.tool_tokens:8,}"
+                 + (f"   cap {budgets['tools']:,}" if budgets.get("tools") else "")
+                 + f"   ({len(lo.tools)} tools)")
+
+    lines.append(f"\n  fixed prompt: {lo.total_chars:,} bytes · {lo.total_tokens:,} tokens"
+                 f"  — paid on every request")
+    return "\n".join(lines)

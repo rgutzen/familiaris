@@ -5,12 +5,12 @@ origin: authored
 authority: agent
 trust: trial
 last_verified: 2026-09-03
-use_count: 9
-last_used: 2026-10-12
+use_count: 14
+last_used: 2026-10-19
 promoted_from: []
 source: []
 supersedes: []
-related: [memory-architecture, memory-mechanisms, claude-code, opencode, hermes, ollama-local, user-vs-conventions, knowledge-index, pi, pointer-following]
+related: [memory-architecture, memory-mechanisms, claude-code, opencode, hermes, ollama-local, user-vs-conventions, knowledge-index, pi, pointer-following, codex]
 tags: [context, tokens, audit, harness, overhead, claude-code, opencode, codex, hermes]
 scope: ["06_SYSTEM/**"]
 area: [B]

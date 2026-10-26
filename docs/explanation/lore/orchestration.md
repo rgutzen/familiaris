@@ -20,6 +20,11 @@ register's criteria say so explicitly — a harness or a model *changing* is the
 [Guises](harness.md), and what a procedure *says* is the
 [Apothecary](skills.md).
 
+
+![The loom: the roster of familiars, and what each may be handed](../../assets/figures/lore-orchestration.svg)
+
+*the loom: the roster of familiars, and what each may be handed.*
+
 ## The design choice, and why
 
 **One weaver.** Work may be split across agents; authority over the result is

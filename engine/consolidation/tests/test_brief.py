@@ -278,3 +278,101 @@ def test_a_runaway_bullet_is_capped(repo, tmp_path):
     quoted = [l for l in out.split("\n") if l.startswith("- start ")]
     assert quoted and len(quoted[0]) < brief.BULLET_CHARS + 120
     assert "…" in quoted[0]
+
+
+# ── scheduled sessions (dev/schedule 1g) ─────────────────────────────────────
+
+def _job(base, name, events, **decl):
+    import json
+    d = base / "sessions" / name
+    d.mkdir(parents=True)
+    (d / "schedule.json").write_text(json.dumps({"name": name, "kind": "chain",
+                                                 "trigger": "ready", "chain": "until-done",
+                                                 "due": "", "unit": "", **decl}))
+    (d / "runs.jsonl").write_text("".join(json.dumps(e) + "\n" for e in events))
+
+
+def test_the_brief_says_what_ran_unattended_with_its_commits(repo, tmp_path):
+    base = tmp_path / "data"
+    _anchor(base, date=(TODAY - dt.timedelta(days=1)).isoformat())
+    day = TODAY.isoformat()
+    _job(base, "track", [
+        {"event": "started", "ts": f"{day}T01:00:00+02:00"},
+        {"event": "finished", "ts": f"{day}T02:00:00+02:00", "exit": 0,
+         "progress": {"ticks": ["1b"], "commits": ["abc1234 schedule: 1b"]}},
+        {"event": "paused", "ts": f"{day}T02:00:00+02:00", "state": "review",
+         "why": "ticked 1b"}])
+    _job(base, "old", [{"event": "started", "ts": "2020-01-01T01:00:00+02:00"},
+                       {"event": "finished", "ts": "2020-01-01T02:00:00+02:00", "exit": 0}],
+         chain="none", kind="once", trigger="at")
+    out = brief.render(_Ctx(repo, base))
+    section = out.split("## Scheduled sessions", 1)[1].split("---", 1)[0]
+    assert "`track` — **paused** (review: ticked 1b)" in section
+    assert "ticked 1b" in section and "abc1234 schedule: 1b" in section
+    assert "`old`" not in section, "a job that did nothing since the last pass is not news"
+
+
+def test_no_scheduled_job_is_stated_not_omitted(repo, tmp_path):
+    out = brief.render(_Ctx(repo, tmp_path / "data"))
+    assert "## Scheduled sessions" in out and "Nothing ran unattended" in out
+
+
+# ── the phone's screen (dev/remote R5c) ──────────────────────────────────────
+
+PHONE_BRIEF = """# Brief — 2026-10-21
+
+## What changed
+
+*question*
+
+- a
+- b
+
+## What failed
+
+- **error** x
+
+---
+"""
+
+
+def test_the_phone_gets_headings_with_counts_unless_it_asks_for_a_section():
+    head = brief.phone(PHONE_BRIEF)
+    assert head.splitlines() == ["Brief — 2026-10-21", "What changed: 2 line(s)  (/brief changed)",
+                                 "What failed: 1 line(s)  (/brief failed)"]
+    assert brief.phone(PHONE_BRIEF, "changed") == "Brief — 2026-10-21 -- What changed\n- a\n- b"
+    assert brief.phone(PHONE_BRIEF, "nonsense").startswith("/brief takes one of")
+    assert brief.phone(PHONE_BRIEF, "changed", limit=20).endswith("[... cut]")
+
+
+# ── the morning highlights (dev/remote R6a) ─────────────────────────────────
+
+def test_highlights_group_failures_by_cause_not_by_file(repo, tmp_path):
+    ctx = _Ctx(repo, tmp_path / "data")
+    for i in range(493):
+        ctx.notes.append(pass_ctx.Note(
+            "1", f"2026101{i % 10}T0000Z_pi_{i}.jsonl: distillation failed (No API key found for deepseek.",
+            "error"))
+    out = brief.highlights(ctx)
+    assert "493x error: distillation failed (No API key found for deepseek." in out
+    assert len(out.splitlines()) <= brief.HIGHLIGHT_LINES + 2
+
+
+def test_highlights_count_what_waits_and_end_with_review(repo, tmp_path):
+    ctx = _Ctx(repo, tmp_path / "data")
+    ctx.proposals = [pass_ctx.Proposal("4", "decision", f"dec-{i}", "w") for i in range(3)]
+    out = brief.highlights(ctx)
+    assert "Waiting on you: 3" in out and "3 decision" in out
+    assert out.rstrip().endswith("/review to decide the open items")
+
+
+def test_highlights_are_written_beside_the_brief(repo, tmp_path):
+    ctx = _Ctx(repo, tmp_path / "data")
+    brief.write(ctx)
+    assert brief.read(ctx.agents, brief.HIGHLIGHTS).startswith(f"Nightly pass {TODAY.isoformat()}")
+
+
+def test_stale_highlights_say_so_in_their_first_line():
+    text = "Nightly pass 2026-10-22\n"
+    assert brief.stale_prefix(text, dt.date(2026, 10, 22)) == ""
+    assert "from 2026-10-22" in brief.stale_prefix(text, dt.date(2026, 10, 23))

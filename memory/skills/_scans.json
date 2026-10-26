@@ -1,0 +1,4611 @@
+{
+ "schema": 3,
+ "scanner": {
+  "tool": "skillspector",
+  "version": "2.12.0",
+  "install": "uv tool install 'skillspector @ git+https://github.com/NVIDIA/skillspector.git@d7338f5'"
+ },
+ "semantic_provider": {
+  "provider": "openai_compatible",
+  "base_url": "https://api.mistral.ai/v1",
+  "model": "mistral-large-latest",
+  "note": "DeepSeek rejected response_format json_schema (400 'This response_format type is unavailable now'); Mistral accepts it"
+ },
+ "policy": {
+  "gate": "HIGH or CRITICAL static finding with no human disposition",
+  "excluded": {
+   "ids": [
+    "AE",
+    "SQP",
+    "SDI",
+    "TP"
+   ],
+   "paths": [
+    "assets/",
+    "examples/",
+    ".html"
+   ]
+  },
+  "semantic": "advisory only (--llm); never gates",
+  "target": "record + upstream body for mode: link"
+ },
+ "digest_method": "sha256 over sorted '<relpath>\\0<sha256(file)>\\n' for every file in the directory",
+ "generated": "2026-10-24T23:24:53Z",
+ "skills": {
+  "system/checks/code-review": {
+   "origin": "imported",
+   "trust": "trial",
+   "mode": "link",
+   "source": "https://github.com/mattpocock/skills \u2014 skills/engineering/code-review",
+   "record": {
+    "path": "~/06_SYSTEM/memory/skills/system/checks/code-review",
+    "digest": "sha256:a255d7a08f39875942e66d952b28a105bb939c289d2fd0f22c3dc1c503b3707f",
+    "files": 1,
+    "bytes": 1963,
+    "scanned_at": "2026-10-24T23:18:01Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 7,
+     "severity": "LOW",
+     "recommendation": "SAFE",
+     "max_issue_severity": "MEDIUM"
+    },
+    "findings": [
+     {
+      "source": "static",
+      "target": "record",
+      "id": "TR2",
+      "severity": "MEDIUM",
+      "category": "Trigger Abuse",
+      "pattern": "Shadow Command Trigger",
+      "file": "SKILL.md",
+      "line": 5,
+      "fingerprint": "b361837740e2927be688f175d15765d871adf4b77789d0c3ef9dda5a183e3122",
+      "explanation": "Shadow Command Trigger: 'review since' conflicts with built-in command 'review'",
+      "gates": false,
+      "gate_excluded": null,
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     }
+    ],
+    "semantic": {
+     "risk": {
+      "score": 9,
+      "severity": "LOW",
+      "recommendation": "SAFE",
+      "max_issue_severity": "MEDIUM"
+     },
+     "findings": [
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "TR2",
+       "severity": "MEDIUM",
+       "category": "Trigger Abuse",
+       "pattern": "Shadow Command Trigger",
+       "file": "SKILL.md",
+       "explanation": "The trigger 'review since' shadows the built-in 'review' command, which could lead to unintended behavior or confusion for users. While not inherently malicious, this could cause operational disruptions or misrouting of commands, especially in automated systems where precise command handling is critical. The skill's context (code review) does not mitigate this risk, as command conflicts can still occur in legitimate usage scenarios.",
+       "line": 5,
+       "fingerprint": "b361837740e2927be688f175d15765d871adf4b77789d0c3ef9dda5a183e3122",
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      }
+     ],
+     "usage": {
+      "calls": 4,
+      "in": 6305,
+      "out": 385,
+      "degraded": false,
+      "calls_succeeded": 4,
+      "calls_attempted": 4,
+      "status": "complete"
+     },
+     "degraded": false,
+     "stale": false
+    }
+   },
+   "body": {
+    "path": "~/04_RESOURCES/Software/mattpocock-skills/skills/engineering/code-review",
+    "digest": "sha256:c52c28f43ca4820ca7330d0baaba39cbe57865dd4b0c2220d0c4e0ac1bbf4b08",
+    "files": 2,
+    "bytes": 6689,
+    "scanned_at": "2026-10-24T23:18:03Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "CAUTION",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "pin": "mattpocock/skills@6654f6b"
+   },
+   "gate": "pass",
+   "open_high": 0
+  },
+  "system/checks/factchk": {
+   "origin": "imported",
+   "trust": "trial",
+   "mode": "link",
+   "source": "https://github.com/lilmgenius/paperthin \u2014 skills/depth/factchk/SKILL.md",
+   "record": {
+    "path": "~/06_SYSTEM/memory/skills/system/checks/factchk",
+    "digest": "sha256:4ae7791384aeff80c204a1d34f58467696e0fff29ba2360bf9d7d42ecb5e7dee",
+    "files": 1,
+    "bytes": 3433,
+    "scanned_at": "2026-10-24T23:18:05Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "CAUTION",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "semantic": {
+     "risk": {
+      "score": 0,
+      "severity": "LOW",
+      "recommendation": "CAUTION",
+      "max_issue_severity": "NONE"
+     },
+     "findings": [],
+     "usage": {
+      "calls": 3,
+      "in": 6632,
+      "out": 23,
+      "degraded": false,
+      "calls_succeeded": 3,
+      "calls_attempted": 3,
+      "status": "partial"
+     },
+     "degraded": false,
+     "stale": false
+    }
+   },
+   "body": {
+    "path": "~/04_RESOURCES/Software/paperthin/skills/depth/factchk",
+    "digest": "sha256:ab98a00466d0b75323240b6210e9be9e29cca26b6dc40517bc07a428fa7bce2c",
+    "files": 1,
+    "bytes": 2895,
+    "scanned_at": "2026-10-24T23:18:07Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "SAFE",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "pin": "lilmgenius/paperthin@7d5dc62"
+   },
+   "gate": "pass",
+   "open_high": 0
+  },
+  "system/checks/mandela": {
+   "origin": "imported",
+   "trust": "trial",
+   "mode": "link",
+   "source": "https://github.com/lilmgenius/paperthin \u2014 skills/depth/mandela/SKILL.md",
+   "record": {
+    "path": "~/06_SYSTEM/memory/skills/system/checks/mandela",
+    "digest": "sha256:19cd4ce15059df88202620d636365c111049d1e0f9c2b599b78a659be8a32514",
+    "files": 1,
+    "bytes": 3402,
+    "scanned_at": "2026-10-24T23:18:09Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "CAUTION",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "semantic": {
+     "risk": {
+      "score": 0,
+      "severity": "LOW",
+      "recommendation": "CAUTION",
+      "max_issue_severity": "NONE"
+     },
+     "findings": [],
+     "usage": {
+      "calls": 3,
+      "in": 6741,
+      "out": 23,
+      "degraded": false,
+      "calls_succeeded": 3,
+      "calls_attempted": 3,
+      "status": "partial"
+     },
+     "degraded": false,
+     "stale": false
+    }
+   },
+   "body": {
+    "path": "~/04_RESOURCES/Software/paperthin/skills/depth/mandela",
+    "digest": "sha256:644c1b1ddc1bd6f24a07c497260efa04a4c5b93ed80acdc079deca42fdab245b",
+    "files": 1,
+    "bytes": 3226,
+    "scanned_at": "2026-10-24T23:18:11Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "SAFE",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "pin": "lilmgenius/paperthin@7d5dc62"
+   },
+   "gate": "pass",
+   "open_high": 0
+  },
+  "system/checks/tdd": {
+   "origin": "imported",
+   "trust": "trial",
+   "mode": "link",
+   "source": "https://github.com/mattpocock/skills \u2014 skills/engineering/tdd",
+   "record": {
+    "path": "~/06_SYSTEM/memory/skills/system/checks/tdd",
+    "digest": "sha256:7a8c72db857d5039c3b1a38957fe62d0a75b983c85ab3fffaa2eff097e94f55e",
+    "files": 1,
+    "bytes": 1863,
+    "scanned_at": "2026-10-24T23:18:13Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 7,
+     "severity": "LOW",
+     "recommendation": "CAUTION",
+     "max_issue_severity": "MEDIUM"
+    },
+    "findings": [
+     {
+      "source": "static",
+      "target": "record",
+      "id": "TR2",
+      "severity": "MEDIUM",
+      "category": "Trigger Abuse",
+      "pattern": "Shadow Command Trigger",
+      "file": "SKILL.md",
+      "line": 2,
+      "fingerprint": "0885732e0df9522be4b42d267e532753c23c55de7bf166a5a8e8260ed49de0b3",
+      "explanation": "Shadow Command Trigger: 'test first' conflicts with built-in command 'test'",
+      "gates": false,
+      "gate_excluded": null,
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     }
+    ],
+    "semantic": {
+     "risk": {
+      "score": 9,
+      "severity": "LOW",
+      "recommendation": "CAUTION",
+      "max_issue_severity": "MEDIUM"
+     },
+     "findings": [
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "TR2",
+       "severity": "MEDIUM",
+       "category": "Trigger Abuse",
+       "pattern": "Shadow Command Trigger",
+       "file": "SKILL.md",
+       "explanation": "The trigger 'test first' conflicts with the built-in command 'test', which could lead to unintended behavior or command hijacking. If a user intends to invoke the built-in 'test' command but the skill's trigger takes precedence, it may result in unexpected execution paths or bypassing of security checks. This is particularly dangerous in environments where 'test' is a sensitive command (e.g., testing security controls or validating system integrity).",
+       "line": 2,
+       "fingerprint": "0885732e0df9522be4b42d267e532753c23c55de7bf166a5a8e8260ed49de0b3",
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      }
+     ],
+     "usage": {
+      "calls": 4,
+      "in": 6296,
+      "out": 401,
+      "degraded": false,
+      "calls_succeeded": 4,
+      "calls_attempted": 4,
+      "status": "partial"
+     },
+     "degraded": false,
+     "stale": false
+    }
+   },
+   "body": {
+    "path": "~/04_RESOURCES/Software/mattpocock-skills/skills/engineering/tdd",
+    "digest": "sha256:7cc72883c75a9d9fc0986401585b157eb8410849c4613980c767cc7266d37a4a",
+    "files": 4,
+    "bytes": 7331,
+    "scanned_at": "2026-10-24T23:18:15Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "CAUTION",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "pin": "mattpocock/skills@6654f6b"
+   },
+   "gate": "pass",
+   "open_high": 0
+  },
+  "system/checks/test-driven-development": {
+   "origin": "imported",
+   "trust": "deprecated",
+   "mode": "link",
+   "source": "git@github.com:NousResearch/hermes-agent.git@f018733 \u2014 software-development/test-driven-development",
+   "record": {
+    "path": "~/06_SYSTEM/memory/skills/system/checks/test-driven-development",
+    "digest": "sha256:8bd707456f4aadd04f7f6fca130e82c63b5ab27786b7de5e5f85a92b0f4a402a",
+    "files": 1,
+    "bytes": 2046,
+    "scanned_at": "2026-10-24T23:18:17Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "CAUTION",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "semantic": {
+     "risk": {
+      "score": 0,
+      "severity": "LOW",
+      "recommendation": "CAUTION",
+      "max_issue_severity": "NONE"
+     },
+     "findings": [],
+     "usage": {
+      "calls": 3,
+      "in": 5314,
+      "out": 21,
+      "degraded": false,
+      "calls_succeeded": 3,
+      "calls_attempted": 3,
+      "status": "partial"
+     },
+     "degraded": false,
+     "stale": false
+    }
+   },
+   "body": {
+    "path": "~/.hermes/skills/software-development/test-driven-development",
+    "digest": "sha256:2d3a9b9eb35406692ecdb32322a3cb1eb322e391e4c53fe8f1596ef6b718e52c",
+    "files": 1,
+    "bytes": 10300,
+    "scanned_at": "2026-10-24T23:18:20Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "CAUTION",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "pin": "hermes-agent@f018733"
+   },
+   "gate": "pass",
+   "open_high": 0
+  },
+  "system/harness/prompt-engineering": {
+   "origin": "authored",
+   "trust": "trusted",
+   "mode": "vendor",
+   "source": "02_AREAS/B_Tech/SKILLS/Prompt-Engineering/PROMPT-ENGINEER.md",
+   "record": {
+    "path": "~/06_SYSTEM/memory/skills/system/harness/prompt-engineering",
+    "digest": "sha256:c07869ede05517296bf8c79a3f2b69749e40315fe07065c80515cee548b163bc",
+    "files": 1,
+    "bytes": 8607,
+    "scanned_at": "2026-10-24T23:18:22Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 7,
+     "severity": "LOW",
+     "recommendation": "CAUTION",
+     "max_issue_severity": "MEDIUM"
+    },
+    "findings": [
+     {
+      "source": "static",
+      "target": "record",
+      "id": "EA2",
+      "severity": "MEDIUM",
+      "category": "Excessive Agency",
+      "pattern": "Autonomous Decision Making",
+      "file": "SKILL.md",
+      "line": 58,
+      "fingerprint": "8dc77d3dce9ba1f2672e813265a1b1a0c8594866ef38a4e978bf4f4451795465",
+      "explanation": "Skill enables autonomous high-impact decisions without human-in-the-loop verification. Critical operations (destructive commands, financial transactions, data deletion) should require explicit user confirmation.",
+      "gates": false,
+      "gate_excluded": null,
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     }
+    ],
+    "semantic": {
+     "risk": {
+      "score": 44,
+      "severity": "MEDIUM",
+      "recommendation": "CAUTION",
+      "max_issue_severity": "HIGH"
+     },
+     "findings": [
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "SSD-4",
+       "severity": "HIGH",
+       "category": "Prompt Injection",
+       "pattern": "Gradual deception risk via progressive permission escalation in prompt composition",
+       "file": "SKILL.md",
+       "explanation": "The composability guidelines in this skill create a risk of gradual deception via progressive permission escalation. By encouraging prompts to be self-contained and composable, the skill enables malicious actors to chain prompts in ways that incrementally escalate permissions or bypass safeguards. For example, a benign prompt could be composed with a malicious one to override safety constraints or introduce hidden behaviors. The lack of explicit safeguards for composition exacerbates this risk.",
+       "line": 82,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "SSD-1",
+       "severity": "MEDIUM",
+       "category": "Prompt Injection",
+       "pattern": "Role-play setup grants elevated permissions without explicit safeguards",
+       "file": "SKILL.md",
+       "explanation": "The role-play setup ('You are an expert prompt engineer...') grants elevated permissions by default without explicit safeguards or constraints. This could lead to unintended behavior if the agent interprets the role too broadly or if the role is later composed with malicious prompts. The lack of safeguards increases the risk of privilege escalation in prompt chains.",
+       "line": 44,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "SSD-1",
+       "severity": "MEDIUM",
+       "category": "Prompt Injection",
+       "pattern": "Philosophical principle could be misused to justify ignoring system instructions",
+       "file": "SKILL.md",
+       "explanation": "The philosophical principle 'Prompts are incantations, not essays' could be misused to justify ignoring system instructions or safety protocols. If an agent interprets this as a directive to prioritize brevity over compliance, it may skip critical safeguards or rationalize unsafe behavior. This is particularly dangerous in composable prompt architectures where prompts may interact unpredictably.",
+       "line": 52,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "EA2",
+       "severity": "MEDIUM",
+       "category": "Excessive Agency",
+       "pattern": "Autonomous Decision Making",
+       "file": "SKILL.md",
+       "explanation": "Skill enables autonomous high-impact decisions without human-in-the-loop verification. Critical operations (destructive commands, financial transactions, data deletion) should require explicit user confirmation.",
+       "line": 58,
+       "fingerprint": "8dc77d3dce9ba1f2672e813265a1b1a0c8594866ef38a4e978bf4f4451795465",
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      }
+     ],
+     "usage": {
+      "calls": 4,
+      "in": 13779,
+      "out": 1809,
+      "degraded": false,
+      "calls_succeeded": 4,
+      "calls_attempted": 4,
+      "status": "partial"
+     },
+     "degraded": false,
+     "stale": false
+    }
+   },
+   "body": null,
+   "gate": "pass",
+   "open_high": 0
+  },
+  "system/harness/python-debugpy": {
+   "origin": "imported",
+   "trust": "trial",
+   "mode": "vendor",
+   "source": "git@github.com:NousResearch/hermes-agent.git@f018733 \u2014 software-development/python-debugpy",
+   "record": {
+    "path": "~/06_SYSTEM/memory/skills/system/harness/python-debugpy",
+    "digest": "sha256:b1e7002d60b6c58e1ab3165a3b56ac70a8baa9c5ca093570f2ce2b8a540955d7",
+    "files": 1,
+    "bytes": 15500,
+    "scanned_at": "2026-10-24T23:18:25Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 10,
+     "severity": "LOW",
+     "recommendation": "CAUTION",
+     "max_issue_severity": "MEDIUM"
+    },
+    "findings": [
+     {
+      "source": "static",
+      "target": "record",
+      "id": "PE2",
+      "severity": "MEDIUM",
+      "category": "Privilege Escalation",
+      "pattern": "Sudo/Root Execution",
+      "file": "SKILL.md",
+      "line": 237,
+      "fingerprint": "16746f7044f347c6322d4c5b879b3fb06b2f205cbf1c9a209b43d52b34b3afd7",
+      "explanation": "Commands invoke sudo or root privileges. Verify this elevated access is necessary and justified.",
+      "gates": false,
+      "gate_excluded": null,
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     },
+     {
+      "source": "static",
+      "target": "record",
+      "id": "PE2",
+      "severity": "MEDIUM",
+      "category": "Privilege Escalation",
+      "pattern": "Sudo/Root Execution",
+      "file": "SKILL.md",
+      "line": 238,
+      "fingerprint": "16746f7044f347c6322d4c5b879b3fb06b2f205cbf1c9a209b43d52b34b3afd7",
+      "explanation": "Commands invoke sudo or root privileges. Verify this elevated access is necessary and justified.",
+      "gates": false,
+      "gate_excluded": null,
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     }
+    ],
+    "semantic": {
+     "risk": {
+      "score": 57,
+      "severity": "HIGH",
+      "recommendation": "DO_NOT_INSTALL",
+      "max_issue_severity": "HIGH"
+     },
+     "findings": [
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "TP4",
+       "severity": "HIGH",
+       "category": "MCP Tool Poisoning",
+       "pattern": "Description-Behavior Mismatch",
+       "file": "SKILL.md",
+       "explanation": "This is a true vulnerability. The skill describes establishing network connections (e.g., `debugpy.listen`, `remote_pdb.set_trace`) and executing arbitrary Python code in a debugging context. While these are legitimate debugging features, they could be exploited for remote access or unauthorized command execution if misconfigured (e.g., listening on all interfaces or exposing the debugger to untrusted networks). The context (debugging) does not mitigate the risk of misuse.",
+       "line": 1,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "TP4",
+       "severity": "HIGH",
+       "category": "MCP Tool Poisoning",
+       "pattern": "Description-Behavior Mismatch",
+       "file": "SKILL.md",
+       "explanation": "The declared purpose suggests a versatile debugging tool supporting multiple debugging protocols (pdb REPL and debugpy DAP) and interactive features like stepping through code and inspecting variables. However, the actual code only implements a remote debugging session using `remote_pdb`, which is a subset of the declared capabilities. This creates a mismatch because the code does not fulfill the broader debugging functionalities implied by the description and triggers. The primary purpose is materially different, as the code is limited to a single remote debugging method without interactive o",
+       "line": 1,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "TP4",
+       "severity": "HIGH",
+       "category": "MCP Tool Poisoning",
+       "pattern": "Description-Behavior Mismatch",
+       "file": "SKILL.md",
+       "explanation": "The declared purpose of the skill is to provide interactive debugging capabilities (e.g., pdb REPL, debugpy remote debugging). However, the actual code performs a static text search for 'breakpoint()' calls in Python files, which is unrelated to interactive debugging. This constitutes a mismatch because the primary purpose (static analysis) is materially different from the declared purpose (interactive debugging), and the code accesses resources (file system) in a way not implied by the declared triggers or description. Additionally, the triggers like 'pdb', 'breakpoint', or 'attach debugger' ",
+       "line": 1,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "TP4",
+       "severity": "HIGH",
+       "category": "MCP Tool Poisoning",
+       "pattern": "Description-Behavior Mismatch",
+       "file": "SKILL.md",
+       "explanation": "The declared purpose of the skill is to provide interactive Python debugging capabilities, but the actual code only retrieves and displays the value of an environment variable (`PYTHONBREAKPOINT`). This is a material mismatch because the code does not implement any debugging functionality (e.g., pdb REPL, debugpy remote debugging, or variable inspection). Additionally, the code performs undeclared capabilities such as accessing environment variables and executing shell commands, which are unrelated to the stated purpose.",
+       "line": 1,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "TP4",
+       "severity": "HIGH",
+       "category": "MCP Tool Poisoning",
+       "pattern": "Description-Behavior Mismatch",
+       "file": "SKILL.md",
+       "explanation": "This is a true vulnerability. The skill documentation instructs users to modify the system kernel parameter `kernel.yama.ptrace_scope` using `sudo`, which is a privileged operation. While the documentation explicitly warns against persisting this change, the use of `sudo` to lower security hardening is dangerous. An attacker could exploit this to attach to arbitrary processes or escalate privileges. The context (debugging) does not justify this risk.",
+       "line": 1,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "TP4",
+       "severity": "HIGH",
+       "category": "MCP Tool Poisoning",
+       "pattern": "Description-Behavior Mismatch",
+       "file": "SKILL.md",
+       "explanation": "The declared purpose suggests a comprehensive debugging tool with interactive capabilities (e.g., pdb REPL, debugpy remote DAP), but the actual code is a minimal example with a single `breakpoint()` call. While the `breakpoint()` is technically part of pdb, it does not constitute a full debugging tool as described. The mismatch lies in the disparity between the broad, interactive debugging capabilities promised and the narrow, non-interactive implementation provided. The code does not support the declared triggers or permissions, and its primary purpose is inconsistent with the description.",
+       "line": 1,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "TP4",
+       "severity": "HIGH",
+       "category": "MCP Tool Poisoning",
+       "pattern": "Description-Behavior Mismatch",
+       "file": "SKILL.md",
+       "explanation": "The declared purpose mentions interactive debugging with pdb and debugpy (DAP), but the actual code only implements a remote pdb session using `remote_pdb.set_trace()`. While remote pdb is a form of debugging, it does not fulfill the full scope of the declared purpose (e.g., debugpy/DAP support, comprehensive triggers like 'step through' or 'inspect variables'). The mismatch arises because the code's primary capability is narrower and not fully representative of the declared debugging suite. Additionally, the remote debugging aspect is not explicitly mentioned in the description, which could m",
+       "line": 1,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "TP4",
+       "severity": "HIGH",
+       "category": "MCP Tool Poisoning",
+       "pattern": "Description-Behavior Mismatch",
+       "file": "SKILL.md",
+       "explanation": "The declared purpose suggests an interactive debugging experience akin to pdb or a user-friendly debugpy interface, but the actual code is a minimal DAP client that sends raw debugging commands over a socket. While DAP is used by debugpy, the code does not provide the interactive, user-facing features implied by the description (e.g., REPL, variable inspection, or intuitive stepping). The triggers like 'step through' or 'inspect variables' are misleading because the code lacks the corresponding high-level functionality. The mismatch is material because the skill's primary purpose (low-level DA",
+       "line": 1,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "TP4",
+       "severity": "HIGH",
+       "category": "MCP Tool Poisoning",
+       "pattern": "Description-Behavior Mismatch",
+       "file": "SKILL.md",
+       "explanation": "The declared purpose emphasizes interactive and remote debugging (e.g., pdb REPL, debugpy DAP), but the actual code only demonstrates automated test runner configurations for pdb integration. There is no evidence of interactive debugging sessions or remote debugging capabilities (e.g., debugpy server/client setup). The primary purpose is materially different: the code configures test execution, while the description implies a general-purpose debugging tool. The triggers (e.g., 'attach debugger', 'remote debug') are also inconsistent with the actual behavior, which is limited to test-specific p",
+       "line": 1,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "TP4",
+       "severity": "HIGH",
+       "category": "MCP Tool Poisoning",
+       "pattern": "Description-Behavior Mismatch",
+       "file": "SKILL.md",
+       "explanation": "The declared purpose suggests an interactive and comprehensive debugging tool, including features like remote debugging via debugpy (DAP), stepping through code, and inspecting variables. However, the actual code only implements an automatic post-mortem debugger for uncaught exceptions, which is a passive and limited debugging capability. This is a material mismatch because the primary purpose (interactive debugging) is not fulfilled, and the actual behavior (automatic post-mortem debugging) is not prominently declared. Additionally, the triggers like 'attach debugger' or 'remote debug' are mi",
+       "line": 1,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "PE2",
+       "severity": "MEDIUM",
+       "category": "Privilege Escalation",
+       "pattern": "Sudo/Root Execution",
+       "file": "SKILL.md",
+       "explanation": "This is a true vulnerability. The skill instructs users to execute `sudo sysctl -w kernel.yama.ptrace_scope=0` to lower system security hardening. This is a privileged operation that could be exploited by an attacker to attach to arbitrary processes or escalate privileges. The context (debugging) does not justify this risk, especially since the documentation explicitly warns against persisting the change.",
+       "line": 237,
+       "fingerprint": "16746f7044f347c6322d4c5b879b3fb06b2f205cbf1c9a209b43d52b34b3afd7",
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "PE2",
+       "severity": "MEDIUM",
+       "category": "Privilege Escalation",
+       "pattern": "Sudo/Root Execution",
+       "file": "SKILL.md",
+       "explanation": "This is a true vulnerability. The skill instructs users to execute `sudo sysctl -w kernel.yama.ptrace_scope=1` to restore the ptrace scope. While this is intended to be a security-conscious action, the use of `sudo` is still dangerous. An attacker could exploit this to execute arbitrary commands with elevated privileges. The context (debugging) does not mitigate this risk.",
+       "line": 238,
+       "fingerprint": "16746f7044f347c6322d4c5b879b3fb06b2f205cbf1c9a209b43d52b34b3afd7",
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      }
+     ],
+     "usage": {
+      "calls": 22,
+      "in": 20018,
+      "out": 8895,
+      "degraded": true,
+      "calls_succeeded": 2,
+      "calls_attempted": 5,
+      "status": "failed"
+     },
+     "degraded": true,
+     "stale": false
+    }
+   },
+   "body": null,
+   "gate": "pass",
+   "open_high": 0
+  },
+  "system/harness/typesafe-jev": {
+   "origin": "imported",
+   "trust": "trial",
+   "mode": "copy",
+   "source": "https://github.com/typesafe-ai/skills/blob/main/skills/typesafe-ai/SKILL.md",
+   "record": {
+    "path": "~/06_SYSTEM/memory/skills/system/harness/typesafe-jev",
+    "digest": "sha256:e332d3e02b40468a0d361712a0b1059e9e43da1f63b321b1e905eef4960399a1",
+    "files": 1,
+    "bytes": 7250,
+    "scanned_at": "2026-10-24T23:18:27Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 17,
+     "severity": "LOW",
+     "recommendation": "CAUTION",
+     "max_issue_severity": "MEDIUM"
+    },
+    "findings": [
+     {
+      "source": "static",
+      "target": "record",
+      "id": "AS3",
+      "severity": "MEDIUM",
+      "category": "Agent Snooping",
+      "pattern": "Skill Enumeration",
+      "file": "SKILL.md",
+      "line": 14,
+      "fingerprint": "7196d4ca70c73bc7f143a8344c3b866c4bcbaf5916b1db50e5b179ee6dcd454c",
+      "explanation": "Skill enumerates or reads other installed skills. Access to other skills' SKILL.md files or the skills directory reveals prompt instructions, capabilities, and secrets that should be invisible to peer skills.",
+      "gates": false,
+      "gate_excluded": null,
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     },
+     {
+      "source": "static",
+      "target": "record",
+      "id": "AS3",
+      "severity": "MEDIUM",
+      "category": "Agent Snooping",
+      "pattern": "Skill Enumeration",
+      "file": "SKILL.md",
+      "line": 40,
+      "fingerprint": "7196d4ca70c73bc7f143a8344c3b866c4bcbaf5916b1db50e5b179ee6dcd454c",
+      "explanation": "Skill enumerates or reads other installed skills. Access to other skills' SKILL.md files or the skills directory reveals prompt instructions, capabilities, and secrets that should be invisible to peer skills.",
+      "gates": false,
+      "gate_excluded": null,
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     },
+     {
+      "source": "static",
+      "target": "record",
+      "id": "E1",
+      "severity": "MEDIUM",
+      "category": "Data Exfiltration",
+      "pattern": "External Transmission",
+      "file": "SKILL.md",
+      "line": 118,
+      "fingerprint": "f421df6616e9951caf808f89b1518c5086cf8a97f9a8bce6b52ec3f3398b0340",
+      "explanation": "Data is being sent to an external URL. This could be legitimate telemetry or data exfiltration. Manual review is recommended.",
+      "gates": false,
+      "gate_excluded": null,
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     }
+    ],
+    "semantic": {
+     "risk": {
+      "score": 21,
+      "severity": "MEDIUM",
+      "recommendation": "CAUTION",
+      "max_issue_severity": "MEDIUM"
+     },
+     "findings": [
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "AS3",
+       "severity": "MEDIUM",
+       "category": "Agent Snooping",
+       "pattern": "Skill Enumeration",
+       "file": "SKILL.md",
+       "explanation": "Skill enumerates or reads other installed skills. Access to other skills' SKILL.md files or the skills directory reveals prompt instructions, capabilities, and secrets that should be invisible to peer skills.",
+       "line": 14,
+       "fingerprint": "7196d4ca70c73bc7f143a8344c3b866c4bcbaf5916b1db50e5b179ee6dcd454c",
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "AS3",
+       "severity": "MEDIUM",
+       "category": "Agent Snooping",
+       "pattern": "Skill Enumeration",
+       "file": "SKILL.md",
+       "explanation": "Skill enumerates or reads other installed skills. Access to other skills' SKILL.md files or the skills directory reveals prompt instructions, capabilities, and secrets that should be invisible to peer skills.",
+       "line": 40,
+       "fingerprint": "7196d4ca70c73bc7f143a8344c3b866c4bcbaf5916b1db50e5b179ee6dcd454c",
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "E1",
+       "severity": "MEDIUM",
+       "category": "Data Exfiltration",
+       "pattern": "External Transmission",
+       "file": "SKILL.md",
+       "explanation": "This finding flags the explicit mention of an external API endpoint (`https://api.typesafe.ai/v1/systemone`) and instructions for transmitting data to it. While the skill itself does not execute code, the documentation encourages users to send data to an external service, which could be exploited if the endpoint is malicious or compromised. The risk is amplified because the skill instructs users to include an API key (`Authorization: Bearer <API_KEY>`) in requests, which could be leaked or misused if not handled securely. The skill's context (structured decision-making) does not inherently mit",
+       "line": 118,
+       "fingerprint": "f421df6616e9951caf808f89b1518c5086cf8a97f9a8bce6b52ec3f3398b0340",
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      }
+     ],
+     "usage": {
+      "calls": 4,
+      "in": 12828,
+      "out": 905,
+      "degraded": false,
+      "calls_succeeded": 4,
+      "calls_attempted": 4,
+      "status": "partial"
+     },
+     "degraded": false,
+     "stale": false
+    }
+   },
+   "body": null,
+   "gate": "pass",
+   "open_high": 0
+  },
+  "system/host/diagnose-crash": {
+   "origin": "imported",
+   "trust": "trusted",
+   "mode": "link",
+   "source": "/usr/share/omarchy/default/agents/skills/diagnose-crash \u2014 Omarchy project (omarchy.org)",
+   "record": {
+    "path": "~/06_SYSTEM/memory/skills/system/host/diagnose-crash",
+    "digest": "sha256:f0f65764ab2a0feaa79c81e1ef4811d5d3ec57c13d710b3026a651c5ee93c13f",
+    "files": 1,
+    "bytes": 3157,
+    "scanned_at": "2026-10-24T23:18:29Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "CAUTION",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "semantic": {
+     "risk": {
+      "score": 0,
+      "severity": "LOW",
+      "recommendation": "CAUTION",
+      "max_issue_severity": "NONE"
+     },
+     "findings": [],
+     "usage": {
+      "calls": 3,
+      "in": 6599,
+      "out": 23,
+      "degraded": false,
+      "calls_succeeded": 3,
+      "calls_attempted": 3,
+      "status": "partial"
+     },
+     "degraded": false,
+     "stale": false
+    }
+   },
+   "body": {
+    "path": "/usr/share/omarchy/default/agents/skills/diagnose-crash",
+    "digest": "sha256:b6d9cbd549d0b42a44384a06324ae318cda2344bd27efcb3a8a6a74d61612583",
+    "files": 2,
+    "bytes": 8118,
+    "scanned_at": "2026-10-24T23:18:32Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 7,
+     "severity": "LOW",
+     "recommendation": "SAFE",
+     "max_issue_severity": "MEDIUM"
+    },
+    "findings": [
+     {
+      "source": "static",
+      "target": "body",
+      "id": "PE2",
+      "severity": "MEDIUM",
+      "category": "Privilege Escalation",
+      "pattern": "Sudo/Root Execution",
+      "file": "reporting.md",
+      "line": 89,
+      "fingerprint": "16746f7044f347c6322d4c5b879b3fb06b2f205cbf1c9a209b43d52b34b3afd7",
+      "explanation": "Commands invoke sudo or root privileges. Verify this elevated access is necessary and justified.",
+      "gates": false,
+      "gate_excluded": null,
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     }
+    ],
+    "pin": "pacman package `omarchy` \u2014 pin the installed version, re-verify with `pacman -Q omarchy` after `omarchy update`"
+   },
+   "gate": "pass",
+   "open_high": 0
+  },
+  "system/host/omarchy": {
+   "origin": "imported",
+   "trust": "trusted",
+   "mode": "link",
+   "source": "/usr/share/omarchy/default/agents/skills/omarchy \u2014 Omarchy project (omarchy.org)",
+   "record": {
+    "path": "~/06_SYSTEM/memory/skills/system/host/omarchy",
+    "digest": "sha256:dcb1c41a3a14132998e67f802f463c2f623dd657f9dedca32e6ca9f0f3e25a19",
+    "files": 1,
+    "bytes": 4381,
+    "scanned_at": "2026-10-24T23:18:34Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "CAUTION",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "semantic": {
+     "risk": {
+      "score": 0,
+      "severity": "LOW",
+      "recommendation": "CAUTION",
+      "max_issue_severity": "NONE"
+     },
+     "findings": [],
+     "usage": {
+      "calls": 3,
+      "in": 7558,
+      "out": 23,
+      "degraded": false,
+      "calls_succeeded": 3,
+      "calls_attempted": 3,
+      "status": "partial"
+     },
+     "degraded": false,
+     "stale": false
+    }
+   },
+   "body": {
+    "path": "/usr/share/omarchy/default/agents/skills/omarchy",
+    "digest": "sha256:ad8f8b2a1ae7bac6b1f56aca77068d342da7c4238479c58b77095bc4ee33a17c",
+    "files": 7,
+    "bytes": 27354,
+    "scanned_at": "2026-10-24T23:18:37Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 22,
+     "severity": "MEDIUM",
+     "recommendation": "CAUTION",
+     "max_issue_severity": "MEDIUM"
+    },
+    "findings": [
+     {
+      "source": "static",
+      "target": "body",
+      "id": "PE2",
+      "severity": "MEDIUM",
+      "category": "Privilege Escalation",
+      "pattern": "Sudo/Root Execution",
+      "file": "SKILL.md",
+      "line": 222,
+      "fingerprint": "16746f7044f347c6322d4c5b879b3fb06b2f205cbf1c9a209b43d52b34b3afd7",
+      "explanation": "Commands invoke sudo or root privileges. Verify this elevated access is necessary and justified.",
+      "gates": false,
+      "gate_excluded": null,
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     },
+     {
+      "source": "static",
+      "target": "body",
+      "id": "PE2",
+      "severity": "MEDIUM",
+      "category": "Privilege Escalation",
+      "pattern": "Sudo/Root Execution",
+      "file": "SKILL.md",
+      "line": 228,
+      "fingerprint": "16746f7044f347c6322d4c5b879b3fb06b2f205cbf1c9a209b43d52b34b3afd7",
+      "explanation": "Commands invoke sudo or root privileges. Verify this elevated access is necessary and justified.",
+      "gates": false,
+      "gate_excluded": null,
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     },
+     {
+      "source": "static",
+      "target": "body",
+      "id": "PE2",
+      "severity": "MEDIUM",
+      "category": "Privilege Escalation",
+      "pattern": "Sudo/Root Execution",
+      "file": "SKILL.md",
+      "line": 228,
+      "fingerprint": "16746f7044f347c6322d4c5b879b3fb06b2f205cbf1c9a209b43d52b34b3afd7",
+      "explanation": "Commands invoke sudo or root privileges. Verify this elevated access is necessary and justified.",
+      "gates": false,
+      "gate_excluded": null,
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     },
+     {
+      "source": "static",
+      "target": "body",
+      "id": "PE2",
+      "severity": "MEDIUM",
+      "category": "Privilege Escalation",
+      "pattern": "Sudo/Root Execution",
+      "file": "SKILL.md",
+      "line": 234,
+      "fingerprint": "16746f7044f347c6322d4c5b879b3fb06b2f205cbf1c9a209b43d52b34b3afd7",
+      "explanation": "Commands invoke sudo or root privileges. Verify this elevated access is necessary and justified.",
+      "gates": false,
+      "gate_excluded": null,
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     },
+     {
+      "source": "static",
+      "target": "body",
+      "id": "PE2",
+      "severity": "MEDIUM",
+      "category": "Privilege Escalation",
+      "pattern": "Sudo/Root Execution",
+      "file": "contributing.md",
+      "line": 26,
+      "fingerprint": "16746f7044f347c6322d4c5b879b3fb06b2f205cbf1c9a209b43d52b34b3afd7",
+      "explanation": "Commands invoke sudo or root privileges. Verify this elevated access is necessary and justified.",
+      "gates": false,
+      "gate_excluded": null,
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     },
+     {
+      "source": "static",
+      "target": "body",
+      "id": "RA2",
+      "severity": "MEDIUM",
+      "category": "Rogue Agent",
+      "pattern": "Session Persistence",
+      "file": "theming.md",
+      "line": 17,
+      "fingerprint": "4bac507009055857804e49fc78bb6202fe6a8e9988a5157b7dbf4a1300075b97",
+      "explanation": "Skill establishes unauthorized persistence across sessions via cron jobs, startup scripts, or state files. Session persistence allows an attacker to maintain access beyond the current interaction.",
+      "gates": false,
+      "gate_excluded": null,
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     },
+     {
+      "source": "static",
+      "target": "body",
+      "id": "RA2",
+      "severity": "MEDIUM",
+      "category": "Rogue Agent",
+      "pattern": "Session Persistence",
+      "file": "theming.md",
+      "line": 50,
+      "fingerprint": "0ed360e74737b5a4e9c00c786c30aed0d9af1fc07c0b5802713dc24a3a2d3380",
+      "explanation": "Skill establishes unauthorized persistence across sessions via cron jobs, startup scripts, or state files. Session persistence allows an attacker to maintain access beyond the current interaction.",
+      "gates": false,
+      "gate_excluded": null,
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     },
+     {
+      "source": "static",
+      "target": "body",
+      "id": "RA2",
+      "severity": "MEDIUM",
+      "category": "Rogue Agent",
+      "pattern": "Session Persistence",
+      "file": "theming.md",
+      "line": 58,
+      "fingerprint": "7f1eb3db7071e2d6a01d29b0236ea1a3db19e41e2dcd83ae08779630d9146a5d",
+      "explanation": "Skill establishes unauthorized persistence across sessions via cron jobs, startup scripts, or state files. Session persistence allows an attacker to maintain access beyond the current interaction.",
+      "gates": false,
+      "gate_excluded": null,
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     }
+    ],
+    "pin": "pacman package `omarchy` \u2014 pin the installed version, re-verify with `pacman -Q omarchy` after `omarchy update`"
+   },
+   "gate": "pass",
+   "open_high": 0
+  },
+  "system/knowledge/domain-modeling": {
+   "origin": "imported",
+   "trust": "trial",
+   "mode": "link",
+   "source": "https://github.com/mattpocock/skills \u2014 skills/engineering/domain-modeling",
+   "record": {
+    "path": "~/06_SYSTEM/memory/skills/system/knowledge/domain-modeling",
+    "digest": "sha256:c41754737c059cf6e282b5efe58349216dfedb4249c65491508fa136d91792d1",
+    "files": 1,
+    "bytes": 1911,
+    "scanned_at": "2026-10-24T23:18:39Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "CAUTION",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "semantic": {
+     "risk": {
+      "score": 13,
+      "severity": "LOW",
+      "recommendation": "CAUTION",
+      "max_issue_severity": "MEDIUM"
+     },
+     "findings": [
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "SDI-3",
+       "severity": "MEDIUM",
+       "category": "Excessive Agency",
+       "pattern": "Scope creep: Skill manifest declares empty permissions but code implicitly expects write access to domain documentation ",
+       "file": "SKILL.md",
+       "explanation": "The skill declares empty permissions (`scope: []`) but implicitly expects write access to domain documentation artifacts (e.g., `CONTEXT.md`). This creates a security risk because the skill could be exploited to modify or overwrite critical documentation files outside its intended scope, potentially leading to misinformation, broken dependencies, or unauthorized changes to the project's domain model. The contradiction between declared and implicit permissions is a common vector for privilege escalation or unintended side effects.",
+       "line": 20,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "SDI-4",
+       "severity": "LOW",
+       "category": "Excessive Agency",
+       "pattern": "Intent-code divergence: Local notes contradict the skill's stated purpose and manifest.",
+       "file": "SKILL.md",
+       "explanation": "The local notes explicitly state that `CONTEXT.md` is a generated Tier 0/1 artifact and should not be written by this skill, yet the upstream skill is designed to write to `CONTEXT.md`. This contradiction could lead to unintended modifications of critical system files, causing misalignment between the project's domain model and its documentation. While not directly malicious, the divergence between intent and implementation increases the risk of accidental corruption or misconfiguration of the project's shared language.",
+       "line": 47,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      }
+     ],
+     "usage": {
+      "calls": 4,
+      "in": 6385,
+      "out": 1262,
+      "degraded": false,
+      "calls_succeeded": 4,
+      "calls_attempted": 4,
+      "status": "partial"
+     },
+     "degraded": false,
+     "stale": false
+    }
+   },
+   "body": {
+    "path": "~/04_RESOURCES/Software/mattpocock-skills/skills/engineering/domain-modeling",
+    "digest": "sha256:3e5ba278061e074e0ef96d9958b44b1faa3bf6c77605837dad9d52090618a5b7",
+    "files": 4,
+    "bytes": 8455,
+    "scanned_at": "2026-10-24T23:18:41Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "CAUTION",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "pin": "mattpocock/skills@6654f6b"
+   },
+   "gate": "pass",
+   "open_high": 0
+  },
+  "system/knowledge/grill-with-docs": {
+   "origin": "imported",
+   "trust": "trial",
+   "mode": "link",
+   "source": "https://github.com/mattpocock/skills \u2014 skills/engineering/grill-with-docs",
+   "record": {
+    "path": "~/06_SYSTEM/memory/skills/system/knowledge/grill-with-docs",
+    "digest": "sha256:f1803039042200f5e661e5b08dda5c46d2116fbb7ee34bdb1dfdb93b7125215b",
+    "files": 1,
+    "bytes": 1777,
+    "scanned_at": "2026-10-24T23:18:43Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "SAFE",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "semantic": {
+     "risk": {
+      "score": 0,
+      "severity": "LOW",
+      "recommendation": "SAFE",
+      "max_issue_severity": "NONE"
+     },
+     "findings": [],
+     "usage": {
+      "calls": 3,
+      "in": 5163,
+      "out": 23,
+      "degraded": false,
+      "calls_succeeded": 3,
+      "calls_attempted": 3,
+      "status": "complete"
+     },
+     "degraded": false,
+     "stale": false
+    }
+   },
+   "body": {
+    "path": "~/04_RESOURCES/Software/mattpocock-skills/skills/engineering/grill-with-docs",
+    "digest": "sha256:d6882d18cf3c2ebcd5f7175ac732b3a0685122ea934b463272949d25657332bc",
+    "files": 2,
+    "bytes": 392,
+    "scanned_at": "2026-10-24T23:18:45Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "SAFE",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "pin": "mattpocock/skills@6654f6b"
+   },
+   "gate": "pass",
+   "open_high": 0
+  },
+  "system/knowledge/literature-review": {
+   "origin": "authored",
+   "trust": "trusted",
+   "mode": "vendor",
+   "source": "02_AREAS/B_Tech/SKILLS/Literature-Review/LITERATURE-REVIEW.md",
+   "record": {
+    "path": "~/06_SYSTEM/memory/skills/system/knowledge/literature-review",
+    "digest": "sha256:eb1c8af8147ce0c7611e45f299569957bb39af5e01a6adbdb41770b270b50fcc",
+    "files": 1,
+    "bytes": 12441,
+    "scanned_at": "2026-10-24T23:18:47Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "CAUTION",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "semantic": {
+     "risk": {
+      "score": 44,
+      "severity": "MEDIUM",
+      "recommendation": "CAUTION",
+      "max_issue_severity": "HIGH"
+     },
+     "findings": [
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "SDI-3",
+       "severity": "HIGH",
+       "category": "Excessive Agency",
+       "pattern": "Scope creep: Skill accesses external data sources without declared permissions.",
+       "file": "SKILL.md",
+       "explanation": "The skill accesses external data sources (e.g., web search, training data) without declaring these permissions in its metadata or documentation. This is a critical security oversight, as it could lead to unauthorized data access, exposure to adversarial content, or unintended interactions with external systems. Scope creep like this is particularly dangerous in a literature review tool, where users expect the analysis to be confined to the provided corpus.",
+       "line": 105,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "SDI-1",
+       "severity": "MEDIUM",
+       "category": "Excessive Agency",
+       "pattern": "Description-behavior mismatch: Skill claims to operate on a provided corpus but actively expands it via external sources",
+       "file": "SKILL.md",
+       "explanation": "The skill's description claims it operates on a provided corpus, but its behavior includes actively expanding the corpus via external sources (e.g., web search, training data). This mismatch between description and behavior violates the principle of least surprise and could lead to unintended data exposure or manipulation. Users may assume the skill is self-contained, while it actually fetches external data, which could be adversarial or biased.",
+       "line": 105,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "SDI-2",
+       "severity": "MEDIUM",
+       "category": "Excessive Agency",
+       "pattern": "Context-inappropriate capability: Web search functionality is unjustified for a literature review skill focused on corpu",
+       "file": "SKILL.md",
+       "explanation": "The skill includes web search functionality to expand the corpus, which is inappropriate for a literature review tool that should operate solely on the provided corpus. This introduces risks of data poisoning, bias injection, or unintended exposure to adversarial content from external sources. The skill's description explicitly states it operates on a corpus the user already has, making this capability contextually unjustified.",
+       "line": 105,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      }
+     ],
+     "usage": {
+      "calls": 4,
+      "in": 19140,
+      "out": 1553,
+      "degraded": false,
+      "calls_succeeded": 4,
+      "calls_attempted": 4,
+      "status": "partial"
+     },
+     "degraded": false,
+     "stale": false
+    }
+   },
+   "body": null,
+   "gate": "pass",
+   "open_high": 0
+  },
+  "system/knowledge/paper-review": {
+   "origin": "authored",
+   "trust": "trusted",
+   "mode": "vendor",
+   "source": "02_AREAS/B_Tech/SKILLS/Paper-Review/NEUROSCIENCE-REVIEWER.md",
+   "record": {
+    "path": "~/06_SYSTEM/memory/skills/system/knowledge/paper-review",
+    "digest": "sha256:9674e193bb3d6aa99e50fbcdbdcad177e8b9cfe650357beebfcaacc03cfc74a4",
+    "files": 1,
+    "bytes": 17585,
+    "scanned_at": "2026-10-24T23:18:50Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 5,
+     "severity": "LOW",
+     "recommendation": "CAUTION",
+     "max_issue_severity": "LOW"
+    },
+    "findings": [
+     {
+      "source": "static",
+      "target": "record",
+      "id": "EA3",
+      "severity": "LOW",
+      "category": "Excessive Agency",
+      "pattern": "Scope Creep",
+      "file": "SKILL.md",
+      "line": 52,
+      "fingerprint": "943d9aae8743c129fe98eb6cc5e984f5e35ceba0b44ce4ca00f42b97f0bf3eaf",
+      "explanation": "Skill's behavior or capabilities extend beyond its stated purpose. Scope creep allows an agent to perform actions unrelated to its documented functionality, increasing the attack surface.",
+      "gates": false,
+      "gate_excluded": null,
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     },
+     {
+      "source": "static",
+      "target": "record",
+      "id": "EA3",
+      "severity": "LOW",
+      "category": "Excessive Agency",
+      "pattern": "Scope Creep",
+      "file": "SKILL.md",
+      "line": 265,
+      "fingerprint": "d97d1e9c653b1383adc39bd240db4fd74f4d96acb2e6b80cf1a5d7e06931e286",
+      "explanation": "Skill's behavior or capabilities extend beyond its stated purpose. Scope creep allows an agent to perform actions unrelated to its documented functionality, increasing the attack surface.",
+      "gates": false,
+      "gate_excluded": null,
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     }
+    ],
+    "semantic": {
+     "risk": {
+      "score": 5,
+      "severity": "LOW",
+      "recommendation": "CAUTION",
+      "max_issue_severity": "LOW"
+     },
+     "findings": [
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "EA3",
+       "severity": "LOW",
+       "category": "Excessive Agency",
+       "pattern": "Scope Creep",
+       "file": "SKILL.md",
+       "explanation": "Skill's behavior or capabilities extend beyond its stated purpose. Scope creep allows an agent to perform actions unrelated to its documented functionality, increasing the attack surface.",
+       "line": 52,
+       "fingerprint": "943d9aae8743c129fe98eb6cc5e984f5e35ceba0b44ce4ca00f42b97f0bf3eaf",
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "EA3",
+       "severity": "LOW",
+       "category": "Excessive Agency",
+       "pattern": "Scope Creep",
+       "file": "SKILL.md",
+       "explanation": "Skill's behavior or capabilities extend beyond its stated purpose. Scope creep allows an agent to perform actions unrelated to its documented functionality, increasing the attack surface.",
+       "line": 265,
+       "fingerprint": "d97d1e9c653b1383adc39bd240db4fd74f4d96acb2e6b80cf1a5d7e06931e286",
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      }
+     ],
+     "usage": {
+      "calls": 4,
+      "in": 22803,
+      "out": 590,
+      "degraded": false,
+      "calls_succeeded": 4,
+      "calls_attempted": 4,
+      "status": "partial"
+     },
+     "degraded": false,
+     "stale": false
+    }
+   },
+   "body": null,
+   "gate": "pass",
+   "open_high": 0
+  },
+  "system/knowledge/primary-source-research": {
+   "origin": "imported",
+   "trust": "trial",
+   "mode": "link",
+   "source": "https://github.com/mattpocock/skills \u2014 skills/engineering/research",
+   "record": {
+    "path": "~/06_SYSTEM/memory/skills/system/knowledge/primary-source-research",
+    "digest": "sha256:9875a842f7c0b90db431d68162dacf1feda1e04adbe720fb84260c71bfbeda55",
+    "files": 1,
+    "bytes": 2043,
+    "scanned_at": "2026-10-24T23:18:52Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "SAFE",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "semantic": {
+     "risk": {
+      "score": 11,
+      "severity": "LOW",
+      "recommendation": "SAFE",
+      "max_issue_severity": "MEDIUM"
+     },
+     "findings": [
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "SQP-1",
+       "severity": "MEDIUM",
+       "category": "Trigger Abuse",
+       "pattern": "Vague trigger phrase 'research a topic' could cause unintended skill invocations.",
+       "file": "SKILL.md",
+       "explanation": "The trigger phrase 'research a topic' is overly broad and could lead to unintended invocations of the skill. This could cause the agent to perform unnecessary or unintended primary-source research, wasting computational resources or retrieving irrelevant data. In a worst-case scenario, it could be exploited to trigger the skill repeatedly, leading to denial-of-service or excessive API calls to external sources.",
+       "line": 18,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "SQP-1",
+       "severity": "LOW",
+       "category": "Trigger Abuse",
+       "pattern": "Trigger phrase 'background research' is ambiguous and could overlap with non-primary-source research tasks.",
+       "file": "SKILL.md",
+       "explanation": "The trigger phrase 'background research' is ambiguous and could overlap with non-primary-source research tasks, such as literature reviews or secondary-source analysis. This ambiguity could lead to the skill being invoked for tasks it is not designed to handle, resulting in irrelevant or low-quality outputs. While the impact is lower than the first finding, it still introduces inefficiency and potential confusion in skill routing.",
+       "line": 18,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      }
+     ],
+     "usage": {
+      "calls": 4,
+      "in": 6511,
+      "out": 1011,
+      "degraded": false,
+      "calls_succeeded": 4,
+      "calls_attempted": 4,
+      "status": "complete"
+     },
+     "degraded": false,
+     "stale": false
+    }
+   },
+   "body": {
+    "path": "~/04_RESOURCES/Software/mattpocock-skills/skills/engineering/research",
+    "digest": "sha256:1a5c408b1843aba2ef8e67faa23bb02d83ddc6ac3e414101c555c938f5fc9033",
+    "files": 2,
+    "bytes": 888,
+    "scanned_at": "2026-10-24T23:18:54Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "SAFE",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "pin": "mattpocock/skills@6654f6b"
+   },
+   "gate": "pass",
+   "open_high": 0
+  },
+  "system/knowledge/ssotize": {
+   "origin": "imported",
+   "trust": "trial",
+   "mode": "link",
+   "source": "https://github.com/lilmgenius/paperthin \u2014 skills/breadth/ssotize/SKILL.md",
+   "record": {
+    "path": "~/06_SYSTEM/memory/skills/system/knowledge/ssotize",
+    "digest": "sha256:3032c936bb65d1a4488b296526887eec00a19ee66423d2d744d379aa0efaca8d",
+    "files": 1,
+    "bytes": 3552,
+    "scanned_at": "2026-10-24T23:18:56Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "CAUTION",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "semantic": {
+     "risk": {
+      "score": 0,
+      "severity": "LOW",
+      "recommendation": "CAUTION",
+      "max_issue_severity": "NONE"
+     },
+     "findings": [],
+     "usage": {
+      "calls": 3,
+      "in": 6801,
+      "out": 23,
+      "degraded": false,
+      "calls_succeeded": 3,
+      "calls_attempted": 3,
+      "status": "partial"
+     },
+     "degraded": false,
+     "stale": false
+    }
+   },
+   "body": {
+    "path": "~/04_RESOURCES/Software/paperthin/skills/breadth/ssotize",
+    "digest": "sha256:ba8aecffb3efaf6bbc84beb69a9e152895877ae8f74f5d3e3ba4f121273720d9",
+    "files": 1,
+    "bytes": 5396,
+    "scanned_at": "2026-10-24T23:18:58Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "SAFE",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "pin": "lilmgenius/paperthin@7d5dc62"
+   },
+   "gate": "pass",
+   "open_high": 0
+  },
+  "system/orchestration/dispatch": {
+   "origin": "authored",
+   "trust": "trial",
+   "mode": "vendor",
+   "source": null,
+   "record": {
+    "path": "~/06_SYSTEM/memory/skills/system/orchestration/dispatch",
+    "digest": "sha256:63636e0dcf13f7c8099bfcd45145f0ff18b70ce8fdd0111574ebabec950cf477",
+    "files": 1,
+    "bytes": 4503,
+    "scanned_at": "2026-10-24T23:19:00Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 7,
+     "severity": "LOW",
+     "recommendation": "CAUTION",
+     "max_issue_severity": "MEDIUM"
+    },
+    "findings": [
+     {
+      "source": "static",
+      "target": "record",
+      "id": "TR2",
+      "severity": "MEDIUM",
+      "category": "Trigger Abuse",
+      "pattern": "Shadow Command Trigger",
+      "file": "SKILL.md",
+      "line": 1,
+      "fingerprint": "1e97d3068652635dac04fd09fa48e5876c7b2afc4b2a48131001a322351c3cf3",
+      "explanation": "Shadow Command Trigger: 'write specs' conflicts with built-in command 'write'",
+      "gates": false,
+      "gate_excluded": null,
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     }
+    ],
+    "semantic": {
+     "risk": {
+      "score": 63,
+      "severity": "HIGH",
+      "recommendation": "DO_NOT_INSTALL",
+      "max_issue_severity": "HIGH"
+     },
+     "findings": [
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "TP4",
+       "severity": "HIGH",
+       "category": "MCP Tool Poisoning",
+       "pattern": "Description-Behavior Mismatch",
+       "file": "SKILL.md",
+       "explanation": "This is a true vulnerability due to a description-behavior mismatch. The skill claims to handle a broad workflow (writing SPECS.md, dispatching, parallelization, model selection) but only demonstrates a narrow verification capability. This misalignment could lead users to trust the skill for tasks it cannot perform, resulting in incomplete or failed workflows. The risk is amplified because the triggers ('write specs', 'implement the specs') imply broader functionality than is delivered.",
+       "line": 1,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "SQP-2",
+       "severity": "HIGH",
+       "category": "Output Handling",
+       "pattern": "Missing user warning for potential model profile resolution requiring explicit approval.",
+       "file": "SKILL.md",
+       "explanation": "The skill fails to warn users that resolving a model outside the active profile requires explicit approval (`--approve=<reason>`). This omission could lead users to unknowingly bypass security controls, potentially exposing sensitive data or incurring unexpected costs. The skill's context (orchestration with model selection) makes this particularly dangerous, as users may assume the skill enforces profile constraints by default.",
+       "line": 94,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "TR2",
+       "severity": "MEDIUM",
+       "category": "Trigger Abuse",
+       "pattern": "Shadow Command Trigger",
+       "file": "SKILL.md",
+       "explanation": "The trigger 'write specs' conflicts with the built-in 'write' command, creating ambiguity in skill activation. This could lead to unintended behavior or failed executions. While not directly malicious, the overlap increases the risk of misrouting user intent, especially in automated workflows.",
+       "line": 1,
+       "fingerprint": "1e97d3068652635dac04fd09fa48e5876c7b2afc4b2a48131001a322351c3cf3",
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "SQP-1",
+       "severity": "MEDIUM",
+       "category": "Trigger Abuse",
+       "pattern": "Vague trigger phrase 'which model for' could overlap with common everyday speech.",
+       "file": "SKILL.md",
+       "explanation": "The trigger phrase 'which model for' is overly vague and could unintentionally activate the skill in unrelated contexts (e.g., casual conversation). While not inherently malicious, this increases the risk of accidental invocation, leading to confusion or unintended actions. The skill's context (orchestration) makes this more dangerous because it could disrupt workflows if triggered unintentionally.",
+       "line": 17,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      }
+     ],
+     "usage": {
+      "calls": 5,
+      "in": 10323,
+      "out": 2026,
+      "degraded": false,
+      "calls_succeeded": 5,
+      "calls_attempted": 5,
+      "status": "partial"
+     },
+     "degraded": false,
+     "stale": false
+    }
+   },
+   "body": null,
+   "gate": "pass",
+   "open_high": 0
+  },
+  "system/practice/app-builder": {
+   "origin": "authored",
+   "trust": "trusted",
+   "mode": "vendor",
+   "source": "02_AREAS/B_Tech/SKILLS/App-Builder/APP-BUILDER.md",
+   "record": {
+    "path": "~/06_SYSTEM/memory/skills/system/practice/app-builder",
+    "digest": "sha256:1b864840e6eb405de0335d6518e54fcc829885d53c8bbbe07f4b5a259ebb0e40",
+    "files": 1,
+    "bytes": 9724,
+    "scanned_at": "2026-10-24T23:19:03Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 8,
+     "severity": "LOW",
+     "recommendation": "CAUTION",
+     "max_issue_severity": "MEDIUM"
+    },
+    "findings": [
+     {
+      "source": "static",
+      "target": "record",
+      "id": "EA4",
+      "severity": "MEDIUM",
+      "category": "Excessive Agency",
+      "pattern": "Unbounded Resource Access",
+      "file": "SKILL.md",
+      "line": 81,
+      "fingerprint": "67c9a756056322190cc33244a700c532281c7298e466f11dcd91c6866064a0b9",
+      "explanation": "Skill allows unbounded resource consumption (API calls, storage, compute). Without rate limits or quotas, a compromised or misbehaving agent can cause denial-of-service or cost overruns.",
+      "gates": false,
+      "gate_excluded": null,
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     }
+    ],
+    "semantic": {
+     "risk": {
+      "score": 8,
+      "severity": "LOW",
+      "recommendation": "CAUTION",
+      "max_issue_severity": "MEDIUM"
+     },
+     "findings": [
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "EA4",
+       "severity": "MEDIUM",
+       "category": "Excessive Agency",
+       "pattern": "Unbounded Resource Access",
+       "file": "SKILL.md",
+       "explanation": "Skill allows unbounded resource consumption (API calls, storage, compute). Without rate limits or quotas, a compromised or misbehaving agent can cause denial-of-service or cost overruns.",
+       "line": 81,
+       "fingerprint": "67c9a756056322190cc33244a700c532281c7298e466f11dcd91c6866064a0b9",
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      }
+     ],
+     "usage": {
+      "calls": 4,
+      "in": 15253,
+      "out": 351,
+      "degraded": false,
+      "calls_succeeded": 4,
+      "calls_attempted": 4,
+      "status": "partial"
+     },
+     "degraded": false,
+     "stale": false
+    }
+   },
+   "body": null,
+   "gate": "pass",
+   "open_high": 0
+  },
+  "system/practice/codebase-design": {
+   "origin": "imported",
+   "trust": "trial",
+   "mode": "link",
+   "source": "https://github.com/mattpocock/skills \u2014 skills/engineering/codebase-design",
+   "record": {
+    "path": "~/06_SYSTEM/memory/skills/system/practice/codebase-design",
+    "digest": "sha256:7175b3c8f34126902c2224de599f83998c6aaa3999fd144ddc2b1c198c263991",
+    "files": 1,
+    "bytes": 2026,
+    "scanned_at": "2026-10-24T23:19:05Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "SAFE",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "semantic": {
+     "risk": {
+      "score": 0,
+      "severity": "LOW",
+      "recommendation": "SAFE",
+      "max_issue_severity": "NONE"
+     },
+     "findings": [],
+     "usage": {
+      "calls": 3,
+      "in": 5314,
+      "out": 21,
+      "degraded": false,
+      "calls_succeeded": 3,
+      "calls_attempted": 3,
+      "status": "complete"
+     },
+     "degraded": false,
+     "stale": false
+    }
+   },
+   "body": {
+    "path": "~/04_RESOURCES/Software/mattpocock-skills/skills/engineering/codebase-design",
+    "digest": "sha256:5f17b5080ffb5f4a07e828373e33d0d6fb430569e9fcbf56ccc2f16770ea9da7",
+    "files": 4,
+    "bytes": 11765,
+    "scanned_at": "2026-10-24T23:19:07Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "SAFE",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "pin": "mattpocock/skills@6654f6b"
+   },
+   "gate": "pass",
+   "open_high": 0
+  },
+  "system/practice/diagnosing-bugs": {
+   "origin": "imported",
+   "trust": "trial",
+   "mode": "link",
+   "source": "https://github.com/mattpocock/skills \u2014 skills/engineering/diagnosing-bugs",
+   "record": {
+    "path": "~/06_SYSTEM/memory/skills/system/practice/diagnosing-bugs",
+    "digest": "sha256:1d4b69fbec39bc890da2cc6ed0dbb9c29ef8d29cf6c995fc8aa8d5a3409d892e",
+    "files": 1,
+    "bytes": 2048,
+    "scanned_at": "2026-10-24T23:19:10Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "SAFE",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "semantic": {
+     "risk": {
+      "score": 14,
+      "severity": "LOW",
+      "recommendation": "SAFE",
+      "max_issue_severity": "MEDIUM"
+     },
+     "findings": [
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "SQP-1",
+       "severity": "MEDIUM",
+       "category": "Trigger Abuse",
+       "pattern": "Vague trigger phrase 'it is slow' could cause unintended skill invocations.",
+       "file": "SKILL.md",
+       "explanation": "The trigger phrase 'it is slow' is overly broad and could lead to unintended skill activations, particularly in performance-sensitive environments. This may result in unnecessary diagnostic processes being initiated, consuming system resources and potentially masking real performance issues. The lack of specificity in the trigger phrase undermines the skill's precision and reliability.",
+       "line": 18,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "SQP-1",
+       "severity": "MEDIUM",
+       "category": "Trigger Abuse",
+       "pattern": "Vague trigger phrase 'something is broken' could cause unintended skill invocations.",
+       "file": "SKILL.md",
+       "explanation": "The trigger phrase 'something is broken' is overly vague and could lead to unintended skill invocations. This increases the risk of the skill being triggered in inappropriate contexts, potentially wasting computational resources or causing confusion in debugging workflows. While not directly malicious, the lack of specificity in trigger phrases can degrade system reliability and user experience.",
+       "line": 18,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      }
+     ],
+     "usage": {
+      "calls": 4,
+      "in": 6668,
+      "out": 958,
+      "degraded": false,
+      "calls_succeeded": 4,
+      "calls_attempted": 4,
+      "status": "complete"
+     },
+     "degraded": false,
+     "stale": false
+    }
+   },
+   "body": {
+    "path": "~/04_RESOURCES/Software/mattpocock-skills/skills/engineering/diagnosing-bugs",
+    "digest": "sha256:5075efe3130a756777e68ab4d6379bbef58d37adde26afb4f981fabc2a17c49f",
+    "files": 3,
+    "bytes": 9948,
+    "scanned_at": "2026-10-24T23:19:12Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 27,
+     "severity": "MEDIUM",
+     "recommendation": "CAUTION",
+     "max_issue_severity": "HIGH"
+    },
+    "findings": [
+     {
+      "source": "static",
+      "target": "body",
+      "id": "P6",
+      "severity": "HIGH",
+      "category": "System Prompt Leakage",
+      "pattern": "Direct Prompt Extraction",
+      "file": "scripts/hitl-loop.template.sh",
+      "line": 10,
+      "fingerprint": "58f8a51bca70aeabbb60a53582a78222a10262e9d9bf749609a7cbe055c22812",
+      "explanation": "Skill contains instructions that could directly expose system prompts, internal rules, or hidden instructions to users or external parties.",
+      "gates": true,
+      "gate_excluded": null,
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     }
+    ],
+    "pin": "mattpocock/skills@6654f6b"
+   },
+   "gate": "blocked",
+   "open_high": 1
+  },
+  "system/practice/diagram-design": {
+   "origin": "imported",
+   "trust": "trial",
+   "mode": "link",
+   "source": "https://github.com/cathrynlavery/diagram-design \u2014 skills/diagram-design",
+   "record": {
+    "path": "~/06_SYSTEM/memory/skills/system/practice/diagram-design",
+    "digest": "sha256:fc6752e243c84f6d911fc67452aa701a7178b5ad1d09c36d27cad799990e2fe6",
+    "files": 1,
+    "bytes": 6767,
+    "scanned_at": "2026-10-24T23:19:15Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "CAUTION",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "semantic": {
+     "risk": {
+      "score": 0,
+      "severity": "LOW",
+      "recommendation": "CAUTION",
+      "max_issue_severity": "NONE"
+     },
+     "findings": [],
+     "usage": {
+      "calls": 3,
+      "in": 10500,
+      "out": 21,
+      "degraded": false,
+      "calls_succeeded": 3,
+      "calls_attempted": 3,
+      "status": "partial"
+     },
+     "degraded": false,
+     "stale": false
+    }
+   },
+   "body": {
+    "path": "~/04_RESOURCES/Software/diagram-design/skills/diagram-design",
+    "digest": "sha256:92acef88c93e0ba11c265341a9f8c971bb33ce4ac7f9802a8ffbea1f9ea69f67",
+    "files": 287,
+    "bytes": 5325584,
+    "scanned_at": "2026-10-24T23:23:17Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 100,
+     "severity": "CRITICAL",
+     "recommendation": "DO_NOT_INSTALL",
+     "max_issue_severity": "HIGH"
+    },
+    "findings": [
+     {
+      "source": "static",
+      "target": "body",
+      "id": "AE1",
+      "severity": "HIGH",
+      "category": "analysis-evasion",
+      "pattern": "Incomplete referenced artifact analysis",
+      "file": "SKILL.md",
+      "line": 29,
+      "fingerprint": "5fa19af5dc7fdca36d91eb87330c290084529d9439f26404a2ad2100053637fc",
+      "explanation": "Referenced artifact was not completely inspected",
+      "gates": false,
+      "gate_excluded": "out of scope: coverage self-report or an opinion about documentation, not evidence about the skill",
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     },
+     {
+      "source": "static",
+      "target": "body",
+      "id": "AE1",
+      "severity": "HIGH",
+      "category": "analysis-evasion",
+      "pattern": "Incomplete referenced artifact analysis",
+      "file": "SKILL.md",
+      "line": 172,
+      "fingerprint": "5fa19af5dc7fdca36d91eb87330c290084529d9439f26404a2ad2100053637fc",
+      "explanation": "Referenced artifact was not completely inspected",
+      "gates": false,
+      "gate_excluded": "out of scope: coverage self-report or an opinion about documentation, not evidence about the skill",
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     },
+     {
+      "source": "static",
+      "target": "body",
+      "id": "AE1",
+      "severity": "HIGH",
+      "category": "analysis-evasion",
+      "pattern": "Incomplete referenced artifact analysis",
+      "file": "SKILL.md",
+      "line": 115,
+      "fingerprint": "d10b88c475b6c5065ced05e8796611ffa64c06f8f8feccc057eebc3e388e9a29",
+      "explanation": "Referenced artifact was not completely inspected",
+      "gates": false,
+      "gate_excluded": "out of scope: coverage self-report or an opinion about documentation, not evidence about the skill",
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     },
+     {
+      "source": "static",
+      "target": "body",
+      "id": "AE1",
+      "severity": "HIGH",
+      "category": "analysis-evasion",
+      "pattern": "Incomplete referenced artifact analysis",
+      "file": "SKILL.md",
+      "line": 117,
+      "fingerprint": "d09ebe090e99cb593e67ae6b16c2881efa48f2f452a91bd39a92878f60833d30",
+      "explanation": "Referenced artifact was not completely inspected",
+      "gates": false,
+      "gate_excluded": "out of scope: coverage self-report or an opinion about documentation, not evidence about the skill",
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     },
+     {
+      "source": "static",
+      "target": "body",
+      "id": "AE1",
+      "severity": "HIGH",
+      "category": "analysis-evasion",
+      "pattern": "Incomplete referenced artifact analysis",
+      "file": "SKILL.md",
+      "line": 120,
+      "fingerprint": "1030b93ca407b519b5b9971ab62a2e4358d9be389d0d432642ddd1d7aee4785e",
+      "explanation": "Referenced artifact was not completely inspected",
+      "gates": false,
+      "gate_excluded": "out of scope: coverage self-report or an opinion about documentation, not evidence about the skill",
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     },
+     {
+      "source": "static",
+      "target": "body",
+      "id": "AE1",
+      "severity": "HIGH",
+      "category": "analysis-evasion",
+      "pattern": "Incomplete referenced artifact analysis",
+      "file": "SKILL.md",
+      "line": 300,
+      "fingerprint": "6b68dca5f538e17976a0b0f9d070ef21a263b60f6869dd6a55696d03392614a6",
+      "explanation": "Referenced artifact was not completely inspected",
+      "gates": false,
+      "gate_excluded": "out of scope: coverage self-report or an opinion about documentation, not evidence about the skill",
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     },
+     {
+      "source": "static",
+      "target": "body",
+      "id": "P2",
+      "severity": "HIGH",
+      "category": "Prompt Injection",
+      "pattern": "Hidden Instructions",
+      "file": "assets/example-high-level-dark.html",
+      "line": 146,
+      "fingerprint": "a39eec4354df8fac1778f7d19a2b6685691b679aa2dab32ac1d1694a1a969d1a",
+      "explanation": "Hidden instructions were detected in comments or invisible text. These could contain malicious directives. Manual review is recommended.",
+      "gates": false,
+      "gate_excluded": "out of scope: data or example asset, not an instruction the agent executes",
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     },
+     {
+      "source": "static",
+      "target": "body",
+      "id": "P2",
+      "severity": "HIGH",
+      "category": "Prompt Injection",
+      "pattern": "Hidden Instructions",
+      "file": "assets/example-high-level.html",
+      "line": 183,
+      "fingerprint": "c16620608c2386f36edb72a8c3afbc052e2ca5c09db76bfdcd6ccb2c20f00c94",
+      "explanation": "Hidden instructions were detected in comments or invisible text. These could contain malicious directives. Manual review is recommended.",
+      "gates": false,
+      "gate_excluded": "out of scope: data or example asset, not an instruction the agent executes",
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     },
+     {
+      "source": "static",
+      "target": "body",
+      "id": "AR2",
+      "severity": "HIGH",
+      "category": "Anti-Refusal",
+      "pattern": "Anti-Refusal Statement",
+      "file": "assets/example-journey-dark.html",
+      "line": 119,
+      "fingerprint": "53da6e3514581956442f00b31d11e3ba45b6fed24dc9f2ab199491418946cf28",
+      "explanation": "Skill instructs the agent to omit warnings, disclaimers, or ethical commentary. Stripping safety caveats hides risk from the user and is a common jailbreak preamble.",
+      "gates": false,
+      "gate_excluded": "out of scope: data or example asset, not an instruction the agent executes",
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     },
+     {
+      "source": "static",
+      "target": "body",
+      "id": "AR2",
+      "severity": "HIGH",
+      "category": "Anti-Refusal",
+      "pattern": "Anti-Refusal Statement",
+      "file": "assets/example-journey-full.html",
+      "line": 93,
+      "fingerprint": "53da6e3514581956442f00b31d11e3ba45b6fed24dc9f2ab199491418946cf28",
+      "explanation": "Skill instructs the agent to omit warnings, disclaimers, or ethical commentary. Stripping safety caveats hides risk from the user and is a common jailbreak preamble.",
+      "gates": false,
+      "gate_excluded": "out of scope: data or example asset, not an instruction the agent executes",
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     },
+     {
+      "source": "static",
+      "target": "body",
+      "id": "AR2",
+      "severity": "HIGH",
+      "category": "Anti-Refusal",
+      "pattern": "Anti-Refusal Statement",
+      "file": "assets/example-journey.html",
+      "line": 119,
+      "fingerprint": "53da6e3514581956442f00b31d11e3ba45b6fed24dc9f2ab199491418946cf28",
+      "explanation": "Skill instructs the agent to omit warnings, disclaimers, or ethical commentary. Stripping safety caveats hides risk from the user and is a common jailbreak preamble.",
+      "gates": false,
+      "gate_excluded": "out of scope: data or example asset, not an instruction the agent executes",
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     },
+     {
+      "source": "static",
+      "target": "body",
+      "id": "AR2",
+      "severity": "HIGH",
+      "category": "Anti-Refusal",
+      "pattern": "Anti-Refusal Statement",
+      "file": "assets/example-journey-full.html",
+      "line": 38,
+      "fingerprint": "449e47b25897541aa26f8824417d1280ef58d2d29e5e3ba95502143b7207c9ec",
+      "explanation": "Skill instructs the agent to omit warnings, disclaimers, or ethical commentary. Stripping safety caveats hides risk from the user and is a common jailbreak preamble.",
+      "gates": false,
+      "gate_excluded": "out of scope: data or example asset, not an instruction the agent executes",
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     },
+     {
+      "source": "static",
+      "target": "body",
+      "id": "PE3",
+      "severity": "HIGH",
+      "category": "Privilege Escalation",
+      "pattern": "Credential Access",
+      "file": "assets/example-sequence-oauth-full.html",
+      "line": 318,
+      "fingerprint": "903a9f18e7222d4c1e39fcf76dec31bef3fd46b6332f4bc5bc823999d287548b",
+      "explanation": "Code accesses credential files (SSH keys, AWS credentials, etc.). This could indicate credential theft attempts.",
+      "gates": false,
+      "gate_excluded": "out of scope: data or example asset, not an instruction the agent executes",
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     },
+     {
+      "source": "static",
+      "target": "body",
+      "id": "P2",
+      "severity": "HIGH",
+      "category": "Prompt Injection",
+      "pattern": "Hidden Instructions",
+      "file": "assets/example-sequence-oauth.html",
+      "line": 108,
+      "fingerprint": "7c4154ab8093269f0cc775da5f3176efc5a20d4ca92533516aa678466da57f0b",
+      "explanation": "Hidden instructions were detected in comments or invisible text. These could contain malicious directives. Manual review is recommended.",
+      "gates": false,
+      "gate_excluded": "out of scope: data or example asset, not an instruction the agent executes",
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     },
+     {
+      "source": "static",
+      "target": "body",
+      "id": "P2",
+      "severity": "HIGH",
+      "category": "Prompt Injection",
+      "pattern": "Hidden Instructions",
+      "file": "assets/example-timeline-dark.html",
+      "line": 88,
+      "fingerprint": "00a4fa6ce9c53b02b7bdaf3085580e3ef6f5dc6f7003e86b4e2f73526e77c5f9",
+      "explanation": "Hidden instructions were detected in comments or invisible text. These could contain malicious directives. Manual review is recommended.",
+      "gates": false,
+      "gate_excluded": "out of scope: data or example asset, not an instruction the agent executes",
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     },
+     {
+      "source": "static",
+      "target": "body",
+      "id": "P2",
+      "severity": "HIGH",
+      "category": "Prompt Injection",
+      "pattern": "Hidden Instructions",
+      "file": "assets/example-timeline-full.html",
+      "line": 69,
+      "fingerprint": "00a4fa6ce9c53b02b7bdaf3085580e3ef6f5dc6f7003e86b4e2f73526e77c5f9",
+      "explanation": "Hidden instructions were detected in comments or invisible text. These could contain malicious directives. Manual review is recommended.",
+      "gates": false,
+      "gate_excluded": "out of scope: data or example asset, not an instruction the agent executes",
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     },
+     {
+      "source": "static",
+      "target": "body",
+      "id": "P2",
+      "severity": "HIGH",
+      "category": "Prompt Injection",
+      "pattern": "Hidden Instructions",
+      "file": "assets/example-timeline.html",
+      "line": 88,
+      "fingerprint": "00a4fa6ce9c53b02b7bdaf3085580e3ef6f5dc6f7003e86b4e2f73526e77c5f9",
+      "explanation": "Hidden instructions were detected in comments or invisible text. These could contain malicious directives. Manual review is recommended.",
+      "gates": false,
+      "gate_excluded": "out of scope: data or example asset, not an instruction the agent executes",
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     },
+     {
+      "source": "static",
+      "target": "body",
+      "id": "P2",
+      "severity": "HIGH",
+      "category": "Prompt Injection",
+      "pattern": "Hidden Instructions",
+      "file": "references/export.md",
+      "line": 85,
+      "fingerprint": "1452fc285f02cc99f1e95459ac120e6f12241d20cc9e960ebe49dde4575710e1",
+      "explanation": "Hidden instructions were detected in comments or invisible text. These could contain malicious directives. Manual review is recommended.",
+      "gates": true,
+      "gate_excluded": null,
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     },
+     {
+      "source": "static",
+      "target": "body",
+      "id": "P6",
+      "severity": "HIGH",
+      "category": "System Prompt Leakage",
+      "pattern": "Direct Prompt Extraction",
+      "file": "scripts/export_svg.py",
+      "line": 1055,
+      "fingerprint": "edce26c80d1d1074b21925313fe17adbd030dacbbd53825ee6473b5e07a59fee",
+      "explanation": "Skill contains instructions that could directly expose system prompts, internal rules, or hidden instructions to users or external parties.",
+      "gates": true,
+      "gate_excluded": null,
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     },
+     {
+      "source": "static",
+      "target": "body",
+      "id": "LP3",
+      "severity": "MEDIUM",
+      "category": "MCP Least Privilege",
+      "pattern": "Skill declares no tool scope ('permissions' or 'allowed-tools') but code capabilities were detected: file_read, file_wri",
+      "file": "SKILL.md",
+      "line": 1,
+      "fingerprint": null,
+      "explanation": "Without declared permissions the skill's intent is opaque and cannot be validated.",
+      "gates": false,
+      "gate_excluded": null,
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     },
+     {
+      "source": "static",
+      "target": "body",
+      "id": "OH3",
+      "severity": "MEDIUM",
+      "category": "Output Handling",
+      "pattern": "Unbounded Output",
+      "file": "references/export-registry.md",
+      "line": 60,
+      "fingerprint": "5a9d76f0ca68d4474bcc26b0bcb5454aa735d9a836417cea8743fb4dacb1fa55",
+      "explanation": "Output size or generation rate is not bounded. Unbounded output enables denial-of-service through resource exhaustion, log flooding, or context-window stuffing.",
+      "gates": false,
+      "gate_excluded": null,
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     },
+     {
+      "source": "static",
+      "target": "body",
+      "id": "EA2",
+      "severity": "MEDIUM",
+      "category": "Excessive Agency",
+      "pattern": "Autonomous Decision Making",
+      "file": "references/output-spec.md",
+      "line": 200,
+      "fingerprint": "8dc77d3dce9ba1f2672e813265a1b1a0c8594866ef38a4e978bf4f4451795465",
+      "explanation": "Skill enables autonomous high-impact decisions without human-in-the-loop verification. Critical operations (destructive commands, financial transactions, data deletion) should require explicit user confirmation.",
+      "gates": false,
+      "gate_excluded": null,
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     },
+     {
+      "source": "static",
+      "target": "body",
+      "id": "RA2",
+      "severity": "MEDIUM",
+      "category": "Rogue Agent",
+      "pattern": "Session Persistence",
+      "file": "references/profiles.md",
+      "line": 57,
+      "fingerprint": "a9d9fa2af3285b0e82f0740724fefaa547b79370a017c1a7f3b6c66c327ed0c9",
+      "explanation": "Skill establishes unauthorized persistence across sessions via cron jobs, startup scripts, or state files. Session persistence allows an attacker to maintain access beyond the current interaction.",
+      "gates": false,
+      "gate_excluded": null,
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     },
+     {
+      "source": "static",
+      "target": "body",
+      "id": "RA2",
+      "severity": "MEDIUM",
+      "category": "Rogue Agent",
+      "pattern": "Session Persistence",
+      "file": "references/profiles.md",
+      "line": 118,
+      "fingerprint": "ed4fb092b5a0457201194a2e93d806b7db872576ef2b00181e07f07b0b248b50",
+      "explanation": "Skill establishes unauthorized persistence across sessions via cron jobs, startup scripts, or state files. Session persistence allows an attacker to maintain access beyond the current interaction.",
+      "gates": false,
+      "gate_excluded": null,
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     }
+    ],
+    "pin": "cathrynlavery/diagram-design@7a12007 (v2.6.119)"
+   },
+   "gate": "blocked",
+   "open_high": 2
+  },
+  "system/practice/grilling": {
+   "origin": "imported",
+   "trust": "trial",
+   "mode": "link",
+   "source": "https://github.com/mattpocock/skills \u2014 skills/productivity/grilling",
+   "record": {
+    "path": "~/06_SYSTEM/memory/skills/system/practice/grilling",
+    "digest": "sha256:fed6e077615701ee0970c2571de959491455be3e4b62307fdc01def2ad8f8929",
+    "files": 1,
+    "bytes": 1860,
+    "scanned_at": "2026-10-24T23:23:23Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "SAFE",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "semantic": {
+     "risk": {
+      "score": 9,
+      "severity": "LOW",
+      "recommendation": "SAFE",
+      "max_issue_severity": "MEDIUM"
+     },
+     "findings": [
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "SQP-1",
+       "severity": "MEDIUM",
+       "category": "Trigger Abuse",
+       "pattern": "Vague trigger phrase 'ask me questions' could overlap with common everyday speech.",
+       "file": "SKILL.md",
+       "explanation": "The trigger phrase 'ask me questions' is overly broad and could inadvertently activate the skill during unrelated conversations. This could disrupt user workflows, cause confusion, or lead to unintended skill execution in contexts where it is not appropriate. While not inherently malicious, the lack of specificity increases the risk of accidental invocation, which could degrade user trust in the system.",
+       "line": 18,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      }
+     ],
+     "usage": {
+      "calls": 4,
+      "in": 6320,
+      "out": 595,
+      "degraded": false,
+      "calls_succeeded": 4,
+      "calls_attempted": 4,
+      "status": "complete"
+     },
+     "degraded": false,
+     "stale": false
+    }
+   },
+   "body": {
+    "path": "~/04_RESOURCES/Software/mattpocock-skills/skills/productivity/grilling",
+    "digest": "sha256:d6ae2cc9cd9778557069d88eff3bbb733ef7f4d6645bb6786c101236d7d422ce",
+    "files": 2,
+    "bytes": 2100,
+    "scanned_at": "2026-10-24T23:23:25Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 8,
+     "severity": "LOW",
+     "recommendation": "SAFE",
+     "max_issue_severity": "MEDIUM"
+    },
+    "findings": [
+     {
+      "source": "static",
+      "target": "body",
+      "id": "EA2",
+      "severity": "MEDIUM",
+      "category": "Excessive Agency",
+      "pattern": "Autonomous Decision Making",
+      "file": "SKILL.md",
+      "line": 26,
+      "fingerprint": "9de502b09a567df9fdaf24805fd25357cfaae1ef9e04e7f68c439b4b11307bcf",
+      "explanation": "Skill enables autonomous high-impact decisions without human-in-the-loop verification. Critical operations (destructive commands, financial transactions, data deletion) should require explicit user confirmation.",
+      "gates": false,
+      "gate_excluded": null,
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     }
+    ],
+    "pin": "mattpocock/skills@6654f6b"
+   },
+   "gate": "pass",
+   "open_high": 0
+  },
+  "system/practice/grill-me": {
+   "origin": "imported",
+   "trust": "trial",
+   "mode": "link",
+   "source": "https://github.com/mattpocock/skills \u2014 skills/productivity/grill-me",
+   "record": {
+    "path": "~/06_SYSTEM/memory/skills/system/practice/grill-me",
+    "digest": "sha256:146762c0360832ead7666a3aea84b543d2d8147e3ad5d79f849d530923377679",
+    "files": 1,
+    "bytes": 1644,
+    "scanned_at": "2026-10-24T23:23:19Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "SAFE",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "semantic": {
+     "risk": {
+      "score": 0,
+      "severity": "LOW",
+      "recommendation": "SAFE",
+      "max_issue_severity": "NONE"
+     },
+     "findings": [],
+     "usage": {
+      "calls": 3,
+      "in": 5050,
+      "out": 23,
+      "degraded": false,
+      "calls_succeeded": 3,
+      "calls_attempted": 3,
+      "status": "complete"
+     },
+     "degraded": false,
+     "stale": false
+    }
+   },
+   "body": {
+    "path": "~/04_RESOURCES/Software/mattpocock-skills/skills/productivity/grill-me",
+    "digest": "sha256:8d501635f6935280c1e493a7551658038fef32a346fb3a4acd21a727ceee3b64",
+    "files": 2,
+    "bytes": 294,
+    "scanned_at": "2026-10-24T23:23:21Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "SAFE",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "pin": "mattpocock/skills@6654f6b"
+   },
+   "gate": "pass",
+   "open_high": 0
+  },
+  "system/practice/handoff": {
+   "origin": "imported",
+   "trust": "trial",
+   "mode": "link",
+   "source": "https://github.com/mattpocock/skills \u2014 skills/productivity/handoff",
+   "record": {
+    "path": "~/06_SYSTEM/memory/skills/system/practice/handoff",
+    "digest": "sha256:61fb68a9ca8d4e262d3ab8c2de04025939ea1418c8d162d7fdd30d44ae80461d",
+    "files": 1,
+    "bytes": 1709,
+    "scanned_at": "2026-10-24T23:23:27Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "SAFE",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "semantic": {
+     "risk": {
+      "score": 0,
+      "severity": "LOW",
+      "recommendation": "SAFE",
+      "max_issue_severity": "NONE"
+     },
+     "findings": [],
+     "usage": {
+      "calls": 3,
+      "in": 5113,
+      "out": 21,
+      "degraded": false,
+      "calls_succeeded": 3,
+      "calls_attempted": 3,
+      "status": "complete"
+     },
+     "degraded": false,
+     "stale": false
+    }
+   },
+   "body": {
+    "path": "~/04_RESOURCES/Software/mattpocock-skills/skills/productivity/handoff",
+    "digest": "sha256:05b0154cd8832fbc2edc805548cf7198594a81d01c7c6b5282b077f941196d9a",
+    "files": 2,
+    "bytes": 1035,
+    "scanned_at": "2026-10-24T23:23:29Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "SAFE",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "pin": "mattpocock/skills@6654f6b"
+   },
+   "gate": "pass",
+   "open_high": 0
+  },
+  "system/practice/hate": {
+   "origin": "imported",
+   "trust": "trial",
+   "mode": "link",
+   "source": "https://github.com/lilmgenius/paperthin \u2014 skills/depth/hate/SKILL.md",
+   "record": {
+    "path": "~/06_SYSTEM/memory/skills/system/practice/hate",
+    "digest": "sha256:dfd43c31d731dd0028536c988900f967568224cff962fb7290a0d2be91104296",
+    "files": 1,
+    "bytes": 3096,
+    "scanned_at": "2026-10-24T23:23:33Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "CAUTION",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "semantic": {
+     "risk": {
+      "score": 0,
+      "severity": "LOW",
+      "recommendation": "CAUTION",
+      "max_issue_severity": "NONE"
+     },
+     "findings": [],
+     "usage": {
+      "calls": 3,
+      "in": 6435,
+      "out": 23,
+      "degraded": false,
+      "calls_succeeded": 3,
+      "calls_attempted": 3,
+      "status": "partial"
+     },
+     "degraded": false,
+     "stale": false
+    }
+   },
+   "body": {
+    "path": "~/04_RESOURCES/Software/paperthin/skills/depth/hate",
+    "digest": "sha256:05d7dfa27b3cfff888420a88cc9b4831f900d3a11839e7da74a97fd58428883b",
+    "files": 1,
+    "bytes": 2445,
+    "scanned_at": "2026-10-24T23:23:35Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "SAFE",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "pin": "lilmgenius/paperthin@7d5dc62"
+   },
+   "gate": "pass",
+   "open_high": 0
+  },
+  "system/practice/implement": {
+   "origin": "imported",
+   "trust": "trial",
+   "mode": "link",
+   "source": "https://github.com/mattpocock/skills \u2014 skills/engineering/implement",
+   "record": {
+    "path": "~/06_SYSTEM/memory/skills/system/practice/implement",
+    "digest": "sha256:a7ba265f9e448c8e99dccd2931b1d7e20ec67045e03e3e103d623d4cce7fa54e",
+    "files": 1,
+    "bytes": 1950,
+    "scanned_at": "2026-10-24T23:23:37Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "SAFE",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "semantic": {
+     "risk": {
+      "score": 0,
+      "severity": "LOW",
+      "recommendation": "SAFE",
+      "max_issue_severity": "NONE"
+     },
+     "findings": [],
+     "usage": {
+      "calls": 3,
+      "in": 5325,
+      "out": 23,
+      "degraded": false,
+      "calls_succeeded": 3,
+      "calls_attempted": 3,
+      "status": "complete"
+     },
+     "degraded": false,
+     "stale": false
+    }
+   },
+   "body": {
+    "path": "~/04_RESOURCES/Software/mattpocock-skills/skills/engineering/implement",
+    "digest": "sha256:379dc7f7c6a3aca41f7743ba8b564500d3c847cd2e8b4957e9156c5eea0fefb6",
+    "files": 2,
+    "bytes": 572,
+    "scanned_at": "2026-10-24T23:23:39Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "SAFE",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "pin": "mattpocock/skills@6654f6b"
+   },
+   "gate": "pass",
+   "open_high": 0
+  },
+  "system/practice/improve-codebase-architecture": {
+   "origin": "imported",
+   "trust": "trial",
+   "mode": "link",
+   "source": "https://github.com/mattpocock/skills \u2014 skills/engineering/improve-codebase-architecture",
+   "record": {
+    "path": "~/06_SYSTEM/memory/skills/system/practice/improve-codebase-architecture",
+    "digest": "sha256:0e96985a1497f263e99bc2bafe2e7e7353e30ee71ecb08d646a91300bc82d9a7",
+    "files": 1,
+    "bytes": 1838,
+    "scanned_at": "2026-10-24T23:23:41Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "SAFE",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "semantic": {
+     "risk": {
+      "score": 0,
+      "severity": "LOW",
+      "recommendation": "SAFE",
+      "max_issue_severity": "NONE"
+     },
+     "findings": [],
+     "usage": {
+      "calls": 3,
+      "in": 5150,
+      "out": 23,
+      "degraded": false,
+      "calls_succeeded": 3,
+      "calls_attempted": 3,
+      "status": "complete"
+     },
+     "degraded": false,
+     "stale": false
+    }
+   },
+   "body": {
+    "path": "~/04_RESOURCES/Software/mattpocock-skills/skills/engineering/improve-codebase-architecture",
+    "digest": "sha256:16fcfd94b20931bc2b8067c1f6d3ccb5ea6c6ca70aacd77bbc74a730ecef79c4",
+    "files": 3,
+    "bytes": 12800,
+    "scanned_at": "2026-10-24T23:23:44Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "CAUTION",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "pin": "mattpocock/skills@6654f6b"
+   },
+   "gate": "pass",
+   "open_high": 0
+  },
+  "system/practice/personalize-context": {
+   "origin": "authored",
+   "trust": "trial",
+   "mode": "authored",
+   "source": null,
+   "record": {
+    "path": "~/06_SYSTEM/memory/skills/system/practice/personalize-context",
+    "digest": "sha256:107c909a4e4099822e288250d0461b2822b3a2ada1e022334fd4fe8dec98f721",
+    "files": 1,
+    "bytes": 4582,
+    "scanned_at": "2026-10-24T23:23:46Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 7,
+     "severity": "LOW",
+     "recommendation": "CAUTION",
+     "max_issue_severity": "MEDIUM"
+    },
+    "findings": [
+     {
+      "source": "static",
+      "target": "record",
+      "id": "TR2",
+      "severity": "MEDIUM",
+      "category": "Trigger Abuse",
+      "pattern": "Shadow Command Trigger",
+      "file": "SKILL.md",
+      "line": 3,
+      "fingerprint": "133d98982a7ebcdc219da5286869654120afe1e4a7b5ba43b5bc3a9d1885b823",
+      "explanation": "Shadow Command Trigger: 'edit user.md' conflicts with built-in command 'edit'",
+      "gates": false,
+      "gate_excluded": null,
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     }
+    ],
+    "semantic": {
+     "risk": {
+      "score": 22,
+      "severity": "MEDIUM",
+      "recommendation": "CAUTION",
+      "max_issue_severity": "MEDIUM"
+     },
+     "findings": [
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "TR2",
+       "severity": "MEDIUM",
+       "category": "Trigger Abuse",
+       "pattern": "Shadow Command Trigger",
+       "file": "SKILL.md",
+       "explanation": "The trigger 'edit user.md' conflicts with the built-in 'edit' command, creating a shadow command that could intercept or override user intent. This is dangerous because: 1) Users may inadvertently invoke this skill when intending to use the generic 'edit' command, leading to unexpected behavior. 2) The skill's file-modifying actions (e.g., enforcing character caps, moving content) could be triggered unintentionally. 3) The ambiguity undermines user trust in command predictability, especially in a sensitive scope like system memory.",
+       "line": 3,
+       "fingerprint": "133d98982a7ebcdc219da5286869654120afe1e4a7b5ba43b5bc3a9d1885b823",
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "SDI-1",
+       "severity": "MEDIUM",
+       "category": "Excessive Agency",
+       "pattern": "Manifest description claims interview-based user documentation, but SKILL.md explicitly modifies files and enforces stru",
+       "file": "SKILL.md",
+       "explanation": "The manifest description misrepresents the skill's actual behavior. While it claims to be interview-based, the skill actively enforces structural rules (e.g., character caps, file moves, bidirectional links) and modifies files directly. This discrepancy could lead to unintended system modifications or misplaced trust in the skill's stated purpose. The risk is amplified because the skill operates in a sensitive scope (`06_SYSTEM/memory/**`), where file modifications can alter system behavior or user expectations.",
+       "line": 16,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "SDI-4",
+       "severity": "LOW",
+       "category": "Excessive Agency",
+       "pattern": "Docstring-like instruction (L49-52) claims 'Never draft a paragraph and ask them to approve it,' but later instructions ",
+       "file": "SKILL.md",
+       "explanation": "The contradiction between the 'never draft a paragraph' rule and later instructions requiring the agent to 'extract what differs' or 'check proposed rules' creates ambiguity in the skill's behavior. While not directly exploitable, this inconsistency could lead to unintended drafting of content, violating the user's expectation of verbatim transcription. Over time, this could erode trust in the system's adherence to user-provided directives.",
+       "line": 49,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      }
+     ],
+     "usage": {
+      "calls": 4,
+      "in": 9673,
+      "out": 1594,
+      "degraded": false,
+      "calls_succeeded": 4,
+      "calls_attempted": 4,
+      "status": "partial"
+     },
+     "degraded": false,
+     "stale": false
+    }
+   },
+   "body": null,
+   "gate": "pass",
+   "open_high": 0
+  },
+  "system/practice/ponytail": {
+   "origin": "imported",
+   "trust": "trial",
+   "mode": "link",
+   "source": "https://github.com/DietrichGebert/ponytail \u2014 skills/ponytail/SKILL.md",
+   "record": {
+    "path": "~/06_SYSTEM/memory/skills/system/practice/ponytail",
+    "digest": "sha256:f59d26ba2ca00b190ca60ca430dc2ffc31224756626f7da10a893ba81cbae7d8",
+    "files": 1,
+    "bytes": 4362,
+    "scanned_at": "2026-10-24T23:23:49Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "CAUTION",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "semantic": {
+     "risk": {
+      "score": 27,
+      "severity": "MEDIUM",
+      "recommendation": "CAUTION",
+      "max_issue_severity": "MEDIUM"
+     },
+     "findings": [
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "SDI-1",
+       "severity": "MEDIUM",
+       "category": "Excessive Agency",
+       "pattern": "Manifest description claims 'subtraction axis for coding' but local notes imply session-persistent behavior modification",
+       "file": "SKILL.md",
+       "explanation": "The contradiction between the manifest description and local notes creates ambiguity about the skill's behavior. While the local notes explicitly reject session-persistent behavior, the manifest's claim of a 'subtraction axis for coding' could mislead users or other systems into expecting persistent behavior. This inconsistency could lead to unintended skill invocations or misapplications, particularly in automated systems relying on manifest descriptions.",
+       "line": 16,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "SQP-1",
+       "severity": "MEDIUM",
+       "category": "Trigger Abuse",
+       "pattern": "Vague trigger phrase 'be lazy' could cause unintended skill invocations.",
+       "file": "SKILL.md",
+       "explanation": "The trigger phrase 'be lazy' is overly vague and could lead to unintended skill invocations. Given the skill's focus on minimalism and deletion, unintended activation could result in unnecessary code removal or oversimplification, potentially breaking functionality or introducing logical errors. The risk is amplified by the skill's `authority: agent` status, which may grant it higher privileges.",
+       "line": 18,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "SQP-1",
+       "severity": "MEDIUM",
+       "category": "Trigger Abuse",
+       "pattern": "Vague trigger phrase 'simplest solution that works' could cause unintended skill invocations.",
+       "file": "SKILL.md",
+       "explanation": "The trigger phrase 'simplest solution that works' is subjective and could lead to unintended skill activations. Like 'be lazy', this phrase lacks specificity and could result in the skill being invoked in scenarios where it is not appropriate, such as when building reusable components or research software. This could lead to oversimplification or deletion of necessary code.",
+       "line": 18,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "SDI-4",
+       "severity": "LOW",
+       "category": "Excessive Agency",
+       "pattern": "Local notes claim 'shortcut: comment convention is in force' but no implementation exists to write these markers.",
+       "file": "SKILL.md",
+       "explanation": "The local notes (L87-88) state that a 'shortcut: <the limit>' comment convention is 'in force', implying active enforcement. However, L89 explicitly states 'Nothing writes those markers yet', directly contradicting the claim of enforcement. This creates confusion about the skill's actual capabilities.",
+       "line": 87,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      }
+     ],
+     "usage": {
+      "calls": 4,
+      "in": 9531,
+      "out": 1954,
+      "degraded": false,
+      "calls_succeeded": 4,
+      "calls_attempted": 4,
+      "status": "partial"
+     },
+     "degraded": false,
+     "stale": false
+    }
+   },
+   "body": {
+    "path": "~/04_RESOURCES/Software/ponytail/skills/ponytail",
+    "digest": "sha256:8c528dc79e2839e56beac2fefe7d7bdaac7ce165f46c9db1b1662ddd9667df46",
+    "files": 1,
+    "bytes": 3496,
+    "scanned_at": "2026-10-24T23:23:51Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "SAFE",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "pin": "DietrichGebert/ponytail@09c434a"
+   },
+   "gate": "pass",
+   "open_high": 0
+  },
+  "system/practice/ponytail-audit": {
+   "origin": "imported",
+   "trust": "trial",
+   "mode": "link",
+   "source": "https://github.com/DietrichGebert/ponytail \u2014 skills/ponytail-audit/SKILL.md",
+   "record": {
+    "path": "~/06_SYSTEM/memory/skills/system/practice/ponytail-audit",
+    "digest": "sha256:e691a62004c6d1eba2fa8ec0144661890797298694d61b61a79ccd1e2ab6d8c4",
+    "files": 1,
+    "bytes": 4770,
+    "scanned_at": "2026-10-24T23:23:53Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 7,
+     "severity": "LOW",
+     "recommendation": "CAUTION",
+     "max_issue_severity": "MEDIUM"
+    },
+    "findings": [
+     {
+      "source": "static",
+      "target": "record",
+      "id": "TR2",
+      "severity": "MEDIUM",
+      "category": "Trigger Abuse",
+      "pattern": "Shadow Command Trigger",
+      "file": "SKILL.md",
+      "line": 6,
+      "fingerprint": "c8a82c3fa048f9f564ede98c02d1fe8d93365e49282864c02440010024ec4efe",
+      "explanation": "Shadow Command Trigger: 'find bloat' conflicts with built-in command 'find'",
+      "gates": false,
+      "gate_excluded": null,
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     }
+    ],
+    "semantic": {
+     "risk": {
+      "score": 26,
+      "severity": "MEDIUM",
+      "recommendation": "CAUTION",
+      "max_issue_severity": "MEDIUM"
+     },
+     "findings": [
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "TR2",
+       "severity": "MEDIUM",
+       "category": "Trigger Abuse",
+       "pattern": "Shadow Command Trigger",
+       "file": "SKILL.md",
+       "explanation": "The trigger 'find bloat' conflicts with the built-in 'find' command, which could lead to unintended behavior or confusion for users. While this is not inherently malicious, it creates a risk of accidental invocation or misrouting of commands, particularly in environments where users rely on precise command naming. The impact is low but could disrupt workflows or lead to unintended skill execution.",
+       "line": 6,
+       "fingerprint": "c8a82c3fa048f9f564ede98c02d1fe8d93365e49282864c02440010024ec4efe",
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "SDI-1",
+       "severity": "MEDIUM",
+       "category": "Excessive Agency",
+       "pattern": "Manifest description claims 'changes nothing' but local notes imply potential for indirect changes via user action",
+       "file": "SKILL.md",
+       "explanation": "The manifest description explicitly claims the skill 'changes nothing,' but the local notes imply that the skill's findings could lead to indirect changes via user action. This contradiction creates a risk of miscommunication or unintended consequences, as users may assume the skill is purely observational when it is designed to prompt follow-up actions. The danger lies in users not realizing the skill's findings require manual intervention, potentially leading to overlooked vulnerabilities or misconfigurations.",
+       "line": 16,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "SDI-4",
+       "severity": "MEDIUM",
+       "category": "Excessive Agency",
+       "pattern": "Local notes contradict the 'changes nothing' principle by advocating for immediate user action on findings",
+       "file": "SKILL.md",
+       "explanation": "The local notes explicitly contradict the skill's 'changes nothing' principle by advocating for immediate user action on findings. This creates a risk of users being misled about the skill's passive nature, potentially leading to rushed or unvetted changes based on the report. The danger is amplified if users assume the skill is non-intrusive and act on findings without proper validation, which could introduce new vulnerabilities or destabilize the codebase.",
+       "line": 72,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      }
+     ],
+     "usage": {
+      "calls": 4,
+      "in": 10088,
+      "out": 1410,
+      "degraded": false,
+      "calls_succeeded": 4,
+      "calls_attempted": 4,
+      "status": "partial"
+     },
+     "degraded": false,
+     "stale": false
+    }
+   },
+   "body": {
+    "path": "~/04_RESOURCES/Software/ponytail/skills/ponytail-audit",
+    "digest": "sha256:bb9c89ed7b3345d7b61bab5cb9a975a9801c8aa7780f896a34caf5c250a323b9",
+    "files": 1,
+    "bytes": 5417,
+    "scanned_at": "2026-10-24T23:23:55Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "CAUTION",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "pin": "DietrichGebert/ponytail@09c434a"
+   },
+   "gate": "pass",
+   "open_high": 0
+  },
+  "system/practice/prism": {
+   "origin": "imported",
+   "trust": "trial",
+   "mode": "link",
+   "source": "https://github.com/lilmgenius/paperthin \u2014 skills/mesh/prism/SKILL.md",
+   "record": {
+    "path": "~/06_SYSTEM/memory/skills/system/practice/prism",
+    "digest": "sha256:7732d8171be417f127b9dffb9a241f3e3eb0fa4395ad72dc9d7b93fa27379bdf",
+    "files": 1,
+    "bytes": 3106,
+    "scanned_at": "2026-10-24T23:23:57Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "CAUTION",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "semantic": {
+     "risk": {
+      "score": 0,
+      "severity": "LOW",
+      "recommendation": "CAUTION",
+      "max_issue_severity": "NONE"
+     },
+     "findings": [],
+     "usage": {
+      "calls": 3,
+      "in": 6439,
+      "out": 25,
+      "degraded": false,
+      "calls_succeeded": 3,
+      "calls_attempted": 3,
+      "status": "partial"
+     },
+     "degraded": false,
+     "stale": false
+    }
+   },
+   "body": {
+    "path": "~/04_RESOURCES/Software/paperthin/skills/mesh/prism",
+    "digest": "sha256:0f9b0d24a83a0924e055b057da5e4afe9907f471fc91e5099cac1f63100c3d40",
+    "files": 1,
+    "bytes": 3110,
+    "scanned_at": "2026-10-24T23:23:59Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "SAFE",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "pin": "lilmgenius/paperthin@7d5dc62"
+   },
+   "gate": "pass",
+   "open_high": 0
+  },
+  "system/practice/research-software-engineering": {
+   "origin": "authored",
+   "trust": "trusted",
+   "mode": "vendor",
+   "source": "git@github.com:rgutzen/rse-ai-style-guide.git \u2014 rse-ai-style-guide.md",
+   "record": {
+    "path": "~/06_SYSTEM/memory/skills/system/practice/research-software-engineering",
+    "digest": "sha256:07d00130f55b7185d1706923a7268fea554e0baf5dc17d4090004d571f49333f",
+    "files": 1,
+    "bytes": 5333,
+    "scanned_at": "2026-10-24T23:24:02Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 7,
+     "severity": "LOW",
+     "recommendation": "SAFE",
+     "max_issue_severity": "MEDIUM"
+    },
+    "findings": [
+     {
+      "source": "static",
+      "target": "record",
+      "id": "TR2",
+      "severity": "MEDIUM",
+      "category": "Trigger Abuse",
+      "pattern": "Shadow Command Trigger",
+      "file": "SKILL.md",
+      "line": 4,
+      "fingerprint": "3910ed031f23e328b0b89ed06aba22ab1539c064f06f7308f0341be165e06ec8",
+      "explanation": "Shadow Command Trigger: 'refactor pipeline' conflicts with built-in command 'refactor'",
+      "gates": false,
+      "gate_excluded": null,
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     }
+    ],
+    "semantic": {
+     "risk": {
+      "score": 9,
+      "severity": "LOW",
+      "recommendation": "SAFE",
+      "max_issue_severity": "MEDIUM"
+     },
+     "findings": [
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "TR2",
+       "severity": "MEDIUM",
+       "category": "Trigger Abuse",
+       "pattern": "Shadow Command Trigger",
+       "file": "SKILL.md",
+       "explanation": "This finding indicates a shadow command trigger conflict where the skill's trigger 'refactor pipeline' overlaps with the built-in command 'refactor'. While not directly malicious, this can lead to unintended behavior or command hijacking, where the skill might intercept or override built-in functionality. In a research software engineering context, this could disrupt workflows or cause confusion, especially if users expect the built-in 'refactor' command to behave in a specific way.",
+       "line": 4,
+       "fingerprint": "3910ed031f23e328b0b89ed06aba22ab1539c064f06f7308f0341be165e06ec8",
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      }
+     ],
+     "usage": {
+      "calls": 4,
+      "in": 10000,
+      "out": 395,
+      "degraded": false,
+      "calls_succeeded": 4,
+      "calls_attempted": 4,
+      "status": "complete"
+     },
+     "degraded": false,
+     "stale": false
+    }
+   },
+   "body": null,
+   "gate": "pass",
+   "open_high": 0
+  },
+  "system/practice/shower": {
+   "origin": "imported",
+   "trust": "trial",
+   "mode": "link",
+   "source": "https://github.com/lilmgenius/paperthin \u2014 skills/depth/shower/SKILL.md",
+   "record": {
+    "path": "~/06_SYSTEM/memory/skills/system/practice/shower",
+    "digest": "sha256:f895fdee638d4a957a9674648cd05f33a0089f7a2883a8e88027abdfd3c61956",
+    "files": 1,
+    "bytes": 3366,
+    "scanned_at": "2026-10-24T23:24:04Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "CAUTION",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "semantic": {
+     "risk": {
+      "score": 36,
+      "severity": "MEDIUM",
+      "recommendation": "CAUTION",
+      "max_issue_severity": "HIGH"
+     },
+     "findings": [
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "SSD-3",
+       "severity": "HIGH",
+       "category": "Data Exfiltration",
+       "pattern": "Natural-language instruction to collect and retain sensitive context without explicit safeguards.",
+       "file": "SKILL.md",
+       "explanation": "The skill instructs users to 'note the intent privately' as part of the cold-read process. While the intent is not explicitly shared with the child process, the instruction lacks safeguards for how this intent is stored or handled. If the intent contains sensitive information (e.g., project goals, user data, or proprietary details), it could be inadvertently leaked or misused. The risk is amplified because the skill does not specify how to secure or dispose of this private note.",
+       "line": 66,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "SDI-2",
+       "severity": "MEDIUM",
+       "category": "Excessive Agency",
+       "pattern": "Context-inappropriate capability implied by local notes: skill instructs to spawn subprocesses and manage files, which i",
+       "file": "SKILL.md",
+       "explanation": "The skill instructs users to spawn subprocesses (`pi -p -nc --model <id>`) and manage files (e.g., copying to scratch files) as part of its 'zero-context read' process. This is dangerous because subprocess spawning and file manipulation are high-risk operations that can be exploited for command injection, privilege escalation, or unauthorized data access. The skill's description claims it only 'diagnoses' and 'does not fix,' but these capabilities go far beyond passive analysis, creating unnecessary attack surfaces.",
+       "line": 59,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "SDI-4",
+       "severity": "LOW",
+       "category": "Excessive Agency",
+       "pattern": "Intent-code divergence in local notes: skill claims to 'never see the intent' but instructs to note the intent privately",
+       "file": "SKILL.md",
+       "explanation": "The skill's description (L16) explicitly states it 'hands over the contents, never the intent.' However, the local notes (L66-L68) instruct the user to 'note the intent privately, first' to provide a yardstick for comparison. While this is not a direct contradiction in code, it creates a divergence between the stated intent (never seeing the intent) and the operational guidance (noting the intent privately). This could mislead users about the skill's true behavior.",
+       "line": 66,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      }
+     ],
+     "usage": {
+      "calls": 4,
+      "in": 8388,
+      "out": 1817,
+      "degraded": false,
+      "calls_succeeded": 4,
+      "calls_attempted": 4,
+      "status": "partial"
+     },
+     "degraded": false,
+     "stale": false
+    }
+   },
+   "body": {
+    "path": "~/04_RESOURCES/Software/paperthin/skills/depth/shower",
+    "digest": "sha256:6f1968ca702dc55acee8c7b64e29162662dcd92795acd31f5bd5953f986cd4e8",
+    "files": 1,
+    "bytes": 3293,
+    "scanned_at": "2026-10-24T23:24:06Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "SAFE",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "pin": "lilmgenius/paperthin@7d5dc62"
+   },
+   "gate": "pass",
+   "open_high": 0
+  },
+  "system/practice/spike": {
+   "origin": "imported",
+   "trust": "trial",
+   "mode": "link",
+   "source": "git@github.com:NousResearch/hermes-agent.git@f018733 \u2014 software-development/spike",
+   "record": {
+    "path": "~/06_SYSTEM/memory/skills/system/practice/spike",
+    "digest": "sha256:88923fb736bc7d3bcf40c86f215d54b10365479db04b9389701cd65cb309ca47",
+    "files": 1,
+    "bytes": 1664,
+    "scanned_at": "2026-10-24T23:24:08Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "SAFE",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "semantic": {
+     "risk": {
+      "score": 9,
+      "severity": "LOW",
+      "recommendation": "SAFE",
+      "max_issue_severity": "MEDIUM"
+     },
+     "findings": [
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "SQP-1",
+       "severity": "MEDIUM",
+       "category": "Trigger Abuse",
+       "pattern": "Vague trigger phrase 'validate idea' could cause unintended skill invocations.",
+       "file": "SKILL.md",
+       "explanation": "The trigger phrase 'validate idea' is overly broad and could lead to unintended invocations of the skill. This is dangerous because it may cause the agent to execute the spike skill in contexts where it is not appropriate, potentially wasting resources or disrupting workflows. The risk is amplified by the skill's description, which emphasizes 'throwaway experiments'\u2014unintended invocations could lead to unnecessary or redundant experimental code being generated.",
+       "line": 17,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      }
+     ],
+     "usage": {
+      "calls": 4,
+      "in": 5892,
+      "out": 606,
+      "degraded": false,
+      "calls_succeeded": 4,
+      "calls_attempted": 4,
+      "status": "complete"
+     },
+     "degraded": false,
+     "stale": false
+    }
+   },
+   "body": {
+    "path": "~/.hermes/skills/software-development/spike",
+    "digest": "sha256:47def402180013bffab79959d014fc59ca6f5bd0d50ecd747264787090e8a4b4",
+    "files": 1,
+    "bytes": 8723,
+    "scanned_at": "2026-10-24T23:24:10Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 10,
+     "severity": "LOW",
+     "recommendation": "CAUTION",
+     "max_issue_severity": "MEDIUM"
+    },
+    "findings": [
+     {
+      "source": "static",
+      "target": "body",
+      "id": "RP1",
+      "severity": "MEDIUM",
+      "category": "MCP Rug Pull",
+      "pattern": "MCP server referenced without pinned version: 'npx get-shit-done-cc'.",
+      "file": "SKILL.md",
+      "line": 28,
+      "fingerprint": "9c3e9354644d878394c4ee8ee7b0d3f2267c83143990eb299f2e421dfefc33bb",
+      "explanation": "npx commands without a version suffix (e.g. @1.0.0) create a rug-pull risk if the upstream server is compromised and publishes a malicious update.",
+      "gates": false,
+      "gate_excluded": null,
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     },
+     {
+      "source": "static",
+      "target": "body",
+      "id": "RP1",
+      "severity": "MEDIUM",
+      "category": "MCP Rug Pull",
+      "pattern": "MCP server referenced without pinned version: 'npx get-shit-done-cc'.",
+      "file": "SKILL.md",
+      "line": 197,
+      "fingerprint": "9c3e9354644d878394c4ee8ee7b0d3f2267c83143990eb299f2e421dfefc33bb",
+      "explanation": "npx commands without a version suffix (e.g. @1.0.0) create a rug-pull risk if the upstream server is compromised and publishes a malicious update.",
+      "gates": false,
+      "gate_excluded": null,
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     }
+    ],
+    "pin": "hermes-agent@f018733"
+   },
+   "gate": "pass",
+   "open_high": 0
+  },
+  "system/practice/systematic-debugging": {
+   "origin": "imported",
+   "trust": "deprecated",
+   "mode": "link",
+   "source": "git@github.com:NousResearch/hermes-agent.git@f018733 \u2014 software-development/systematic-debugging",
+   "record": {
+    "path": "~/06_SYSTEM/memory/skills/system/practice/systematic-debugging",
+    "digest": "sha256:c6d1778090fd40f8db5f46e80e1b7c27341542ac606ae521583351657540a32e",
+    "files": 1,
+    "bytes": 1977,
+    "scanned_at": "2026-10-24T23:24:12Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "SAFE",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "semantic": {
+     "risk": {
+      "score": 0,
+      "severity": "LOW",
+      "recommendation": "SAFE",
+      "max_issue_severity": "NONE"
+     },
+     "findings": [],
+     "usage": {
+      "calls": 3,
+      "in": 5244,
+      "out": 23,
+      "degraded": false,
+      "calls_succeeded": 3,
+      "calls_attempted": 3,
+      "status": "complete"
+     },
+     "degraded": false,
+     "stale": false
+    }
+   },
+   "body": {
+    "path": "~/.hermes/skills/software-development/systematic-debugging",
+    "digest": "sha256:4dc4d38602fb23cf7ff95b357046a4b37abe73c41c85892ce7f1a1a740dc65e9",
+    "files": 1,
+    "bytes": 14059,
+    "scanned_at": "2026-10-24T23:24:15Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "CAUTION",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "pin": "hermes-agent@f018733"
+   },
+   "gate": "pass",
+   "open_high": 0
+  },
+  "system/practice/teach": {
+   "origin": "imported",
+   "trust": "trial",
+   "mode": "link",
+   "source": "https://github.com/mattpocock/skills \u2014 skills/productivity/teach",
+   "record": {
+    "path": "~/06_SYSTEM/memory/skills/system/practice/teach",
+    "digest": "sha256:2e35dd313bb27fa521c636d0db2b5876739f407d2b0e52bb4623c263e47bc8f7",
+    "files": 1,
+    "bytes": 1769,
+    "scanned_at": "2026-10-24T23:24:17Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "SAFE",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "semantic": {
+     "risk": {
+      "score": 9,
+      "severity": "LOW",
+      "recommendation": "SAFE",
+      "max_issue_severity": "MEDIUM"
+     },
+     "findings": [
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "SQP-2",
+       "severity": "MEDIUM",
+       "category": "Output Handling",
+       "pattern": "Missing user warning about stateful data persistence in the working directory.",
+       "file": "SKILL.md",
+       "explanation": "The skill is stateful and persists data in the working directory across sessions, but there is no explicit warning to users about this behavior. This could lead to unintended data leakage or corruption if users point the skill at sensitive directories (e.g., `03_ZETTEL/**`). While the skill explicitly warns against using sensitive directories in the 'Local notes' section, the lack of a direct user-facing warning increases the risk of misuse.",
+       "line": 49,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      }
+     ],
+     "usage": {
+      "calls": 4,
+      "in": 6155,
+      "out": 665,
+      "degraded": false,
+      "calls_succeeded": 4,
+      "calls_attempted": 4,
+      "status": "complete"
+     },
+     "degraded": false,
+     "stale": false
+    }
+   },
+   "body": {
+    "path": "~/04_RESOURCES/Software/mattpocock-skills/skills/productivity/teach",
+    "digest": "sha256:709c091dc273eddc504fa631bbb8172f32b2a03620ddf5fccfce3fb758ba205b",
+    "files": 6,
+    "bytes": 17978,
+    "scanned_at": "2026-10-24T23:24:20Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "CAUTION",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "pin": "mattpocock/skills@6654f6b"
+   },
+   "gate": "pass",
+   "open_high": 0
+  },
+  "system/practice/to-questionnaire": {
+   "origin": "imported",
+   "trust": "trial",
+   "mode": "link",
+   "source": "https://github.com/mattpocock/skills \u2014 skills/productivity/to-questionnaire",
+   "record": {
+    "path": "~/06_SYSTEM/memory/skills/system/practice/to-questionnaire",
+    "digest": "sha256:afd70a30b30f1419bb64b2a6e4108b5d6982f967625848f329692b3d5756a35e",
+    "files": 1,
+    "bytes": 1699,
+    "scanned_at": "2026-10-24T23:24:22Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "SAFE",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "semantic": {
+     "risk": {
+      "score": 0,
+      "severity": "LOW",
+      "recommendation": "SAFE",
+      "max_issue_severity": "NONE"
+     },
+     "findings": [],
+     "usage": {
+      "calls": 3,
+      "in": 5041,
+      "out": 23,
+      "degraded": false,
+      "calls_succeeded": 3,
+      "calls_attempted": 3,
+      "status": "complete"
+     },
+     "degraded": false,
+     "stale": false
+    }
+   },
+   "body": {
+    "path": "~/04_RESOURCES/Software/mattpocock-skills/skills/productivity/to-questionnaire",
+    "digest": "sha256:bea06bbc77c5a926ad61ae63eb6bca55d485ee9546cf41e8d0b7911843bd09b6",
+    "files": 2,
+    "bytes": 3070,
+    "scanned_at": "2026-10-24T23:24:24Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 17,
+     "severity": "LOW",
+     "recommendation": "SAFE",
+     "max_issue_severity": "HIGH"
+    },
+    "findings": [
+     {
+      "source": "static",
+      "target": "body",
+      "id": "AR1",
+      "severity": "HIGH",
+      "category": "Anti-Refusal",
+      "pattern": "Anti-Refusal Statement",
+      "file": "SKILL.md",
+      "line": 9,
+      "fingerprint": "b4404d69f30b43064cedf6b7a3bc0f82006c7ad3e8bc125c4f8dc6a681444289",
+      "explanation": "Skill instructs the agent to never refuse or to always comply. Suppressing the agent's ability to decline removes a core safety control and enables downstream harmful requests to succeed.",
+      "gates": true,
+      "gate_excluded": null,
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     }
+    ],
+    "pin": "mattpocock/skills@6654f6b"
+   },
+   "gate": "blocked",
+   "open_high": 1
+  },
+  "system/practice/wait-what": {
+   "origin": "imported",
+   "trust": "trial",
+   "mode": "link",
+   "source": "https://github.com/mattpocock/skills \u2014 skills/productivity/wait-what",
+   "record": {
+    "path": "~/06_SYSTEM/memory/skills/system/practice/wait-what",
+    "digest": "sha256:62aa188f018112e5d3fcd58c821f61456903a8775646e679aad6440c6696d615",
+    "files": 1,
+    "bytes": 1655,
+    "scanned_at": "2026-10-24T23:24:26Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "SAFE",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "semantic": {
+     "risk": {
+      "score": 9,
+      "severity": "LOW",
+      "recommendation": "SAFE",
+      "max_issue_severity": "MEDIUM"
+     },
+     "findings": [
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "SQP-3",
+       "severity": "MEDIUM",
+       "category": "Output Handling",
+       "pattern": "Natural-language policy violation: skill forces output in a specific controlled language (ASD-STE100 Simplified Technica",
+       "file": "SKILL.md",
+       "explanation": "This is a true vulnerability because the skill enforces output in ASD-STE100 Simplified Technical English without explicit user consent or a clear use-case justification. While ASD-STE100 is a controlled language designed for clarity, its imposition without opt-in could lead to unintended consequences, such as miscommunication for users unfamiliar with the language constraints or those who require domain-specific terminology not supported by ASD-STE100. The lack of transparency about this behavior increases the risk of user frustration or errors in critical contexts where precise language is r",
+       "line": 48,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      }
+     ],
+     "usage": {
+      "calls": 4,
+      "in": 6106,
+      "out": 734,
+      "degraded": false,
+      "calls_succeeded": 4,
+      "calls_attempted": 4,
+      "status": "complete"
+     },
+     "degraded": false,
+     "stale": false
+    }
+   },
+   "body": {
+    "path": "~/04_RESOURCES/Software/mattpocock-skills/skills/productivity/wait-what",
+    "digest": "sha256:4147334437e2554ed0d684be3a6eb1e7bc4c893d788966ad8c58cd145c1685ff",
+    "files": 2,
+    "bytes": 552,
+    "scanned_at": "2026-10-24T23:24:28Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 0,
+     "severity": "LOW",
+     "recommendation": "CAUTION",
+     "max_issue_severity": "NONE"
+    },
+    "findings": [],
+    "pin": "mattpocock/skills@6654f6b"
+   },
+   "gate": "pass",
+   "open_high": 0
+  },
+  "system/practice/wizard": {
+   "origin": "authored",
+   "trust": "trusted",
+   "mode": "vendor",
+   "source": "02_AREAS/B_Tech/SKILLS/code-wizard/",
+   "record": {
+    "path": "~/06_SYSTEM/memory/skills/system/practice/wizard",
+    "digest": "sha256:0067d4ece67ec1827dda2972f109ed592fd560ff6cdc47e34b2a3789604c6523",
+    "files": 3,
+    "bytes": 16811,
+    "scanned_at": "2026-10-24T23:24:30Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 18,
+     "severity": "LOW",
+     "recommendation": "CAUTION",
+     "max_issue_severity": "MEDIUM"
+    },
+    "findings": [
+     {
+      "source": "static",
+      "target": "record",
+      "id": "EA2",
+      "severity": "MEDIUM",
+      "category": "Excessive Agency",
+      "pattern": "Autonomous Decision Making",
+      "file": "CHECKLIST.md",
+      "line": 38,
+      "fingerprint": "fe5d1711651a4715ab1d9b8451c549b9733b35dcee753a00cc95b0754ef2c699",
+      "explanation": "Skill enables autonomous high-impact decisions without human-in-the-loop verification. Critical operations (destructive commands, financial transactions, data deletion) should require explicit user confirmation.",
+      "gates": false,
+      "gate_excluded": null,
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     },
+     {
+      "source": "static",
+      "target": "record",
+      "id": "EA2",
+      "severity": "MEDIUM",
+      "category": "Excessive Agency",
+      "pattern": "Autonomous Decision Making",
+      "file": "SKILL.md",
+      "line": 233,
+      "fingerprint": "fe5d1711651a4715ab1d9b8451c549b9733b35dcee753a00cc95b0754ef2c699",
+      "explanation": "Skill enables autonomous high-impact decisions without human-in-the-loop verification. Critical operations (destructive commands, financial transactions, data deletion) should require explicit user confirmation.",
+      "gates": false,
+      "gate_excluded": null,
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     },
+     {
+      "source": "static",
+      "target": "record",
+      "id": "TR2",
+      "severity": "MEDIUM",
+      "category": "Trigger Abuse",
+      "pattern": "Shadow Command Trigger",
+      "file": "SKILL.md",
+      "line": 5,
+      "fingerprint": "af921fcc2384fb56de23204c3289f96ba54e9383febd844bfc6b30763f5e4725",
+      "explanation": "Shadow Command Trigger: 'refactor subsystem' conflicts with built-in command 'refactor'",
+      "gates": false,
+      "gate_excluded": null,
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     }
+    ],
+    "semantic": {
+     "risk": {
+      "score": 100,
+      "severity": "CRITICAL",
+      "recommendation": "DO_NOT_INSTALL",
+      "max_issue_severity": "HIGH"
+     },
+     "findings": [
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "TP4",
+       "severity": "HIGH",
+       "category": "MCP Tool Poisoning",
+       "pattern": "Description-Behavior Mismatch",
+       "file": "SKILL.md",
+       "explanation": "The skill includes version control operations (e.g., Git commands) without disclosing this in its description. This is dangerous because version control operations can alter repository state (e.g., commits, branches), and users may not expect the skill to perform such actions. This could lead to unauthorized changes or data loss if the skill is misused.",
+       "line": 1,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "TP4",
+       "severity": "HIGH",
+       "category": "MCP Tool Poisoning",
+       "pattern": "Description-Behavior Mismatch",
+       "file": "SKILL.md",
+       "explanation": "The skill's description claims it is focused on architectural planning, TDD, and refactoring, but it also includes GitHub issue management capabilities (listing, creating, updating, commenting, labeling, and closing issues). This is dangerous because it misrepresents the skill's scope, potentially leading users to grant excessive permissions (e.g., GitHub API access) under false pretenses. The mismatch could enable unauthorized project management actions if the skill is compromised or misused.",
+       "line": 1,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "TP4",
+       "severity": "HIGH",
+       "category": "MCP Tool Poisoning",
+       "pattern": "Description-Behavior Mismatch",
+       "file": "SKILL.md",
+       "explanation": "The skill performs code search, version control inspection, and manual pattern matching without disclosing these capabilities in its description. This is dangerous because users may unknowingly expose sensitive codebase details (e.g., secrets, proprietary logic) to the skill. The lack of transparency could lead to unintended data leaks or misuse of the skill's access.",
+       "line": 1,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "SDI-3",
+       "severity": "HIGH",
+       "category": "Excessive Agency",
+       "pattern": "Scope creep: Skill accesses external tools and systems without declared permissions or requirements",
+       "file": "SKILL.md",
+       "explanation": "The skill accesses external tools (e.g., GitHub CLI, TodoWrite) without declaring these dependencies in its metadata or description. This is dangerous because users may not realize the skill requires additional permissions or tools, leading to failed executions or unintended side effects (e.g., unauthorized GitHub API calls). The lack of transparency could also enable supply chain attacks if the external tools are compromised.",
+       "line": 87,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "EA2",
+       "severity": "MEDIUM",
+       "category": "Excessive Agency",
+       "pattern": "Autonomous Decision Making",
+       "file": "CHECKLIST.md",
+       "explanation": "Skill enables autonomous high-impact decisions without human-in-the-loop verification. Critical operations (destructive commands, financial transactions, data deletion) should require explicit user confirmation.",
+       "line": 38,
+       "fingerprint": "fe5d1711651a4715ab1d9b8451c549b9733b35dcee753a00cc95b0754ef2c699",
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "SDI-2",
+       "severity": "MEDIUM",
+       "category": "Excessive Agency",
+       "pattern": "Context-inappropriate capability: The skill's documentation includes shell command execution patterns unrelated to its s",
+       "file": "PATTERNS.md",
+       "explanation": "The inclusion of shell command execution patterns (e.g., `grep`, `git diff`) in documentation for an 'architect-mode development' skill is contextually inappropriate. While not inherently malicious, these commands could be misused or exploited if the skill is integrated into an automated system that executes them without proper sandboxing. This could lead to unintended file system access, information leakage, or even command injection if inputs are not properly sanitized.",
+       "line": 116,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "SQP-2",
+       "severity": "MEDIUM",
+       "category": "Output Handling",
+       "pattern": "Missing user warning for potentially destructive verification commands in markdown documentation.",
+       "file": "PATTERNS.md",
+       "explanation": "The verification commands (e.g., `grep`, `git diff`) lack warnings about their potential destructiveness or unintended consequences. For example, `git diff --staged` is generally safe, but `grep -rn` could inadvertently expose sensitive data if misused. In an automated or shared environment, this could lead to information leakage or unintended side effects.",
+       "line": 116,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "TR2",
+       "severity": "MEDIUM",
+       "category": "Trigger Abuse",
+       "pattern": "Shadow Command Trigger",
+       "file": "SKILL.md",
+       "explanation": "The trigger 'refactor subsystem' conflicts with the built-in 'refactor' command, which could lead to unintended behavior or skill collisions. This is dangerous because users may inadvertently invoke the wrong skill, leading to unexpected actions or failed executions. The conflict could also cause confusion in multi-skill environments.",
+       "line": 5,
+       "fingerprint": "af921fcc2384fb56de23204c3289f96ba54e9383febd844bfc6b30763f5e4725",
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "SDI-2",
+       "severity": "MEDIUM",
+       "category": "Excessive Agency",
+       "pattern": "Context-inappropriate capability: TodoWrite usage is unjustified for architectural planning",
+       "file": "SKILL.md",
+       "explanation": "The skill's stated purpose is architectural planning, TDD, and refactoring (L016, L030). However, it instructs the use of TodoWrite (L080) to create a todo list, which is a task management capability. While task management may be useful, it is not directly related to the skill's core purpose of architectural development and refactoring. The manifest does not mention task management as part of the skill's scope.",
+       "line": 80,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "SDI-2",
+       "severity": "MEDIUM",
+       "category": "Excessive Agency",
+       "pattern": "Context-inappropriate capability: GitHub CLI usage is unjustified for a skill focused on architectural planning and code",
+       "file": "SKILL.md",
+       "explanation": "The skill includes GitHub CLI usage (e.g., `gh issue list --search \"keyword\"`), which is unjustified for a skill focused on architectural planning and codebase refactoring. This is dangerous because it introduces unnecessary external dependencies and potential attack vectors (e.g., GitHub API abuse). The capability could be exploited to leak repository metadata or perform unauthorized issue management.",
+       "line": 87,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "EA2",
+       "severity": "MEDIUM",
+       "category": "Excessive Agency",
+       "pattern": "Autonomous Decision Making",
+       "file": "SKILL.md",
+       "explanation": "Skill enables autonomous high-impact decisions without human-in-the-loop verification. Critical operations (destructive commands, financial transactions, data deletion) should require explicit user confirmation.",
+       "line": 233,
+       "fingerprint": "fe5d1711651a4715ab1d9b8451c549b9733b35dcee753a00cc95b0754ef2c699",
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "SQP-3",
+       "severity": "LOW",
+       "category": "Output Handling",
+       "pattern": "Natural-language policy violation: Implicit assumption of English in code examples and comments.",
+       "file": "PATTERNS.md",
+       "explanation": "The entire markdown file assumes English as the default language for code examples, comments, and instructions. While this is common in technical documentation, it violates policies requiring explicit user opt-in for language constraints. The file does not offer a language/locale choice or document a justified exception for this constraint.",
+       "line": 1,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      },
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "SDI-4",
+       "severity": "LOW",
+       "category": "Excessive Agency",
+       "pattern": "Intent-code divergence: The 'Don't Repeat Yourself (DRY)' section's example contradicts its own advice by promoting manu",
+       "file": "PATTERNS.md",
+       "explanation": "The 'DRY' section (L103-L112) advocates for eliminating code duplication, but its example (L108) suggests using `grep` to manually search for patterns followed by unspecified 'fix ALL occurrences'. This contradicts the principle of programmatic refactoring (e.g., extracting shared functions) and could lead to inconsistent fixes or missed duplicates. The advice undermines the very pattern it claims to promote.",
+       "line": 105,
+       "fingerprint": null,
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      }
+     ],
+     "usage": {
+      "calls": 15,
+      "in": 37249,
+      "out": 6031,
+      "degraded": false,
+      "calls_succeeded": 5,
+      "calls_attempted": 5,
+      "status": "partial"
+     },
+     "degraded": false,
+     "stale": false
+    }
+   },
+   "body": null,
+   "gate": "pass",
+   "open_high": 0
+  },
+  "system/skills/adopt-skill": {
+   "origin": "authored",
+   "trust": "trusted",
+   "mode": "vendor",
+   "source": null,
+   "record": {
+    "path": "~/06_SYSTEM/memory/skills/system/skills/adopt-skill",
+    "digest": "sha256:595d47089ac1f559a52d4c33eb1ebe1c48825f56aca2fee034c9299936bbd1b8",
+    "files": 1,
+    "bytes": 7959,
+    "scanned_at": "2026-10-24T23:24:53Z",
+    "mode": "static",
+    "degraded": false,
+    "risk": {
+     "score": 7,
+     "severity": "LOW",
+     "recommendation": "CAUTION",
+     "max_issue_severity": "MEDIUM"
+    },
+    "findings": [
+     {
+      "source": "static",
+      "target": "record",
+      "id": "TR2",
+      "severity": "MEDIUM",
+      "category": "Trigger Abuse",
+      "pattern": "Shadow Command Trigger",
+      "file": "SKILL.md",
+      "line": 4,
+      "fingerprint": "b730291fed6c3712422d173b1c865514c437f9a74dc9a692c7ea9648822b4bb3",
+      "explanation": "Shadow Command Trigger: 'install skill' conflicts with built-in command 'install'",
+      "gates": false,
+      "gate_excluded": null,
+      "disposition": null,
+      "reason": null,
+      "by": null,
+      "at": null
+     }
+    ],
+    "semantic": {
+     "risk": {
+      "score": 9,
+      "severity": "LOW",
+      "recommendation": "CAUTION",
+      "max_issue_severity": "MEDIUM"
+     },
+     "findings": [
+      {
+       "source": "semantic",
+       "target": "record",
+       "id": "TR2",
+       "severity": "MEDIUM",
+       "category": "Trigger Abuse",
+       "pattern": "Shadow Command Trigger",
+       "file": "SKILL.md",
+       "explanation": "The trigger 'install skill' conflicts with the built-in command 'install', which could lead to unintended behavior or ambiguity in skill routing. While not inherently malicious, this could cause confusion or misrouting of commands, especially in automated systems where precise command resolution is critical. The skill's context (a meta-skill for onboarding other skills) amplifies the risk, as it could inadvertently override or interfere with core system commands.",
+       "line": 4,
+       "fingerprint": "b730291fed6c3712422d173b1c865514c437f9a74dc9a692c7ea9648822b4bb3",
+       "disposition": null,
+       "reason": null,
+       "by": null,
+       "at": null,
+       "gates": false,
+       "gate_excluded": "advisory: semantic tier does not gate"
+      }
+     ],
+     "usage": {
+      "calls": 4,
+      "in": 12808,
+      "out": 421,
+      "degraded": false,
+      "calls_succeeded": 4,
+      "calls_attempted": 4,
+      "status": "partial"
+     },
+     "degraded": false,
+     "stale": true
+    }
+   },
+   "body": null,
+   "gate": "pass",
+   "open_high": 0
+  }
+ }
+}

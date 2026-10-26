@@ -75,10 +75,164 @@ def source_digest() -> str:
         digest.update(path.read_bytes())
     digest.update(b"\0" + DIRECTIVE_DOMAIN.encode() + b"\0")
     try:
+        digest.update(VOCABULARY.read_bytes() + b"\0")   # a vocabulary edit needs a recompile
+    except OSError:
+        pass
+    try:
         digest.update(ENTITY_REGISTER.read_bytes())
     except OSError:
         pass          # absent is a change too, and the next compile says so
     return digest.hexdigest()
+
+
+def vocabulary() -> dict:
+    """The compiled vocabulary, validated. Every value is configuration: a new
+    push verb or mutating command is an edit here and a recompile, not a code
+    change (dev/architecture 2c)."""
+    try:
+        cfg = _miniyaml.load(VOCABULARY.read_text())
+    except OSError:
+        die(f"no vocabulary at {roots.rel(VOCABULARY)} -- the rules' words have no meaning")
+    except Exception as exc:                     # a parse error carries its line
+        die(f"{roots.rel(VOCABULARY)}: {exc}")
+    return _check_vocabulary(cfg, roots.rel(VOCABULARY))
+
+
+def _text_list(value, where: str) -> list:
+    """A block sequence of non-empty strings. `_miniyaml` returns every scalar as
+    TEXT, so a flow list would arrive as one string -- and the parser now raises
+    on those (`_reject_flow`), which is the point: a vocabulary that quietly
+    means something else is the failure this file would be guarding."""
+    if not isinstance(value, list) or not value:
+        die(f"{where}: expected a list, got {value!r}")
+    for item in value:
+        if not isinstance(item, str) or not item.strip():
+            die(f"{where}: every entry must be a non-empty string, got {item!r}")
+    return [item.strip() for item in value]
+
+
+def _str_map(value, where: str) -> dict:
+    if not isinstance(value, dict) or not value:
+        die(f"{where}: expected a mapping, got {value!r}")
+    return {str(k): _text_list(v, f"{where}.{k}") for k, v in value.items()}
+
+
+def _git_rules(value, where: str) -> dict:
+    """`{subcommands: [..], with_flag: {commit: [--amend]}}`, both optional but
+    at least one present: a git rule that names nothing reads as a rule and
+    does nothing."""
+    if not isinstance(value, dict):
+        die(f"{where}: expected a mapping, got {value!r}")
+    out = {}
+    if "subcommands" in value:
+        out["subcommands"] = _text_list(value["subcommands"], f"{where}.subcommands")
+    if "with_flag" in value:
+        out["with_flag"] = _str_map(value["with_flag"], f"{where}.with_flag")
+    if not out:
+        die(f"{where}: needs `subcommands:` or `with_flag:`")
+    extra = set(value) - {"subcommands", "with_flag"}
+    if extra:
+        die(f"{where}: unknown key(s) {sorted(extra)}")
+    return out
+
+
+def _host_escape(value, where: str) -> dict:
+    """`shell.host_escape`: which container launches reach the host. Every key
+    is required: a section missing `flags:` would read as a rule and wave
+    `--privileged` through."""
+    lists = ("engines", "subcommands", "flags", "mount_flags", "whole", "beneath")
+    if not isinstance(value, dict):
+        die(f"{where}: expected a mapping, got {value!r}")
+    extra = set(value) - set(lists) - {"flag_values"}
+    if extra:
+        die(f"{where}: unknown key(s) {sorted(extra)}")
+    out = {k: _text_list(value.get(k), f"{where}.{k}") for k in lists}
+    out["flag_values"] = _str_map(value.get("flag_values"), f"{where}.flag_values")
+    return out
+
+
+def _tools(value, where: str) -> dict:
+    """One harness's tool map: `shell:` (tool -> command field) and `paths:`
+    (tool -> {fields, ops}), or a hermes-style `translate_to:` + `tools:`."""
+    if not isinstance(value, dict):
+        die(f"{where}: expected a mapping, got {value!r}")
+    if "translate_to" in value:
+        out = {"translate_to": str(value["translate_to"])}
+        tools = value.get("tools")
+        if not isinstance(tools, dict) or not tools:
+            die(f"{where}: `translate_to:` needs a `tools:` mapping")
+        out["tools"] = {}
+        for name, spec in tools.items():
+            if not isinstance(spec, dict) or "as" not in spec:
+                die(f"{where}.{name}: needs `as:` (the target harness's tool)")
+            fields = spec.get("fields")
+            if not isinstance(fields, dict):
+                die(f"{where}.{name}: needs `fields:` mapping its argument to the target's")
+            out["tools"][name] = {"as": str(spec["as"]),
+                                  "fields": {str(k): str(v) for k, v in fields.items()}}
+        return out
+    out = {}
+    if "shell" in value:
+        out["shell"] = {str(k): str(v) for k, v in (value["shell"] or {}).items()} or die(
+            f"{where}.shell: expected at least one tool")
+    paths = value.get("paths")
+    if not isinstance(paths, dict) or not paths:
+        die(f"{where}: needs a `paths:` mapping")
+    out["paths"] = {}
+    for tool, spec in paths.items():
+        if not isinstance(spec, dict):
+            die(f"{where}.{tool}: expected a mapping with `fields:` and `ops:`")
+        fields = _text_list(spec.get("fields"), f"{where}.{tool}.fields")
+        ops = set(_text_list(spec.get("ops"), f"{where}.{tool}.ops"))
+        bad = ops - OPERATIONS
+        if bad:
+            die(f"{where}.{tool}.ops: {sorted(bad)} not in {sorted(OPERATIONS)}")
+        out["paths"][tool] = {"fields": fields, "ops": sorted(ops)}
+    return out
+
+
+def _check_vocabulary(cfg: dict, where: str) -> dict:
+    if not isinstance(cfg, dict):
+        die(f"{where}: expected a mapping")
+    if str(cfg.get("version", "1")) != VOCABULARY_VERSION:
+        die(f"{where}: unsupported version {cfg.get('version')!r}")
+    out: dict = {}
+
+    modes = cfg.get("modes")
+    if not isinstance(modes, dict) or not modes:
+        die(f"{where}: needs a `modes:` mapping")
+    out["modes"] = {}
+    for name, ops in modes.items():
+        denies = set(_text_list(ops, f"{where}.modes.{name}"))
+        bad = denies - OPERATIONS
+        if bad:
+            die(f"{where}.modes.{name}: {sorted(bad)} not in {sorted(OPERATIONS)}")
+        out["modes"][str(name)] = sorted(denies)
+
+    shell = cfg.get("shell")
+    if not isinstance(shell, dict):
+        die(f"{where}: needs a `shell:` mapping")
+    out["shell"] = {"writes": _text_list(shell.get("writes"), f"{where}.shell.writes"),
+                    "writes_with_flag": _str_map(shell.get("writes_with_flag"),
+                                                 f"{where}.shell.writes_with_flag")}
+    # Optional, so a vocabulary written before 8i still compiles; a judge that
+    # meets a `no-delete` rule without them fails CLOSED.
+    for key in ("deletes", "delete_safe", "delete_wrappers", "delete_shells"):
+        if shell.get(key) is not None:
+            out["shell"][key] = _text_list(shell.get(key), f"{where}.shell.{key}")
+    for key in ("push", "git_writes"):
+        section = shell.get(key)
+        if not isinstance(section, dict) or set(section) != {"git"}:
+            die(f"{where}.shell.{key}: expected `git:` only")
+        out["shell"][key] = {"git": _git_rules(section["git"], f"{where}.shell.{key}.git")}
+    out["shell"]["host_escape"] = _host_escape(shell.get("host_escape"),
+                                               f"{where}.shell.host_escape")
+
+    tools = cfg.get("tools")
+    if not isinstance(tools, dict) or not tools:
+        die(f"{where}: needs a `tools:` mapping")
+    out["tools"] = {name: _tools(spec, f"{where}.tools.{name}") for name, spec in tools.items()}
+    return out
 
 
 def sources() -> list[Path]:
@@ -94,7 +248,7 @@ def sources() -> list[Path]:
     the skip is here and not at the call sites: `domain = path.stem` would
     otherwise put a dot in a filename."""
     return sorted(p for p in SOURCE_DIR.glob("*.yaml")
-                  if not p.name.endswith(".example.yaml"))
+                  if not p.name.endswith(".example.yaml") and p.name != VOCABULARY.name)
 
 
 def advisory_target(domain: str) -> Path:
@@ -111,14 +265,16 @@ END = "<!-- END GENERATED boundaries -->"
 BLOCK_ANY = re.compile(
     r"<!-- BEGIN GENERATED boundaries.*?<!-- END GENERATED boundaries -->\n?", re.S)
 
-MODES = {
-    # mode           -> which operations it denies
-    "no-read-write": {"read", "write"},
-    "no-read":       {"read"},
-    "no-write":      {"write"},
-    "no-push":       {"push"},
-}
 MODEL_CLASSES = {"all", "local", "remote"}
+
+# Where the vocabulary lives. It is a DOMAIN file's neighbour but not a domain:
+# `sources()` skips it, because it holds no rules -- it holds what the words in
+# the rules MEAN (mode -> denied operations, the commands that write or push,
+# each harness's tool -> path field). `compile.py` copies it into
+# `boundaries.json` and both judges read it from there.
+VOCABULARY = SOURCE_DIR / "vocabulary.yaml"
+VOCABULARY_VERSION = "1"
+OPERATIONS = {"read", "write", "push", "escape", "delete"}
 
 # How hard a matching rule bites. Orthogonal to MODES: the mode says WHICH
 # operations a rule covers, the decision says what happens when one matches.
@@ -132,36 +288,144 @@ DECISIONS = {"deny", "ask"}
 
 # ── load and validate ────────────────────────────────────────────────────────
 
+# The one place "push" is spelled out for the gotgenes bash surface. These
+# patterns must stay in sync with wards's GIT_WRITE regex and the
+# opencode plugin's GIT_WRITE — all three are interpretations of the same
+# `no-push` rule and disagreeing about "what is a push" is a boundary leak.
+# ` *` (space + star) also matches the bare command, so `git push *` gates
+# `git push` with no args as well as `git push origin main`.
+PUSH_PATTERNS = (
+    "git push *",
+    "git rebase *",
+    "git filter-branch *",
+    "git filter-repo *",
+    "git commit --amend *",
+)
+
+# The prefix the rtk extension puts on a command it rewrites (`rtk rewrite`).
+RTK_PREFIX = "rtk "
+
+def escape_patterns(he: dict) -> list[str]:
+    """gotgenes bash globs for `no-host-escape`, from `shell.host_escape`.
+
+    COARSER THAN THE TWO JUDGES, in both directions. A glob cannot tokenise:
+    `*docker *--pid*host*` also asks for `--pid=1 --network host`, a flag in a
+    second command after `;` still counts, and a subcommand is not required.
+    The other way, an alias or a variable that hides the engine word passes.
+    The leading `*` covers `rtk`, `sudo` and `bash -c '...'` prefixes, so no
+    RTK twin is needed here.
+    """
+    home = os.path.expanduser("~")
+
+    def spell(entry: str) -> list[str]:
+        if entry == "~" or entry.startswith("~/"):
+            rest = entry[1:]
+            return [entry, "$HOME" + rest, "${HOME}" + rest, home + rest]
+        return [entry]
+
+    # A `whole` entry is hit by itself or any directory above it, exactly.
+    exact = set()
+    for entry in he["whole"]:
+        exact.update(spell(entry))
+        parts = os.path.expanduser(entry).rstrip("/").split("/")
+        exact.update("/".join(parts[:i]) or "/" for i in range(1, len(parts)))
+    below = [s for entry in he["beneath"] for s in spell(entry)]
+
+    out = []
+    for e in he["engines"]:
+        for flag in he["flags"]:
+            out.append(f"*{e} *{flag}*")
+        for flag, values in he["flag_values"].items():
+            for v in values:
+                for form in dict.fromkeys((v, v.lower())):
+                    out.append(f"*{e} *{flag}*{form}*")
+        for flag in he["mount_flags"]:
+            if flag == "--mount":
+                for src in sorted(exact):
+                    for key in ("source", "src"):
+                        out += [f"*{e} *--mount*{key}={src},*",
+                                f"*{e} *--mount*{key}={src} *",
+                                f"*{e} *--mount*{key}={src}"]
+                for src in below:
+                    for key in ("source", "src"):
+                        out.append(f"*{e} *--mount*{key}={src}*")
+                continue
+            joins = (" ", "=", "") if not flag.startswith("--") else (" ", "=")
+            for j in joins:
+                for src in sorted(exact):
+                    out.append(f"*{e} *{flag}{j}{src}:*")
+                for src in below:
+                    out.append(f"*{e} *{flag}{j}{src}*")
+    return list(dict.fromkeys(out))
+
+
+
+
+def bash_pattern_rules(rules: list[dict], vocab: dict) -> dict:
+    """gotgenes bash glob -> the index of the rule that emitted it.
+
+    The pattern is what an ask shows (`rule : *docker *--privileged*`); the rule
+    is where its `reason` and `instead` live. Deriving the map here, beside the
+    pattern generation itself, keeps ONE copy of both: an ask's audit line quotes
+    the rule without a second text anywhere. Only model-agnostic rules reach the
+    gotgenes surface; the model axis is the Pi guard's job.
+    """
+    index = {}
+    for i, r in enumerate(rules):
+        if r["models"] != "all":
+            continue
+        if r["mode"] == "no-push":
+            for pat in PUSH_PATTERNS:
+                index[pat] = i
+                index[f"{RTK_PREFIX}{pat}"] = i
+        elif r["mode"] == "no-host-escape":
+            for pat in escape_patterns(vocab["shell"]["host_escape"]):
+                index[pat] = i
+    return index
+
+
 def load() -> dict:
     """Every domain file, validated and merged into one rule list."""
     files = sources()
     if not files:
         die(f"no *.yaml in {SOURCE_DIR}")
 
+    vocab = vocabulary()
     out: list[dict] = []
     providers: list[str] = []
+    chain: list[str] = []
     for path in files:
         cfg = _miniyaml.load(path.read_text())
-        out += _load_one(path, cfg)
+        out += _load_one(path, cfg, vocab)
         for prov in (cfg.get("local_providers") or []):
             if prov not in providers:
                 providers.append(prov)
+        # pi's authorizerChain: an ORDERED list, so the files are read in
+        # sources() order and a name is kept where it first appears.
+        for link in (cfg.get("authorizer_chain") or []):
+            if link not in chain:
+                chain.append(link)
 
     out += directive_rules()
 
     return {
         "generated_from": (f"{roots.rel(roots.BOUNDARIES)}/*.yaml + "
-                           f"{roots.rel(ENTITY_REGISTER)}"),
+                           f"{roots.rel(VOCABULARY)} + {roots.rel(ENTITY_REGISTER)}"),
         "generated_by": f"{roots.ENGINE_REL}/boundaries/compile.py",
         "do_not_edit": f"Edit {roots.rel(roots.BOUNDARIES)}/*.yaml and re-run boundaries/compile.py.",
         "source_sha256": source_digest(),
         "version": 1,
         "local_providers": providers,
+        "authorizer_chain": chain,
+        "vocabulary": vocab,
         "rules": out,
+        # Which rule owns an ask's pattern. Derived, never written in a YAML:
+        # only the pattern generator knows, and the ask's audit line reads it.
+        "bash_pattern_rules": bash_pattern_rules(out, vocab),
     }
 
 
-def _load_one(path: Path, cfg: dict) -> list[dict]:
+def _load_one(path: Path, cfg: dict, vocab: dict) -> list[dict]:
     domain = path.stem
     where = f"{path.name}"
 
@@ -182,8 +446,9 @@ def _load_one(path: Path, cfg: dict) -> list[dict]:
             die(f"{where}: rule {n}: `paths:` must be a list of non-empty strings")
 
         mode = rule.get("mode")
-        if mode not in MODES:
-            die(f"{where}: rule {n}: mode {mode!r} not one of {sorted(MODES)}")
+        if mode not in vocab["modes"]:
+            die(f"{where}: rule {n}: mode {mode!r} not one of "
+                f"{sorted(vocab['modes'])} (declared in the vocabulary)")
         models = rule.get("models", default_models)
         if models not in MODEL_CLASSES:
             die(f"{where}: rule {n}: models {models!r} not one of {sorted(MODEL_CLASSES)}")
@@ -219,7 +484,7 @@ def _load_one(path: Path, cfg: dict) -> list[dict]:
             "domain": domain,
             "paths": expanded,
             "mode": mode,
-            "denies": sorted(MODES[mode]),
+            "denies": vocab["modes"][mode],
             "decision": decision,
             "models": models,
             "reason": " ".join(rule["reason"].split()),
@@ -250,15 +515,20 @@ def directive_rules() -> list[dict]:
     compile. A hand-written list here would be a second register.
 
     `no-write`, never `no-read`: the directive files are the always-loaded set
-    (`context/pazras.ALWAYS_LOADED`), so an agent that could not READ them
+    (`context/navigation.ALWAYS_LOADED`), so an agent that could not READ them
     could not work. What the user decides is who may WRITE.
 
     Returns [] when the register declares none, rather than dying: a compile
     that emits nothing is visible in the advisory and in `--explain`, while a
     guard that refuses to start is a session with no boundary at all.
     """
+    # The register is read through `knowledge.ontology`, imported HERE and not
+    # at module load (dev/architecture 4d): importing that module costs +19.3 ms
+    # and `guard.py` imports this one on every tool call, while `directive_rules`
+    # runs only at compile time.
+    from knowledge import ontology
     try:
-        entries = (_miniyaml.load(ENTITY_REGISTER.read_text()) or {}).get("entities") or []
+        entries = ontology.entity_register()
     except OSError:
         die(f"no entity register at {roots.rel(ENTITY_REGISTER)} -- the "
             f"directive kinds cannot be derived")
@@ -266,22 +536,21 @@ def directive_rules() -> list[dict]:
         die(f"{roots.rel(ENTITY_REGISTER)}: {exc}")
 
     out = []
-    for e in entries:
-        if not isinstance(e, dict) or str(e.get("directive", "false")) != TRUE:
+    for eid, e in entries:
+        if not e.directive:
             continue
-        head = paths.literal_head(str(e.get("pattern") or ""))
+        head = paths.literal_head(str(e.pattern or ""))
         if not head:
-            die(f"entity {e.get('id')!r} is directive but its pattern "
-                f"{e.get('pattern')!r} names no directory")
-        root = str(e.get("root") or roots.MEMORY_REL)
+            die(f"entity {eid!r} is directive but its pattern "
+                f"{e.pattern!r} names no directory")
+        root = str(e.root or roots.MEMORY_REL)
         if root not in (roots.MEMORY_REL, ROOT_REPO):
-            die(f"entity {e.get('id')!r}: unknown root {root!r}; the register "
+            die(f"entity {eid!r}: unknown root {root!r}; the register "
                 f"speaks {roots.MEMORY_REL!r} and {ROOT_REPO!r}")
         rel = f"{roots.MEMORY_REL}/{head}" if root == roots.MEMORY_REL else head
         # INSTALL, not the checkout: these rules protect the tree the harnesses
         # actually read, and `roots.tilde` names it the same way.
         path = roots.INSTALL / rel
-        eid = e.get("id")
         out.append({
             "domain": DIRECTIVE_DOMAIN,
             "derived_from": f"entities.yaml:{eid}",

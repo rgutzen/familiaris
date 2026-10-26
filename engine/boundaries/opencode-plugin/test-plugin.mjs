@@ -54,5 +54,34 @@ for (const [label, session, tool, args, expect] of CASES) {
   console.log(`${ok ? "ok  " : "FAIL"}  ${label.padEnd(22)} ${session.padEnd(6)} ` +
               `expect=${(expect ? "DENY" : "allow").padEnd(5)} got=${denied ? "DENY" : "allow"}`);
 }
-console.log("\nFAILURES:", fail, `/ ${CASES.length} cases`);
+
+// ── the parity corpus (boundaries.md §Parity corpus) ─────────────────────────
+// One fixture, run by every judge. A case whose `expected_fail` names this judge
+// must still FAIL here; one that starts passing is reported, so the entry goes.
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+const PARITY = JSON.parse(readFileSync(
+  fileURLToPath(new URL("../fixtures/parity.json", import.meta.url)), "utf8")).cases;
+const VAULT_NAME = "03_" + "ZETTEL";
+const expand = (v) => v.replaceAll("{VAULT_NAME}", VAULT_NAME)
+  .replaceAll("{VAULT}", HOME + "/" + VAULT_NAME)
+  .replaceAll("{CWD}", CWD).replaceAll("{HOME}", HOME);
+// opencode's channel is a throw: `ask` and `deny` both arrive as a refusal.
+const OC = { read: ["read", { path: "filePath" }], write: ["write", { path: "filePath" }],
+             edit: ["edit", { path: "filePath" }], glob: ["glob", { pattern: "pattern" }],
+             grep: ["grep", { pattern: "pattern", path: "path" }], bash: ["bash", { command: "command" }] };
+for (const c of PARITY) {
+  const [tool, fields] = OC[c.tool];
+  const args = Object.fromEntries(Object.entries(c.args).map(([k, v]) => [fields[k], expand(v)]));
+  let denied = false;
+  try { await before({ tool, sessionID: c.model, callID: "p" }, { args }); } catch { denied = true; }
+  const want = c.expect !== "allow";
+  const known = (c.expected_fail || {}).opencode;
+  const ok = known ? denied !== want : denied === want;
+  if (!ok) fail++;
+  console.log(`${known && ok ? "xfail" : ok ? "ok  " : "FAIL"}  parity: ${c.label.padEnd(26)} ` +
+              `expect=${(want ? "DENY" : "allow").padEnd(5)} got=${denied ? "DENY" : "allow"}` +
+              (known ? `  (known: ${known})` : ""));
+}
+console.log("\nFAILURES:", fail, `/ ${CASES.length + PARITY.length} cases (${PARITY.length} parity)`);
 process.exit(fail ? 1 : 0);

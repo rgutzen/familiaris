@@ -67,10 +67,22 @@ DIRS = ("engine", "config", "memory", "docs")
 
 # ── the generated figures ────────────────────────────────────────────────────
 
+# The `06-system` skin (paper, ink, muted, accent) as one Mermaid init line.
+# `fontFamily` is the stack mermaid-cli honours; 'Geist, sans-serif' is ignored.
+THEME = ("%%{init: {'theme': 'base', 'themeVariables': {"
+         "'background': '#f5f5f5', 'primaryColor': '#f5f5f5', "
+         "'primaryTextColor': '#2d3142', 'primaryBorderColor': '#2d3142', "
+         "'secondaryColor': '#ececec', 'tertiaryColor': '#ececec', "
+         "'lineColor': '#4f5d75', 'textColor': '#2d3142', "
+         "'edgeLabelBackground': '#f5f5f5', 'clusterBkg': '#ececec', "
+         "'clusterBorder': '#bfc0c0', 'noteBkgColor': '#f5f5f5', "
+         "'fontFamily': 'Geist, Helvetica Neue, Arial'}}}%%")
+
 def fig_import_order() -> str:
     chain = " --> ".join(import_order.ORDER)
     return "\n".join([
         "```mermaid",
+        THEME,
         "flowchart LR",
         f"  {chain}",
         "```",
@@ -86,12 +98,12 @@ def fig_subjects() -> str:
     declares subjects and branches as two lists, so there is no branch grouping
     to draw — the branch a leaf is filed under is the path, not a subject
     field."""
-    out = ["```mermaid", "flowchart LR"]
-    for s in ontology.SUBJECTS.values():
+    out = ["```mermaid", THEME, "flowchart LR"]
+    for s in ontology.subjects():
         out.append(f'  {s.id}["{s.name} — {s.id}"]')
     for d in DIRS:
         out.append(f'  dir_{d}["{d}/"]')
-    for s in ontology.SUBJECTS.values():
+    for s in ontology.subjects():
         for place in s.places:
             top = place.split("/")[0]
             if top not in DIRS:
@@ -112,7 +124,7 @@ def fig_boundaries() -> str:
     domains = [p.stem for p in _boundaries.sources()]
     if _boundaries.directive_rules():
         domains.append(_boundaries.DIRECTIVE_DOMAIN)
-    out = ["```mermaid", "flowchart LR"]
+    out = ["```mermaid", THEME, "flowchart LR"]
     for path in _boundaries.sources():
         out.append(f'  {_node("src", path.stem)}["{path.name}"]')
     if _boundaries.directive_rules():
@@ -161,7 +173,7 @@ def _display(path: pathlib.Path) -> str:
 def fig_schedule() -> str:
     """The units, from `PAZRAS_TIMERS` — the table `timers-gen.sh` renders."""
     rows = _timers()
-    out = ["```mermaid", "flowchart LR"]
+    out = ["```mermaid", THEME, "flowchart LR"]
     for name, fields in rows:
         node = _node("u", name)
         out.append(f'  {node}["{name}<br/>{fields.get("desc", "")}"]')
@@ -198,7 +210,7 @@ def _timers() -> list[tuple[str, dict]]:
 
 def fig_stages() -> str:
     """The pass: the stage chain, and each stage's declared invariants."""
-    out = ["```mermaid", "flowchart LR"]
+    out = ["```mermaid", THEME, "flowchart LR"]
     prev = None
     for num, label, _fn in c_run.STAGES:
         decl = invariants.DECLARED.get(label)

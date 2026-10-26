@@ -33,6 +33,7 @@ Prose is the fallback. Pick the form by the shape of the content:
 | relation, flow, dependency, decision path | `mermaid` flowchart |
 | hierarchy, containment | indented tree, or a nested `mermaid` block |
 | sequence | numbered list |
+| a concept figure a person outside the session will read — an architecture, a filing decision, a process with hand-offs | `diagram-design` (the skill), drawn as SVG with its HTML source beside it, embedded; the skill's local notes own when it does not apply, and its checks gate the file |
 | quantity or share | inline bars in a table (`▇▇▇▇····`); a running series in chat is `asciichartpy.plot([…])`; a leaf gets a `matplotlib` chart, PNG/SVG, embedded |
 | one fact, or a nuance that resists a shape | sentence |
 
@@ -44,19 +45,25 @@ document — split it or drop it; a diagram is not a code listing, so §Never's
 ~10-line bound does not apply, and §Verification reads it as replacing its prose.
 
 **One source, two renderings.** A `mermaid` block renders in place inside the
-vault (`memory/**`); outside it the reader's viewer decides, so a diagram beside
-a root doc is a PNG or a fenced block. `termaid file.mmd` renders the same
-source as terminal text for a chat reply — under ~30 lines and ~100 columns, and
-never an image in a reply.
+vault (`memory/**`), and is the form for a figure that changes with its
+register or with every commit — generation keeps it true. An authored concept
+figure travels as an exported SVG beside its HTML source (the viewer renders
+the SVG; the source is the editable form); a chart computed from numbers stays
+a `matplotlib` PNG with the script that drew it next to it — never hand-placed
+marks. `termaid file.mmd` renders the same source as terminal text for a chat
+reply — under ~30 lines and ~100 columns, and never an image in a reply.
 
 **A shape serves a human reader.** A table costs about what its sentences cost,
 and more than a flat list; what it buys is the reader's scan. Give one a human
 reader and three or more parallel items — two facts are a sentence.
 
 **Text a model reads is paid every session** — a router, a skill `description:`,
-an always-loaded line. Keep it prose there, and a table only when the shape is a lookup. 
-Instead: visualizations that are *easier to see than to read*. 
-House style for a diagram: `flowchart TB`, labelled edges, `class` for layers.
+an always-loaded line. Keep it prose there, and a table only when the shape is
+a lookup.
+
+House style for a `mermaid` diagram: `flowchart TB`, labelled edges, `class`
+for layers. A drawn figure takes its style from the diagram-design skill, not
+from here.
 
 ## Placement — how the document is reached
 

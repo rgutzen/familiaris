@@ -18,14 +18,21 @@ What is NOT tested here: the numbers. `branch_of_cwd` is asserted against
 R1h's four CLASSES; the split over the live corpus (170/20/55/26 on
 2026-10-09) is a measurement, and `journal search`'s exit records it.
 """
+import io
 import json
 import os
 import pathlib
+import urllib.error
 
 import pytest
 
 from knowledge import journal_index as ji
 from knowledge import ontology
+
+# The real `_post_json`, kept before the autouse fixture replaces it: the error
+# classification tests drive it through a stubbed `urlopen`, never a socket.
+_REAL_POST_JSON = ji._post_json
+_REAL_EMBED = ji.embed
 
 ENTRY = "# Title\n\n## What was done\n\nrestic backup ran here\n"
 
@@ -364,3 +371,290 @@ def test_a_bad_branch_exits_nonzero_with_the_allowed_values(memory, base, capsys
     code = ji.main(["search", "restic", "--branch=backup"], str(base), str(memory))
     assert code == 1
     assert "system, areas, projects, unknown" in capsys.readouterr().err
+
+
+# ── the error class: an answered request is not an unreachable server ────────
+#
+# 2026-10-24 and 10-25: Ollama answered HTTP 400 and the message read "cannot
+# reach Ollama ... Is `ollama serve` running?", because `HTTPError` is a
+# subclass of `URLError` and the handler for the parent came first.
+
+def _http_error(code, reason, body):
+    return urllib.error.HTTPError("http://x/api/embed", code, reason, {},
+                                  io.BytesIO(body.encode()))
+
+
+def _real_post(monkeypatch, exc):
+    def urlopen(*_a, **_kw):
+        raise exc
+    monkeypatch.setattr(ji, "_post_json", _REAL_POST_JSON)
+    monkeypatch.setattr(ji.urllib.request, "urlopen", urlopen)
+
+
+def test_an_http_error_reports_the_status_and_the_body_not_unreachable(monkeypatch):
+    body = '{"error":"Post \\"http://127.0.0.1:42773/tokenize\\": connection reset by peer"}'
+    _real_post(monkeypatch, _http_error(400, "Bad Request", body))
+    with pytest.raises(ji.OllamaHTTPError) as e:
+        ji._post_json("/api/embed", {})
+    assert e.value.status == 400
+    assert "HTTP 400 Bad Request" in str(e.value)
+    assert "connection reset by peer" in str(e.value)       # Ollama's own words
+    assert "cannot reach" not in str(e.value)
+    assert "ollama serve" not in str(e.value)
+
+
+def test_a_connection_error_is_still_unreachable(monkeypatch):
+    _real_post(monkeypatch, urllib.error.URLError(ConnectionRefusedError(111, "refused")))
+    with pytest.raises(ji.OllamaUnreachable) as e:
+        ji._post_json("/api/embed", {})
+    assert e.value.status is None
+    assert "cannot reach Ollama" in str(e.value)
+    assert "ollama serve" in str(e.value)
+
+
+def test_a_connection_dropped_without_an_answer_is_unreachable(monkeypatch):
+    """A peer that accepts and closes without answering -- Ollama's runner
+    dying mid-request -- raises `ConnectionResetError`: an OSError and NOT a
+    URLError, so the URLError clause never sees it. Measured against a socket
+    that closes on accept, 2026-10-25; before this the exception escaped
+    `_post_json` unclassified, so `build` saved nothing and the CLI printed a
+    traceback instead of "cannot reach"."""
+    _real_post(monkeypatch, ConnectionResetError(104, "Connection reset by peer"))
+    with pytest.raises(ji.OllamaUnreachable) as e:
+        ji._post_json("/api/embed", {})
+    assert "cannot reach Ollama" in str(e.value)
+    assert "ConnectionResetError" in str(e.value)          # what the socket did
+    assert "reset by peer" in str(e.value).lower()
+
+
+def test_a_dropped_connection_stops_the_cli_at_2_and_saves_the_progress(
+        memory, base, capsys, monkeypatch):
+    """The same class of failure, through the whole stack: `build` must stop
+    cleanly (progress saved, no traceback) rather than die on an OSError."""
+    _real_post(monkeypatch, ConnectionResetError(104, "Connection reset by peer"))
+    monkeypatch.setattr(ji, "embed", _REAL_EMBED)
+    assert ji.main(["index"], str(base), str(memory)) == 2
+    err = capsys.readouterr().err
+    assert "cannot reach Ollama" in err and "Traceback" not in err
+    assert (base / "journal-index" / "index.json").exists()
+
+
+def test_a_timeout_is_unreachable_and_an_empty_body_is_said(monkeypatch):
+    _real_post(monkeypatch, TimeoutError())
+    with pytest.raises(ji.OllamaUnreachable, match="timed out"):
+        ji._post_json("/api/embed", {})
+    _real_post(monkeypatch, _http_error(500, "Internal Server Error", ""))
+    with pytest.raises(ji.OllamaHTTPError, match=r"HTTP 500.*\(empty body\)"):
+        ji._post_json("/api/embed", {})
+
+
+def test_the_cli_prints_the_http_failure_and_exits_2(memory, base, capsys, monkeypatch):
+    def refuse(texts, model=""):
+        raise ji.OllamaHTTPError("Ollama answered /api/embed with HTTP 404 Not Found: "
+                                 "model \"x\" not found", status=404)
+    monkeypatch.setattr(ji, "embed", refuse)
+    assert ji.main(["index"], str(base), str(memory)) == 2
+    err = capsys.readouterr().err
+    assert "HTTP 404" in err and "not found" in err and "cannot reach" not in err
+
+
+def test_embed_caps_each_text_and_does_not_hide_a_400_behind_the_legacy_route(monkeypatch):
+    sent = []
+
+    def post(path, body, timeout=0):
+        sent.append((path, body))
+        raise ji.OllamaHTTPError("HTTP 400", status=400)
+    monkeypatch.setattr(ji, "_post_json", post)
+    monkeypatch.setattr(ji, "embed", _REAL_EMBED)
+    with pytest.raises(ji.OllamaHTTPError):
+        ji.embed(["x" * 1_000_000, "y"])
+    assert [p for p, _ in sent] == ["/api/embed"]           # no per-text retry
+    assert max(len(t) for t in sent[0][1]["input"]) == ji.MAX_CHUNK_CHARS
+
+
+def test_embed_falls_back_to_the_legacy_route_only_on_a_404(monkeypatch):
+    def post(path, body, timeout=0):
+        if path == "/api/embed":
+            raise ji.OllamaHTTPError("HTTP 404", status=404)
+        return {"embedding": [1.0, 2.0]}
+    monkeypatch.setattr(ji, "_post_json", post)
+    monkeypatch.setattr(ji, "embed", _REAL_EMBED)
+    assert ji.embed(["a", "b"]) == [[1.0, 2.0], [1.0, 2.0]]
+
+
+# ── one bad chunk, one bad batch, one interrupted run ────────────────────────
+
+POISON = "POISONED-CHUNK"
+
+
+def _refusing(poison=POISON, calls=None):
+    """An embed that, like Ollama on 2026-10-24, answers 400 for a whole batch
+    that contains one input it cannot take."""
+    def embed(texts, model=""):
+        if calls is not None:
+            calls.append(len(texts))
+        if any(poison in t for t in texts):
+            raise ji.OllamaHTTPError("HTTP 400 Bad Request: tokenize reset",
+                                     status=400)
+        return _stub_embed(texts)
+    return embed
+
+
+def _poisoned(memory):
+    p = memory / "journal" / "2026" / "10" / "2026-10-03_area.md"
+    p.write_text(p.read_text() + f"\n## Bad\n\n{POISON}\n")
+    os.utime(p, (1_700_000_000, 1_700_000_000))
+    return "journal/2026/10/2026-10-03_area.md"
+
+
+def test_one_bad_chunk_is_skipped_and_logged_not_fatal(memory, base, monkeypatch):
+    bad = _poisoned(memory)
+    monkeypatch.setattr(ji, "embed", _refusing())
+    lines = []
+    stats = ji.build(str(memory), str(base), log=lines.append)
+    assert stats["chunks_skipped"] == 1
+    assert any(l.startswith("!! skipped") and "Bad" in l and "tokenize reset" in l
+               for l in lines)                              # named, with Ollama's words
+    idx = _index(base)
+    paths = {c["path"] for c in idx["chunks"]}
+    assert len(paths) == 5                                  # the other four files, and this one's good chunks
+    assert not any(POISON in c["text"] for c in idx["chunks"])
+    assert bad not in idx["files"]                          # unrecorded -> retried
+
+
+def test_the_partly_indexed_file_is_retried_and_completed_once_it_can_be(memory, base, monkeypatch):
+    bad = _poisoned(memory)
+    monkeypatch.setattr(ji, "embed", _refusing())
+    ji.build(str(memory), str(base))
+    monkeypatch.setattr(ji, "embed", _stub_embed)           # Ollama recovers
+    lines = []
+    stats = ji.build(str(memory), str(base), log=lines.append)
+    assert stats["files_changed"] == 1 and stats["chunks_skipped"] == 0
+    # A retry is not a new file: its good chunks are already in the index, so
+    # the build log must not call it one.
+    assert stats["files_new"] == 0
+    assert "(0 new, 1 modified)" in " ".join(lines)
+    idx = _index(base)
+    assert bad in idx["files"]
+    mine = [c for c in idx["chunks"] if c["path"] == bad]
+    assert len(mine) == idx["files"][bad]["chunks"]         # no duplicates from the retry
+
+
+def test_a_failing_batch_is_split_so_the_good_chunks_are_not_lost(memory, base, monkeypatch):
+    _poisoned(memory)
+    calls = []
+    monkeypatch.setattr(ji, "embed", _refusing(calls=calls))
+    ji.build(str(memory), str(base))
+    assert calls[0] > 1 and 1 in calls                      # whole batch first, then down to one
+
+
+def test_five_refusals_in_a_row_abort_the_run_with_progress_saved(memory, base, monkeypatch):
+    def refuse_all(texts, model=""):
+        raise ji.OllamaHTTPError("HTTP 400 Bad Request: nope", status=400)
+    monkeypatch.setattr(ji, "BATCH_CHUNKS", 1)
+    monkeypatch.setattr(ji, "MAX_CONSECUTIVE_SKIPS", 3)
+    monkeypatch.setattr(ji, "embed", refuse_all)
+    with pytest.raises(ji.EmbedError, match="3 chunks in a row"):
+        ji.build(str(memory), str(base))
+    assert (base / "journal-index" / "index.json").exists()
+
+
+def test_a_status_that_is_not_about_the_request_is_not_split(memory, base, monkeypatch):
+    calls = []
+
+    def not_found(texts, model=""):
+        calls.append(len(texts))
+        raise ji.OllamaHTTPError("HTTP 404: model not found", status=404)
+    monkeypatch.setattr(ji, "embed", not_found)
+    with pytest.raises(ji.OllamaHTTPError, match="model not found"):
+        ji.build(str(memory), str(base))
+    assert len(calls) == 1                                  # not 2 * chunks of retries
+
+
+def test_an_interrupted_run_keeps_its_finished_files_and_resumes_the_rest(memory, base, monkeypatch):
+    n = {"batches": 0}
+
+    def dies_on_the_third(texts, model=""):
+        n["batches"] += 1
+        if n["batches"] == 3:
+            raise ji.OllamaUnreachable("cannot reach Ollama")
+        return _stub_embed(texts)
+    monkeypatch.setattr(ji, "BATCH_CHUNKS", 1)
+    monkeypatch.setattr(ji, "embed", dies_on_the_third)
+    with pytest.raises(ji.OllamaUnreachable):
+        ji.build(str(memory), str(base))
+    saved = _index(base)
+    assert len(saved["files"]) == 1                         # one finished (2 chunks); the file in flight is unrecorded
+    assert len(saved["chunks"]) == 2                        # the finished file's, nothing half-written
+    monkeypatch.setattr(ji, "embed", _stub_embed)
+    stats = ji.build(str(memory), str(base))
+    assert stats["files_changed"] == 4                      # only the rest
+    done = _index(base)
+    assert len(done["files"]) == 5
+    assert len(done["chunks"]) == sum(f["chunks"] for f in done["files"].values())
+
+
+def test_a_chunk_is_stored_capped_and_embedded_capped(memory, base, monkeypatch):
+    p = memory / "journal" / "2026" / "10" / "2026-10-01_system.md"
+    p.write_text(p.read_text() + "\n## Huge\n\n" + "w" * 1_200_000 + "\n")
+    seen = []
+    monkeypatch.setattr(ji, "embed",
+                        lambda texts, model="": seen.extend(texts) or _stub_embed(texts))
+    ji.build(str(memory), str(base))
+    assert max(len(t) for t in seen) == ji.MAX_CHUNK_CHARS
+    assert max(len(c["text"]) for c in _index(base)["chunks"]) == ji.MAX_CHUNK_CHARS
+    big = [c for c in _index(base)["chunks"] if c["header"] == "Huge"][0]
+    assert big["end_line"] - big["start_line"] >= 3         # the pointer is still the whole section
+
+
+def test_batches_respect_the_chunk_and_the_byte_ceiling():
+    chunk = lambda n: {"text": "a" * n}
+    out = list(ji._batches([chunk(10)] * (ji.BATCH_CHUNKS + 1)))
+    assert [len(b) for b in out] == [ji.BATCH_CHUNKS, 1]
+    big = ji.BATCH_CHARS // 2 + 1
+    assert [len(b) for b in ji._batches([chunk(big)] * 3)] == [1, 1, 1]
+    assert list(ji._batches([])) == []
+
+
+# ── what made 2026-10-24 look like an invalidated index ──────────────────────
+#
+# 474 "changed" files read as a hash or path change. They were 471 new entries
+# (one consolidation commit) and 3 edits, against an index that was intact.
+
+def test_a_burst_of_new_entries_is_reported_as_new_not_as_an_invalidation(memory, base):
+    ji.build(str(memory), str(base))
+    before = _index(base)
+    for i in range(40):
+        _entry(memory, f"2026/10/2026-10-20_burst-{i:02d}.md", SYSTEM_CWD)
+    p = memory / "journal" / "2026" / "10" / "2026-10-04_none.md"
+    p.write_text(p.read_text() + "\n## Edit\n\nx\n")
+    os.utime(p, (1_700_000_000, 1_700_000_000))
+    lines = []
+    stats = ji.build(str(memory), str(base), log=lines.append)
+    assert "(40 new, 1 modified)" in " ".join(lines)
+    assert stats["files_new"] == 40 and stats["files_changed"] == 41
+    assert not any("forcing full rebuild" in l for l in lines)    # model and schema held
+    after = _index(base)
+    key = lambda c: (c["path"], c["start_line"])
+    kept = {key(c): c["embedding"] for c in before["chunks"]
+            if not c["path"].endswith("none.md")}
+    assert kept and all(c["embedding"] == kept[key(c)] for c in after["chunks"]
+                        if key(c) in kept)                       # untouched entries kept their vectors
+    assert {key(c) for c in after["chunks"]} >= set(kept)
+
+
+def test_a_move_of_the_whole_journal_does_not_change_what_is_stored_as_changed(memory, base, tmp_path):
+    """The index keys files by their path RELATIVE to the memory root and
+    compares mtimes, so the same journal read from another checkout (a
+    worktree) has the same keys and a different mtime for every file. That is
+    why a worktree run against the live index would re-embed everything, and
+    why the live service must run from the install."""
+    ji.build(str(memory), str(base))
+    other = tmp_path / "checkout" / "memory"
+    for src in (memory / "journal").rglob("*.md"):
+        dst = other / src.relative_to(memory)
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        dst.write_text(src.read_text())
+    stats = ji.build(str(other), str(base))
+    assert stats["files_removed"] == 0
+    assert stats["files_changed"] == 5
