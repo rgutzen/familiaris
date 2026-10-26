@@ -2,7 +2,7 @@
   "$comment": "Written by engine/publication/publish.py. `managed` is the list of paths this tool wrote and may delete; anything not listed here is never touched.",
   "tool": "engine/publication/publish.py",
   "version": 1,
-  "source_hash": "sha256:d28bb65ff3d8a8a970d0586403bba1e8fbfabcaa583724a97e14319ebdc17a66",
+  "source_hash": "sha256:88f84812f4da4c9ef1ea909973f35fd87477b9f05fc7a68d484c9f41a61e4d46",
   "files": 585,
   "managed": [
     ".gitignore",

@@ -98,6 +98,39 @@ def test_a_file_with_no_frontmatter_is_left_alone():
 
 # ── the target's permission slip ─────────────────────────────────────────────
 
+# ── what never travels, and what is renamed on the way ───────────────────────
+
+def test_dev_never_travels_whatever_the_classification_says():
+    assert publish.never_public(["dev/x/SPECS.md", "engine/familiar",
+                                 "docs/dev/x.md"]) == ["dev/x/SPECS.md"]
+
+
+def test_a_classification_that_makes_dev_public_is_refused(monkeypatch):
+    rule = publish.audit.Rule(section="overrides", index=0, path="dev/",
+                              cls="public", why="a mistake")
+    monkeypatch.setattr(publish.audit, "findings", lambda *a: [])
+    monkeypatch.setattr(publish.audit, "tracked", lambda: ["dev/x/SPECS.md"])
+    monkeypatch.setattr(publish.audit, "classify", lambda rel, rules: (rule, ""))
+    with pytest.raises(SystemExit, match="never"):
+        publish.main(["--to", "/nonexistent/familiaris-target"])
+
+
+def test_a_rename_covers_its_three_spellings_and_stops_at_letters():
+    rules = publish.renames({"rename": [{"from": "acme", "to": "work"}]})
+    counts = {}
+    out = publish._rename(
+        b"profile acme, ~/.claude-acme, KEY_ACME, an Acme probe, acmesia\n",
+        rules, counts).decode()
+    assert out == ("profile work, ~/.claude-work, KEY_WORK, an Work probe, "
+                   "acmesia\n")
+    assert sum(counts.values()) == 4
+
+
+def test_a_binary_file_is_not_renamed():
+    data = b"\xff\xfeacme"
+    assert publish._rename(data, [("acme", "work")], {}) == data
+
+
 def test_an_empty_directory_is_a_target(tmp_path):
     publish.check_target(tmp_path)          # does not raise
 

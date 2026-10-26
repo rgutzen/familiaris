@@ -67,6 +67,13 @@ EDGE_FIELDS = ("related", "supersedes", "superseded_by", "contradicts",
                "promoted_from", "source", "cites")
 
 MARKER = ".familiaris-export"
+# Paths that never travel, whatever the classification says. `dev/` is omitted
+# there too, but one longer `overrides:` entry would beat that rule; this list
+# is the floor under it, checked on every exported and generated path.
+NEVER_PUBLIC = ("dev/",)
+# A rename is bounded by letters, not `\b`: `API_KEY_WORK` and `.claude-work`
+# are the same name as `work`, and `interest` is not.
+_RENAME_EDGE = "(?<![A-Za-z]){}(?![A-Za-z])"
 # The leak scanner is deliberately THIS tree's: its private pattern file and the
 # declarations it measures against live under `dev/`, which the export has not
 # got, so the instance runs the scan on a tree it names with `--tree`.
@@ -291,6 +298,36 @@ def _substitute(data: bytes, subs: tuple, rel: str) -> tuple[bytes, int]:
     return text.encode("utf-8"), n
 
 
+def renames(cfg: dict) -> list[tuple[str, str]]:
+    """The classification's `rename:` rules, each in its three spellings
+    (lower, Capitalised, UPPER), so one rule covers a profile name, the
+    prose that mentions it and the environment variable that carries it."""
+    out = []
+    for raw in cfg.get("rename") or []:
+        old, new = str(raw["from"]), str(raw["to"])
+        for case in (str.lower, str.capitalize, str.upper):
+            if (case(old), case(new)) not in out:
+                out.append((case(old), case(new)))
+    return out
+
+
+def _rename(data: bytes, rules: list[tuple[str, str]],
+            counts: dict) -> bytes:
+    """Apply every rename to one file's text; a binary file is left alone."""
+    try:
+        text = data.decode("utf-8")
+    except UnicodeDecodeError:
+        return data
+    for old, new in rules:
+        text, n = re.subn(_RENAME_EDGE.format(re.escape(old)), new, text)
+        counts[old] = counts.get(old, 0) + n
+    return text.encode("utf-8")
+
+
+def never_public(paths) -> list[str]:
+    return sorted(p for p in paths if p.startswith(NEVER_PUBLIC))
+
+
 def _triples(subs: tuple) -> tuple:
     """Accept `(from, to)` and `(from, to, drop_line)`.
 
@@ -314,6 +351,7 @@ def build(stage: pathlib.Path, cfg: dict, rules, sources: list[tuple[str, object
         present.add(dest)
 
     defs: list[tuple[pathlib.Path, object]] = []
+    rename_rules, renamed = renames(cfg), {}
     for rel, rule in sources:
         dest = rule.as_ if rule.as_ else rel
         src = roots.REPO / rel
@@ -322,6 +360,8 @@ def build(stage: pathlib.Path, cfg: dict, rules, sources: list[tuple[str, object
         if rule.substitute:
             data, n = _substitute(data, rule.substitute, rel)
             note = f"{len(rule.substitute)} substitution(s), {n} occurrence(s)"
+        if rename_rules:
+            data = _rename(data, rename_rules, renamed)
         if getattr(rule, "prune_absent_places", False):
             text, dropped = prune_absent_places(data.decode("utf-8"), present)
             data = text.encode("utf-8")
@@ -338,6 +378,18 @@ def build(stage: pathlib.Path, cfg: dict, rules, sources: list[tuple[str, object
             defs.append((target, rule))
         if rule.as_:
             surgery.append(f"{rel} -> {dest} (renamed, {rule.cls})")
+
+    # A rename that matched nothing in any spelling is dead, as a `substitute:`
+    # that matches nothing is: the name it guards moved, and the scan is then
+    # the only net.
+    for raw in cfg.get("rename") or []:
+        old = str(raw["from"])
+        n = sum(renamed.get(case(old), 0)
+                for case in (str.lower, str.capitalize, str.upper))
+        if n == 0:
+            raise SystemExit(f"publish: rename `{old}` matches nothing in the "
+                             f"export; delete the rule or fix its `from:`")
+        surgery.append(f"rename: `{old}` -> `{raw['to']}`, {n} occurrence(s)")
 
     # After every file is in place: an edge resolves against the whole export,
     # so pruning while copying would judge a leaf against half a tree.
@@ -612,12 +664,24 @@ def main(argv: list[str] | None = None) -> int:
             raise SystemExit(f"publish: {rel}: {why}")
         if rule.cls != "omit":
             sources.append((rel, rule))
+    leaked = never_public(rel for rel, _ in sources) or never_public(
+        rule.as_ for _, rule in sources if rule.as_)
+    if leaked:
+        raise SystemExit(f"publish: {len(leaked)} path(s) under "
+                         f"{', '.join(NEVER_PUBLIC)} would travel, and they never "
+                         f"do, whatever {roots.rel(audit.CLASSIFICATION)} says: "
+                         f"{', '.join(leaked[:5])}")
 
     workspace = pathlib.Path(tempfile.mkdtemp(prefix="familiaris-publish-"))
     stage = workspace / "export"
     stage.mkdir()
     try:
         files, surgery, _ = build(stage, cfg, rules, sources, workspace)
+        leaked = never_public(p.relative_to(stage).as_posix()
+                              for p in stage.rglob("*") if p.is_file())
+        if leaked:
+            raise SystemExit(f"publish: a regenerate step wrote under "
+                             f"{', '.join(NEVER_PUBLIC)}: {', '.join(leaked[:5])}")
         verdict = gate(stage)
         managed_before = set(read_marker(target).get("managed") or [])
         d = diff(stage, target, managed_before)

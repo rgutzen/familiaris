@@ -34,7 +34,7 @@ Run every command from the private tree's root. `<clone>` is the publish clone,
    must be refreshed whenever the hook body changes: `--check` reports a drifted
    copy.
 4. **The clone's leak gate** is armed by the first `publish.py` run. It is
-   advisory: findings are printed and the push proceeds. To make it refuse, run
+   advisory until you make it refuse, which you should:
    `git -C <clone> config pazras.leak-gate strict`.
 
 ## Each publish
@@ -74,6 +74,15 @@ its own tree, without this machine's `dev/`, journal or instance config. A
 check or test that reads one of them fails there. Make it pass in both trees:
 declare `instance_only="<why>"` on a check whose whole subject is private, or
 skip one assertion with `roots.instance_here()`. Do not remove the check.
+
+**`publish.py` refuses a path under `dev/`.** Nothing under `dev/` travels,
+whatever the classification says (`NEVER_PUBLIC` in `publish.py`). A rule that
+made it public is the mistake; fix the classification.
+
+**A name the engine depends on must not travel.** Rename it in every exported
+file with a `rename:` rule in the classification, rather than templating each
+file: the export gate then runs the renamed tests, and the scan checks that
+nothing escaped. Add the name to the pattern register as well.
 
 **The scan reports an undeclared hit.** The output contains a string from the
 pattern register (`config/publication/leak-patterns.txt`) or a built-in shape

@@ -660,6 +660,9 @@ CHECKS: tuple[Check, ...] = (
         "scheduled sessions' records, units and sources agree",
         (f"{E}/familiar", "schedule", "sessions", "--check"),
         frozenset({GATE_PRE_COMMIT, GATE_DAILY, GATE_MANUAL}),
+        instance_only="its subject is this machine's job records under "
+                      "`$PAZRAS_DATA_DIR/sessions/` and the units they wrote; a "
+                      "published tree run here would measure the publisher's jobs",
     ),
     Check(
         "pytest-schedule",

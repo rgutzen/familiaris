@@ -43,6 +43,7 @@ from __future__ import annotations
 import argparse
 import dataclasses
 import pathlib
+import re
 import subprocess
 import sys
 
@@ -289,6 +290,18 @@ def findings(repo: pathlib.Path = roots.REPO,
                        f"subjects.yaml that no `directories:` rule covers -- "
                        f"the register forces a filing decision, and the "
                        f"export owes the same for publication")
+
+    for i, raw in enumerate(cfg.get("rename") or [], 1):
+        where = f"rename[{i}]"
+        if not isinstance(raw, dict) or not raw.get("from") or not raw.get("to"):
+            out.append(f"{where}: needs `from:` and `to:`")
+            continue
+        if not str(raw.get("why") or "").strip():
+            out.append(f"{where}: no `why:` -- a rename in every exported file "
+                       f"is a decision like any other")
+        if not re.fullmatch(r"[A-Za-z][A-Za-z0-9-]*", str(raw["from"])):
+            out.append(f"{where}: `from: {raw['from']}` is not a plain name; a "
+                       f"rename is a word, bounded by letters, not a pattern")
 
     produced: set = set()
     for i, raw in enumerate(cfg.get("regenerate") or [], 1):

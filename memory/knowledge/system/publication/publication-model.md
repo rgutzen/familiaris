@@ -92,6 +92,13 @@ on eight, about 70 tests, among them a real portability bug (the tier checks rea
 the master config without the `.example.sh` fallback the bash loader has) and
 two hand-written files under the omitted `config/schedule/`.
 
+Two floors under the classification (2026-10-26). Nothing under `dev/`
+travels, whatever `publish.yaml` says: `publish.py` refuses it
+(`NEVER_PUBLIC`), because one longer `overrides:` entry would otherwise beat
+the `dev/` rule. A venture is never named in the export: the pattern register
+refuses it, and a `rename:` rule ships the billing profile named after it as
+`work` in every exported file, so the engine and its tests still agree.
+
 `publish.py` copies working-tree bytes, not a commit. Run it from a clean
 worktree at the commit being published whenever the main checkout holds
 uncommitted work, or that work travels.

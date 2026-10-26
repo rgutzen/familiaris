@@ -34,7 +34,8 @@ def args_for(*argv):
 @pytest.fixture(autouse=True)
 def _vendor_keys(monkeypatch):
     """The suite must not depend on the shell that runs it (as test_sessions.py)."""
-    for var in ("DEEPSEEK_API_KEY", "MISTRAL_API_KEY"):
+    for var in ("DEEPSEEK_API_KEY", "MISTRAL_API_KEY",
+                "DEEPSEEK_API_KEY_WORK", "MISTRAL_API_KEY_WORK"):
         monkeypatch.setenv(var, "test-placeholder")
 
 
